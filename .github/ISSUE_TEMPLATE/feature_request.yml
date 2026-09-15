@@ -1,0 +1,12 @@
+name: Feature request
+description: Propose a chain, protocol, provider, or library capability
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: use_case
+    attributes:
+      label: Use case
+      description: Describe the library operation and the structured result you need.
+    validations:
+      required: true

@@ -1,0 +1,93 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Regit
+
+[workspace]
+resolver = "3"
+members = ["."]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "Apache-2.0"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+unimplemented = "deny"
+dbg_macro = "deny"
+disallowed_types = "deny"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+unused_must_use = "deny"
+unreachable_pub = "deny"
+
+[package]
+name = "regit-web3"
+description = "Reusable Rust primitives for typed Web3 operations and observations"
+repository = "https://github.com/org-regit-io/regit-web3"
+readme = "README.md"
+exclude = ["/doc/", "/sbom/", "/target/"]
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+autobins = false
+
+[lints]
+workspace = true
+
+[features]
+default = ["evm"]
+
+evm = []
+solana = []
+cardano = []
+bitcoin = []
+litecoin = []
+dogecoin = []
+bitcoin-cash = []
+xrpl = []
+ton = []
+thorchain = []
+
+jupiter = ["solana"]
+uniswap = ["evm"]
+oneinch = ["evm"]
+lifi = []
+rubic = []
+
+coingecko = []
+defillama = []
+helius = ["solana"]
+blockfrost = ["cardano"]
+mempool-space = ["bitcoin"]
+
+all = [
+  "evm",
+  "solana",
+  "cardano",
+  "bitcoin",
+  "litecoin",
+  "dogecoin",
+  "bitcoin-cash",
+  "xrpl",
+  "ton",
+  "thorchain",
+  "jupiter",
+  "uniswap",
+  "oneinch",
+  "lifi",
+  "rubic",
+  "coingecko",
+  "defillama",
+  "helius",
+  "blockfrost",
+  "mempool-space",
+]

@@ -1,0 +1,10 @@
+/target/
+/sbom/
+/*.cdx.json
+/doc/
+AGENTS.md
+.env
+.env.*
+.DS_Store
+.idea/
+.vscode/

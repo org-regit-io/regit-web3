@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Regit
+
+name: gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: toolchain
+        run: rustup show
+
+      - name: install pinned just
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh \
+            | bash -s -- --tag 1.58.0 --to "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: install pinned gate tools
+        run: |
+          cargo install cargo-deny --locked --version "$(just --evaluate deny_version)"
+          cargo install cargo-shear --locked --version "$(just --evaluate shear_version)"
+          cargo install taplo-cli --locked --version "$(just --evaluate taplo_version)"
+          cargo install cargo-cyclonedx --locked --version "$(just --evaluate cyclonedx_version)"
+          cargo install cargo-nextest --locked --version "$(just --evaluate nextest_version)"
+
+      - name: gate
+        run: just gate
+
+      - name: sbom
+        run: just sbom

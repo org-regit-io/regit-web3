@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2026 Regit
+
+# Tests may panic to expose a failed assumption; production code may not.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+
+# Transaction amounts must use exact integer or fixed-point representations.
+disallowed-types = [
+  { path = "f32", reason = "use exact values for asset amounts" },
+  { path = "f64", reason = "use exact values for asset amounts" },
+]
