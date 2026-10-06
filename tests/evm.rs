@@ -13,7 +13,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use regit_web3::{
     chains::evm::EvmClient,
     config::{EvmConfig, RpcEndpoint, RpcLimits},
-    domain::{Address, BlockHash, BlockSelector, ChainId, Finality, NetworkId},
+    domain::{
+        Address, Balance, BlockHash, BlockSelector, ChainId, Finality, NetworkId, Observation,
+    },
     error::{Error, ProviderError},
 };
 use serde_json::{Value, json};
@@ -765,5 +767,165 @@ async fn concurrent_reads_keep_address_block_and_balance_associations_with_the_s
     let requests = fixture.requests()?;
     assert_eq!(requests.len(), 7);
     assert!(requests.iter().all(|request| request.body["id"] == 1));
+    Ok(())
+}
+
+#[tokio::test]
+async fn actual_native_observations_have_stable_wire_fields_and_roundtrip() -> TestResult {
+    let mut replies = prefix()?;
+    replies.extend([Reply::result(&block())?, Reply::result(&json!("0x5"))?]);
+    let fixture = Fixture::start(replies).await?;
+    let client = EvmClient::connect(config(
+        &fixture,
+        0,
+        BlockSelector::Finalized,
+        0,
+        4096,
+        Duration::from_secs(2),
+    )?)
+    .await?;
+    let observed = client
+        .get_native_balance(Address::parse(ADDRESS)?, None)
+        .await?;
+    let serialized = serde_json::to_value(&observed)?;
+    let network = json!({"chain_id":"1","alias":"fixture-network"});
+    let expected = json!({
+        "schema_version":1,"operation":"native_balance","network":network,
+        "requested_selector":{"kind":"finalized"},
+        "block":{"number":42,"hash":block_hash(),"timestamp":1_700_000_000_u64},
+        "source":{"provider_id":"fixture-provider","method":"eth_getBalance","integration_version":env!("CARGO_PKG_VERSION")},
+        "retrieved_at":observed.context().retrieved_at().unix_seconds(),
+        "finality":"unknown","confirmations":null,
+        "value":{"address":ADDRESS,
+            "asset":{"network":network,"kind":"native","decimals":0,"symbol":"NATIVE","metadata_origin":"caller_configured"},
+            "amount":{"raw":"5","decimals":0,"formatted":"5"}}
+    });
+    assert_eq!(serialized, expected);
+    assert_eq!(
+        serde_json::from_value::<Observation<Balance>>(serialized)?,
+        observed
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn block_and_balance_stages_enforce_the_same_strict_rpc_envelope() -> TestResult {
+    for balance_stage in [false, true] {
+        let result = if balance_stage { json!("0x1") } else { block() };
+        let encoded_result = serde_json::to_string(&result)?;
+        for raw in [
+            format!("{{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{encoded_result}}}"),
+            format!("{{\"jsonrpc\":\"1.0\",\"id\":1,\"result\":{encoded_result}}}"),
+            format!("{{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{encoded_result},\"error\":null}}"),
+            format!("{{\"jsonrpc\":\"2.0\",\"id\":1,\"id\":1,\"result\":{encoded_result}}}"),
+        ] {
+            let mut replies = prefix()?;
+            if balance_stage {
+                replies.push(Reply::result(&block())?);
+            }
+            replies.push(Reply::raw(200, raw.into_bytes()));
+            let fixture = Fixture::start(replies).await?;
+            let client = EvmClient::connect(config(
+                &fixture,
+                18,
+                BlockSelector::Latest,
+                2,
+                4096,
+                Duration::from_secs(2),
+            )?)
+            .await?;
+            assert_eq!(
+                client
+                    .get_native_balance(Address::parse(ADDRESS)?, None)
+                    .await
+                    .unwrap_err(),
+                Error::Provider(ProviderError::InvalidResponse)
+            );
+            assert_eq!(fixture.requests()?.len(), if balance_stage { 4 } else { 3 });
+        }
+    }
+    Ok(())
+}
+
+#[tokio::test]
+async fn transport_and_rate_limit_read_retries_keep_the_captured_hash() -> TestResult {
+    let mut dropped = Reply::raw(200, Vec::new());
+    dropped.close_connection = true;
+    let mut replies = prefix()?;
+    replies.extend([
+        Reply::result(&block())?,
+        dropped,
+        Reply::raw(429, b"fixture-body-token".to_vec()),
+        Reply::result(&json!("0x5"))?,
+    ]);
+    let fixture = Fixture::start(replies).await?;
+    let client = EvmClient::connect(config(
+        &fixture,
+        18,
+        BlockSelector::Latest,
+        2,
+        4096,
+        Duration::from_secs(2),
+    )?)
+    .await?;
+    assert_eq!(
+        client
+            .get_native_balance(Address::parse(ADDRESS)?, None)
+            .await?
+            .value()
+            .amount()
+            .raw()
+            .to_string(),
+        "5"
+    );
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 6);
+    assert_eq!(requests[3].body, requests[4].body);
+    assert_eq!(requests[4].body, requests[5].body);
+    assert_eq!(
+        requests[5].body["params"],
+        json!([ADDRESS,{"blockHash":block_hash(),"requireCanonical":true}])
+    );
+    assert_eq!(
+        requests
+            .iter()
+            .filter(|request| request.body["method"] == "eth_getBlockByNumber")
+            .count(),
+        1
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn malformed_balance_response_diagnostics_do_not_echo_raw_provider_text() -> TestResult {
+    let mut replies = prefix()?;
+    replies.extend([
+        Reply::result(&block())?,
+        Reply::raw(200, b"Bearer fixture-body-token not-json".to_vec()),
+    ]);
+    let fixture = Fixture::start(replies).await?;
+    let client = EvmClient::connect(config(
+        &fixture,
+        18,
+        BlockSelector::Latest,
+        2,
+        4096,
+        Duration::from_secs(2),
+    )?)
+    .await?;
+    let error = client
+        .get_native_balance(Address::parse(ADDRESS)?, None)
+        .await
+        .unwrap_err();
+    assert_eq!(error, Error::Provider(ProviderError::InvalidResponse));
+    for rendered in [
+        error.to_string(),
+        format!("{error:?}"),
+        serde_json::to_string(&error)?,
+    ] {
+        assert!(!rendered.contains("fixture-body-token"));
+        assert!(!rendered.contains("not-json"));
+    }
+    assert_eq!(fixture.requests()?.len(), 4);
     Ok(())
 }
