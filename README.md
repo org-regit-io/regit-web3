@@ -25,6 +25,27 @@ Native balances retain configured decimal precision and explicit source/block co
 
 The default feature is `evm`. Feature names identify integration boundaries; they do not imply implemented integration support.
 
+## Native balance example
+
+The [Rust example](examples/native_balance.rs) constructs typed configuration and reads through the public API. Set these example-owned environment inputs before running it:
+
+| Variable | Value |
+| --- | --- |
+| `REGIT_WEB3_RPC_URL` | HTTP(S) endpoint supporting chain/block lookup and EIP-1898 canonical hash reads |
+| `REGIT_WEB3_CHAIN_ID` | Expected chain ID as a canonical decimal integer |
+| `REGIT_WEB3_NETWORK_ALIAS` | Non-secret network label |
+| `REGIT_WEB3_ADDRESS` | `0x`-prefixed EVM address |
+| `REGIT_WEB3_NATIVE_DECIMALS` | Explicit native precision, `0`–`255` |
+| `REGIT_WEB3_NATIVE_SYMBOL` | Optional display symbol; omit when unavailable |
+| `REGIT_WEB3_PROVIDER_ID` | Non-secret source label |
+| `REGIT_WEB3_BLOCK_SELECTOR` | `latest`, `safe`, `finalized`, `number:<decimal height>` or `hash:<0x-prefixed hash>` |
+
+```sh
+cargo run --locked --example native_balance --features evm
+```
+
+Success writes one observation JSON line to stdout. Failure writes a fixed typed error to stderr and exits with status 1. Endpoint credentials and provider diagnostic text are excluded. The example sets a 5-second connection timeout, a 15-second total operation budget, a 1 MiB response limit and two additional attempts per RPC stage. Environment parsing belongs to the example; the library accepts typed configuration.
+
 ## Development
 
 Use [rustup](https://rustup.rs/) and [just](https://just.systems/), then run:
@@ -36,7 +57,7 @@ just tools
 
 | Command | Verifies |
 | --- | --- |
-| `just test` | Deterministic domain, configuration and loopback RPC behavior |
+| `just test` | Deterministic domain, configuration and loopback RPC behavior, including the executable example |
 | `just doctest` | Compiled public Rust examples |
 | `just gate` | Required precommit checks: formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
 

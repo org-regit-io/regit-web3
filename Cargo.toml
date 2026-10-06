@@ -43,6 +43,10 @@ autobins = false
 [lints]
 workspace = true
 
+[[example]]
+name = "native_balance"
+required-features = ["evm"]
+
 [dependencies]
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
