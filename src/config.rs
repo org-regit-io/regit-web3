@@ -125,7 +125,9 @@ impl fmt::Debug for RpcEndpoint {
 ///
 /// The request timeout bounds the entire operation, including retries, their
 /// delays, and response-body consumption. The connect timeout independently
-/// bounds each connection attempt within that total budget.
+/// bounds each connection attempt within that total budget. The retry count
+/// applies separately to each RPC stage; a balance operation's chain check,
+/// block lookup, and balance read share one request timeout.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RpcLimits {
     connect_timeout: Duration,
@@ -184,7 +186,9 @@ impl RpcLimits {
         self.max_response_bytes
     }
 
-    /// Returns additional safe-read attempts after the initial attempt.
+    /// Returns additional safe-read attempts after each RPC stage's initial attempt.
+    ///
+    /// All stages and their retries share the operation's request timeout.
     #[must_use]
     pub const fn max_retries(self) -> u8 {
         self.max_retries

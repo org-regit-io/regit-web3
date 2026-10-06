@@ -8,7 +8,7 @@ The library is organized around chain primitives and integrations, protocols, da
 | --- | --- | --- |
 | `domain` | Exact values, identities, assets and observations | Exact amounts and EVM native-balance records implemented |
 | `config` | Caller-supplied network and transport configuration | Validated typed EVM configuration implemented |
-| `chains` | Chain-specific operations | EVM client establishment verifies chain identity; other chains scaffolded |
+| `chains` | Chain-specific operations | EVM client and hash-pinned native balance reads implemented; other chains scaffolded |
 | `protocols` | Protocol integrations | Scaffold |
 | `providers` | Data-provider integrations | Scaffold |
 | `wallets` | Wallet contracts and connectors | Scaffold |
@@ -19,7 +19,9 @@ The library implements exact unsigned 256-bit amounts, validated EVM identities,
 
 Constructors and deserialization enforce the same domain invariants. Amounts and chain identifiers serialize as decimal strings; addresses and hashes use canonical lowercase hexadecimal.
 
-Typed EVM client establishment is implemented. It verifies `eth_chainId`; RPC requests enforce a total deadline, response-size bounds and limited retries. Native balance retrieval is pending.
+The EVM client verifies `eth_chainId` at establishment and before each native balance read. `get_native_balance` resolves the requested block, pins the balance call to its hash with EIP-1898 `requireCanonical: true`, and returns an observation. RPC requests enforce a total deadline, response-size bounds and limited retries.
+
+Native balances retain configured decimal precision and explicit source/block context. Reads leave finality `unknown` and confirmations `null`; requested block tags do not infer either.
 
 The default feature is `evm`. Feature names identify integration boundaries; they do not imply implemented integration support.
 

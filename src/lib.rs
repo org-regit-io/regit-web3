@@ -8,8 +8,9 @@
 //! Constructors and deserialization enforce the same domain invariants. The
 //! [`error`] module provides typed failures with fixed diagnostics.
 //! With the `evm` feature, explicit configuration and client establishment verify
-//! a provider's chain identity through a bounded read-only request. Balance
-//! operations and other integrations remain unimplemented.
+//! a provider's chain identity. Native-balance reads resolve a block and request
+//! exact state at its canonical hash, with bounded requests and source context.
+//! Other operations and integrations remain unimplemented.
 
 pub mod chains;
 #[cfg(feature = "evm")]

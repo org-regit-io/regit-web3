@@ -82,30 +82,39 @@ pub(super) struct Fixture {
 
 impl Fixture {
     pub(super) async fn start(replies: Vec<Reply>) -> io::Result<Self> {
+        let queued = Mutex::new(VecDeque::from(replies));
+        Self::start_routed(move |_| {
+            queued
+                .lock()
+                .map_err(|_| io::Error::other("fixture reply lock poisoned"))?
+                .pop_front()
+                .ok_or_else(|| io::Error::other("fixture received an unexpected request"))
+        })
+        .await
+    }
+
+    pub(super) async fn start_routed<F>(respond: F) -> io::Result<Self>
+    where
+        F: Fn(&Request) -> io::Result<Reply> + Send + Sync + 'static,
+    {
         let listener = TcpListener::bind("127.0.0.1:0").await?;
         let endpoint = format!("http://{}/rpc", listener.local_addr()?);
         let requests = Arc::new(Mutex::new(Vec::new()));
         let captured = Arc::clone(&requests);
-        let queued = Arc::new(Mutex::new(VecDeque::from(replies)));
+        let respond = Arc::new(respond);
         let task = tokio::spawn(async move {
             let mut connections = JoinSet::new();
             loop {
                 let (mut stream, _) = listener.accept().await?;
                 let captured = Arc::clone(&captured);
-                let queued = Arc::clone(&queued);
+                let respond = Arc::clone(&respond);
                 connections.spawn(async move {
                     let request = read_request(&mut stream).await?;
                     captured
                         .lock()
                         .map_err(|_| io::Error::other("fixture request lock poisoned"))?
                         .push(request.clone());
-                    let reply = queued
-                        .lock()
-                        .map_err(|_| io::Error::other("fixture reply lock poisoned"))?
-                        .pop_front()
-                        .ok_or_else(|| {
-                            io::Error::other("fixture received an unexpected request")
-                        })?;
+                    let reply = respond(&request)?;
                     send_reply(&mut stream, reply, &request.body["id"]).await
                 });
             }

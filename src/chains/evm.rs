@@ -1,38 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Explicit EVM client establishment with bounded, read-only chain verification.
+//! Bounded, read-only EVM operations with explicit chain and block context.
 //!
-//! Establishment checks the selected provider's `eth_chainId`. The caller owns
-//! the Tokio runtime, with I/O and time drivers enabled. HTTPS uses verified
-//! standard platform certificate trust. Proxy discovery, redirects, automatic
-//! transport retries, cookies, and response decompression are disabled.
+//! Establishment and each balance operation check the provider's `eth_chainId`.
+//! Balance reads use EIP-1898 with a captured hash and `requireCanonical: true`.
+//! These checks describe the source's responses; they do not prove atomic
+//! behavior across a routed provider or establish lasting block finality.
+//! The caller owns a Tokio runtime with I/O and time drivers enabled. HTTPS
+//! uses verified standard platform trust. Proxy discovery, redirects,
+//! automatic transport retries, cookies, and decompression are disabled.
 
-use std::{fmt, time::Duration};
+mod rpc;
 
-use reqwest::{Client, Response, StatusCode, header::CONTENT_TYPE};
-use serde::{Deserialize, Deserializer, Serialize};
-use serde_json::Value;
-use tokio::time::{Instant, sleep, timeout_at};
+use std::{
+    fmt,
+    time::{SystemTime, UNIX_EPOCH},
+};
+
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use tokio::time::{Instant, timeout_at};
 
 use crate::{
     config::EvmConfig,
-    domain::{ChainId, U256},
+    domain::{
+        Address, Amount, Balance, BlockContext, BlockHash, BlockSelector, ChainId, Observation,
+        ObservationContext, Source, Timestamp,
+    },
     error::{Error, ProviderError},
 };
 
-const REQUEST_ID: u64 = 1;
-const RETRY_DELAY: Duration = Duration::from_millis(25);
+use self::rpc::{ErrorPolicy, parse_quantity, read};
 
-/// A read-only EVM client whose expected chain was verified at establishment.
+/// A read-only EVM client with explicit configuration and verified chain identity.
 ///
 /// Construct with [`Self::connect`] inside an existing Tokio runtime with its
 /// I/O and time drivers enabled. The library creates no runtime, loads no RPC
 /// configuration or credentials, and discovers no proxy configuration.
-///
-/// The chain verification describes the provider at establishment time; it
-/// does not establish future endpoint behavior. This client currently exposes
-/// configuration and verified identity only, without a balance operation.
+/// Native balances are read only at a captured canonical block hash.
 pub struct EvmClient {
     config: EvmConfig,
     chain_id: ChainId,
@@ -51,20 +57,18 @@ impl EvmClient {
     ///
     /// # Errors
     ///
-    /// Returns fixed typed failures for absent runtime or invalid client configuration,
+    /// Returns fixed typed failures for absent runtime or invalid configuration,
     /// elapsed budgets, transfer/status failures, oversized responses, invalid
-    /// JSON-RPC envelopes or quantities, RPC errors, and a
-    /// chain ID differing from the explicitly configured identity. No failure
-    /// retains endpoint URLs, headers, or remote response messages.
+    /// JSON-RPC envelopes or quantities, RPC errors, and a chain ID differing
+    /// from the configured identity. Errors retain no endpoint URLs, headers,
+    /// or remote response messages.
     ///
     /// # Panics
     ///
     /// Tokio and its networking stack may panic when an existing runtime lacks
     /// enabled time or I/O drivers. Both drivers must be enabled by the caller.
     pub async fn connect(config: EvmConfig) -> Result<Self, Error> {
-        if tokio::runtime::Handle::try_current().is_err() {
-            return Err(Error::Configuration);
-        }
+        require_runtime()?;
         let deadline = Instant::now() + config.limits().request_timeout();
         let http = Client::builder()
             .tls_backend_rustls()
@@ -85,16 +89,68 @@ impl EvmClient {
             config,
             http,
         };
-        let chain_id = timeout_at(deadline, verify_chain(&client.http, &client.config))
+        let chain_id = timeout_at(deadline, client.verify_chain())
             .await
             .map_err(|_| Error::Timeout)??;
-        // An async timeout cannot preempt synchronous JSON decoding. The body
-        // is bounded; additionally reject any result accepted after its budget.
         if Instant::now() >= deadline {
             return Err(Error::Timeout);
         }
         client.chain_id = chain_id;
         Ok(client)
+    }
+
+    /// Reads an exact native balance at a resolved canonical block hash.
+    ///
+    /// An omitted selector uses the explicitly configured default. Each read
+    /// rechecks `eth_chainId`, resolves the selector through a block lookup,
+    /// then calls `eth_getBalance` with that hash and `requireCanonical: true`.
+    /// Balance retries retain the same address and captured hash; there is no
+    /// fallback to a height or a newer head. The returned observation preserves
+    /// the requested selector, block, configured asset precision, and source.
+    /// Retrieval time is captured from the system clock in whole Unix seconds
+    /// after the responses. Finality remains unknown and confirmations absent.
+    ///
+    /// One configured request budget covers all stages, retries, delays and
+    /// body consumption. Synchronous decoding and observation construction
+    /// cannot be preempted; bounded bodies and a final deadline check prevent
+    /// accepting late success. Each independent HTTP response must match its
+    /// request's JSON-RPC ID. Calls may execute concurrently on this client.
+    ///
+    /// The per-read chain check cannot make multiple provider responses atomic.
+    /// Canonicality is the provider's assertion when it processes the pinned
+    /// read and does not establish lasting finality. A safe/finalized selector
+    /// alone does not change the observation's finality metadata.
+    ///
+    /// # Errors
+    ///
+    /// Returns typed failures for chain mismatch, malformed or inconsistent
+    /// responses, elapsed budgets, transport/status failures and body limits.
+    /// A null block or balance is unavailable data, never a zero balance.
+    /// For block/balance RPC errors, codes `-32601`/`-32004` indicate unsupported
+    /// methods and `-32001`/`-32002` unavailable data. Other codes, including the
+    /// ambiguous `-32000` canonicality rejection, remain provider RPC failures;
+    /// remote message text is never interpreted. Missing runtime or a system
+    /// clock before the Unix epoch returns a configuration failure.
+    ///
+    /// # Panics
+    ///
+    /// Tokio and its networking stack may panic if the caller's existing
+    /// runtime lacks enabled time or I/O drivers.
+    pub async fn get_native_balance(
+        &self,
+        address: Address,
+        selector: Option<BlockSelector>,
+    ) -> Result<Observation<Balance>, Error> {
+        require_runtime()?;
+        let deadline = Instant::now() + self.config.limits().request_timeout();
+        let selector = selector.unwrap_or_else(|| self.config.default_selector());
+        let observation = timeout_at(deadline, self.native_balance(address, selector))
+            .await
+            .map_err(|_| Error::Timeout)??;
+        if Instant::now() >= deadline {
+            return Err(Error::Timeout);
+        }
+        Ok(observation)
     }
 
     /// Returns the explicit configuration, with redacted endpoint diagnostics.
@@ -103,10 +159,102 @@ impl EvmClient {
         &self.config
     }
 
-    /// Returns the exact chain ID verified against the configured expectation.
+    /// Returns the exact chain ID verified at establishment.
     #[must_use]
     pub const fn chain_id(&self) -> ChainId {
         self.chain_id
+    }
+
+    async fn verify_chain(&self) -> Result<ChainId, Error> {
+        let quantity: String = read(
+            &self.http,
+            &self.config,
+            "eth_chainId",
+            &[] as &[(); 0],
+            ErrorPolicy::ChainIdentity,
+        )
+        .await?
+        .ok_or_else(invalid_response)?;
+        let chain_id = ChainId::new(parse_quantity(&quantity)?);
+        if chain_id != self.config.network().chain_id() {
+            return Err(Error::Provider(ProviderError::ChainMismatch));
+        }
+        Ok(chain_id)
+    }
+
+    async fn resolve_block(&self, selector: BlockSelector) -> Result<BlockContext, Error> {
+        let (method, identifier) = match selector {
+            BlockSelector::Latest => ("eth_getBlockByNumber", "latest".to_owned()),
+            BlockSelector::Safe => ("eth_getBlockByNumber", "safe".to_owned()),
+            BlockSelector::Finalized => ("eth_getBlockByNumber", "finalized".to_owned()),
+            BlockSelector::Number(number) => ("eth_getBlockByNumber", format!("0x{number:x}")),
+            BlockSelector::Hash(hash) => ("eth_getBlockByHash", hash.to_string()),
+        };
+        let block: RpcBlock = read(
+            &self.http,
+            &self.config,
+            method,
+            &(identifier, false),
+            ErrorPolicy::StateRead,
+        )
+        .await?
+        .ok_or(Error::UnavailableData)?;
+        let block = block.context()?;
+        let mismatch = match selector {
+            BlockSelector::Number(number) => number != block.number(),
+            BlockSelector::Hash(hash) => hash != *block.hash(),
+            BlockSelector::Latest | BlockSelector::Safe | BlockSelector::Finalized => false,
+        };
+        if mismatch {
+            return Err(invalid_response());
+        }
+        Ok(block)
+    }
+
+    async fn native_balance(
+        &self,
+        address: Address,
+        selector: BlockSelector,
+    ) -> Result<Observation<Balance>, Error> {
+        self.verify_chain().await?;
+        let block = self.resolve_block(selector).await?;
+        let quantity: String = read(
+            &self.http,
+            &self.config,
+            "eth_getBalance",
+            &(
+                address,
+                CanonicalBlock {
+                    block_hash: *block.hash(),
+                    require_canonical: true,
+                },
+            ),
+            ErrorPolicy::StateRead,
+        )
+        .await?
+        .ok_or(Error::UnavailableData)?;
+        let amount = Amount::new(
+            parse_quantity(&quantity)?,
+            Some(self.config.native_asset().decimals()),
+        );
+        let retrieved_at = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| Timestamp::from_unix_seconds(duration.as_secs()))
+            .map_err(|_| Error::Configuration)?;
+        let source = Source::new(
+            self.config.provider_id(),
+            "eth_getBalance",
+            env!("CARGO_PKG_VERSION"),
+        )?;
+        let context = ObservationContext::new(
+            self.config.network().clone(),
+            selector,
+            block,
+            source,
+            retrieved_at,
+        )?;
+        let balance = Balance::new(address, self.config.native_asset().clone(), amount)?;
+        Observation::native_balance(balance, context)
     }
 }
 
@@ -120,181 +268,46 @@ impl fmt::Debug for EvmClient {
     }
 }
 
-async fn verify_chain(http: &Client, config: &EvmConfig) -> Result<ChainId, Error> {
-    for attempt in 0..=config.limits().max_retries() {
-        match request_chain_id(http, config).await {
-            Ok(chain_id) => {
-                if chain_id != config.network().chain_id() {
-                    return Err(Error::Provider(ProviderError::ChainMismatch));
-                }
-                return Ok(chain_id);
-            }
-            Err(failure) if failure.retry && attempt < config.limits().max_retries() => {
-                sleep(RETRY_DELAY).await;
-            }
-            Err(failure) => return Err(failure.error),
-        }
+fn require_runtime() -> Result<(), Error> {
+    if tokio::runtime::Handle::try_current().is_err() {
+        Err(Error::Configuration)
+    } else {
+        Ok(())
     }
-    // The inclusive range always makes at least one attempt.
-    Err(Error::Provider(ProviderError::Transport))
 }
 
-struct AttemptFailure {
-    error: Error,
-    retry: bool,
+const fn invalid_response() -> Error {
+    Error::Provider(ProviderError::InvalidResponse)
 }
 
-impl AttemptFailure {
-    fn terminal(error: Error) -> Self {
-        Self {
-            error,
-            retry: false,
-        }
-    }
+// Block responses include many protocol fields, including future extensions.
+// Deserialize the required anchor directly so duplicate critical fields cannot
+// be silently overwritten in an intermediate generic JSON object.
+#[derive(Deserialize)]
+struct RpcBlock {
+    hash: String,
+    number: String,
+    timestamp: String,
+}
 
-    fn transport(error: &reqwest::Error) -> Self {
-        if error.is_timeout() {
-            Self {
-                error: Error::Timeout,
-                retry: true,
-            }
-        } else {
-            Self {
-                error: Error::Provider(ProviderError::Transport),
-                retry: true,
-            }
-        }
+impl RpcBlock {
+    fn context(self) -> Result<BlockContext, Error> {
+        let hash = BlockHash::parse(&self.hash).map_err(|_| invalid_response())?;
+        let number =
+            u64::try_from(parse_quantity(&self.number)?).map_err(|_| invalid_response())?;
+        let timestamp =
+            u64::try_from(parse_quantity(&self.timestamp)?).map_err(|_| invalid_response())?;
+        Ok(BlockContext::new(
+            number,
+            hash,
+            Timestamp::from_unix_seconds(timestamp),
+        ))
     }
 }
 
 #[derive(Serialize)]
-struct ChainRequest {
-    jsonrpc: &'static str,
-    id: u64,
-    method: &'static str,
-    params: [(); 0],
-}
-
-async fn request_chain_id(http: &Client, config: &EvmConfig) -> Result<ChainId, AttemptFailure> {
-    let body = serde_json::to_vec(&ChainRequest {
-        jsonrpc: "2.0",
-        id: REQUEST_ID,
-        method: "eth_chainId",
-        params: [],
-    })
-    .map_err(|_| AttemptFailure::terminal(Error::Configuration))?;
-    let response = http
-        .post(config.endpoint().url.clone())
-        .headers(config.endpoint().headers.clone())
-        .header(CONTENT_TYPE, "application/json")
-        .body(body)
-        .send()
-        .await
-        .map_err(|error| AttemptFailure::transport(&error))?;
-    let status = response.status();
-    if !status.is_success() {
-        let error = if status == StatusCode::TOO_MANY_REQUESTS {
-            Error::Provider(ProviderError::RateLimited)
-        } else {
-            Error::Provider(ProviderError::HttpStatus)
-        };
-        return Err(AttemptFailure {
-            error,
-            retry: status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error(),
-        });
-    }
-    let bytes = bounded_body(response, config.limits().max_response_bytes()).await?;
-    decode_chain_id(&bytes).map_err(AttemptFailure::terminal)
-}
-
-async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>, AttemptFailure> {
-    if response
-        .content_length()
-        .is_some_and(|length| length > maximum as u64)
-    {
-        return Err(AttemptFailure::terminal(Error::Provider(
-            ProviderError::ResponseTooLarge,
-        )));
-    }
-    let mut body = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|error| AttemptFailure::transport(&error))?
-    {
-        if chunk.len() > maximum - body.len() {
-            return Err(AttemptFailure::terminal(Error::Provider(
-                ProviderError::ResponseTooLarge,
-            )));
-        }
-        body.extend_from_slice(&chunk);
-    }
-    Ok(body)
-}
-
-// Direct typed deserialization rejects duplicate envelope fields before any
-// intermediate Value could overwrite them. The custom presence decoder keeps
-// an explicit null result distinct from an absent result.
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RpcEnvelope {
-    jsonrpc: String,
-    id: u64,
-    #[serde(default, deserialize_with = "present")]
-    result: Option<Value>,
-    #[serde(default, deserialize_with = "present")]
-    error: Option<RpcFailure>,
-}
-
-fn present<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: Deserialize<'de>,
-{
-    T::deserialize(deserializer).map(Some)
-}
-
-#[derive(Deserialize)]
-#[serde(deny_unknown_fields)]
-struct RpcFailure {
-    code: i64,
-    message: String,
-    #[serde(default)]
-    data: Option<Value>,
-}
-
-fn decode_chain_id(bytes: &[u8]) -> Result<ChainId, Error> {
-    let invalid = || Error::Provider(ProviderError::InvalidResponse);
-    let envelope: RpcEnvelope = serde_json::from_slice(bytes).map_err(|_| invalid())?;
-    if envelope.jsonrpc != "2.0" || envelope.id != REQUEST_ID {
-        return Err(invalid());
-    }
-    match (envelope.result, envelope.error) {
-        (Some(Value::String(quantity)), None) => parse_quantity(&quantity),
-        (None, Some(failure)) => {
-            // Type-check all fields, then discard the remote message and data.
-            let RpcFailure {
-                code: _code,
-                message: _message,
-                data: _data,
-            } = failure;
-            Err(Error::Provider(ProviderError::Rpc))
-        }
-        _ => Err(invalid()),
-    }
-}
-
-fn parse_quantity(quantity: &str) -> Result<ChainId, Error> {
-    let invalid = || Error::Provider(ProviderError::InvalidResponse);
-    let digits = quantity.strip_prefix("0x").ok_or_else(invalid)?;
-    if digits.is_empty()
-        || digits.len() > 64
-        || !digits.bytes().all(|byte| byte.is_ascii_hexdigit())
-        || (digits.len() > 1 && digits.starts_with('0'))
-    {
-        return Err(invalid());
-    }
-    U256::from_str_radix(digits, 16)
-        .map(ChainId::new)
-        .map_err(|_| invalid())
+#[serde(rename_all = "camelCase")]
+struct CanonicalBlock {
+    block_hash: BlockHash,
+    require_canonical: bool,
 }

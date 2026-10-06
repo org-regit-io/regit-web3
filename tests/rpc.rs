@@ -369,7 +369,7 @@ async fn all_retry_attempts_share_one_total_deadline() -> TestResult {
     let mut first = Reply::raw(503, Vec::new());
     first.delay = Duration::from_millis(40);
     let mut second = Reply::result(&json!("0x1"))?;
-    second.delay = Duration::from_millis(150);
+    second.delay = Duration::from_millis(70);
     let fixture = Fixture::start(vec![first, second]).await?;
     let config = configured(
         RpcEndpoint::new(&fixture.endpoint)?,
