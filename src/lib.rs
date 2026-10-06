@@ -7,10 +7,12 @@
 //! native-balance observations with explicit block and source context.
 //! Constructors and deserialization enforce the same domain invariants. The
 //! [`error`] module provides typed failures with fixed diagnostics.
-//! Integrations are module shells; no network operation or wallet backend is
-//! implemented yet.
+//! With the `evm` feature, explicit configuration and client establishment verify
+//! a provider's chain identity through a bounded read-only request. Balance
+//! operations and other integrations remain unimplemented.
 
 pub mod chains;
+#[cfg(feature = "evm")]
 pub mod config;
 pub mod domain;
 pub mod error;

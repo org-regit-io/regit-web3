@@ -1,3 +1,7 @@
 Regit Web3
 Copyright (c) 2026 Regit
 An open-source project from Regit: https://www.regit.io
+
+The optional EVM transport depends on webpki-root-certs 1.0.9, which distributes
+Mozilla root certificate data under CDLA-Permissive-2.0. Its license text is
+included at LICENSES/CDLA-Permissive-2.0.txt.

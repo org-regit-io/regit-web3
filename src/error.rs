@@ -125,6 +125,14 @@ pub enum ProviderError {
     InvalidResponse,
     /// The provider rate-limited the request.
     RateLimited,
+    /// A connection or response-body transfer failed.
+    Transport,
+    /// The provider returned an unsuccessful HTTP status.
+    HttpStatus,
+    /// The response exceeded the explicitly configured byte limit.
+    ResponseTooLarge,
+    /// The provider's chain identity differs from the configured identity.
+    ChainMismatch,
 }
 
 impl fmt::Display for ProviderError {
@@ -133,6 +141,10 @@ impl fmt::Display for ProviderError {
             Self::Rpc => "provider RPC failure",
             Self::InvalidResponse => "invalid provider response",
             Self::RateLimited => "provider rate limit reached",
+            Self::Transport => "provider transport failure",
+            Self::HttpStatus => "unsuccessful provider HTTP status",
+            Self::ResponseTooLarge => "provider response exceeds byte limit",
+            Self::ChainMismatch => "provider chain identity differs from configuration",
         })
     }
 }

@@ -1,6 +1,17 @@
 # Regit Web3
 
-An open-source Rust library for Web3 primitives, developed by [Regit](https://www.regit.io).
+An open-source Rust library for reusable Web3 primitives, developed by [Regit](https://www.regit.io).
+
+The library is organized around chain primitives and integrations, protocols, data providers, and wallet contracts. EVM is the first implemented chain path.
+
+| Module | Scope | Current status |
+| --- | --- | --- |
+| `domain` | Exact values, identities, assets and observations | Exact amounts and EVM native-balance records implemented |
+| `config` | Caller-supplied network and transport configuration | Validated typed EVM configuration implemented |
+| `chains` | Chain-specific operations | EVM client establishment verifies chain identity; other chains scaffolded |
+| `protocols` | Protocol integrations | Scaffold |
+| `providers` | Data-provider integrations | Scaffold |
+| `wallets` | Wallet contracts and connectors | Scaffold |
 
 ## Status
 
@@ -8,7 +19,9 @@ The library implements exact unsigned 256-bit amounts, validated EVM identities,
 
 Constructors and deserialization enforce the same domain invariants. Amounts and chain identifiers serialize as decimal strings; addresses and hashes use canonical lowercase hexadecimal.
 
-Chain, protocol, provider, configuration, and wallet integration modules remain scaffolds. The default feature is `evm`; enabling integration features currently adds no network behavior.
+Typed EVM client establishment is implemented. It verifies `eth_chainId`; RPC requests enforce a total deadline, response-size bounds and limited retries. Native balance retrieval is pending.
+
+The default feature is `evm`. Feature names identify integration boundaries; they do not imply implemented integration support.
 
 ## Development
 
@@ -17,10 +30,15 @@ Use [rustup](https://rustup.rs/) and [just](https://just.systems/), then run:
 ```sh
 rustup show
 just tools
-just gate
 ```
 
-The gate checks formatting, strict Clippy, behavior tests, doctests, documentation, unused dependencies, and dependency policy. Nextest retains `--no-tests fail`.
+| Command | Verifies |
+| --- | --- |
+| `just test` | Deterministic domain, configuration and loopback RPC behavior |
+| `just doctest` | Compiled public Rust examples |
+| `just gate` | Required precommit checks: formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
+
+Default tests run without external providers or credentials. Live provider qualification has not been performed. Nextest retains `--no-tests fail`.
 
 `just sbom` generates a CycloneDX bill of materials in `sbom/`. GitHub workflows run only when manually dispatched.
 

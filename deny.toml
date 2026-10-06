@@ -13,7 +13,13 @@ allow = [
   "Unicode-3.0",
   "CC0-1.0",
 ]
-exceptions = []
+
+# Reviewed certificate-data license: https://cdla.dev/permissive-2-0/
+# The released license text is retained in LICENSES/CDLA-Permissive-2.0.txt.
+[[licenses.exceptions]]
+name = "webpki-root-certs"
+version = "=1.0.9"
+allow = ["CDLA-Permissive-2.0"]
 
 [bans]
 multiple-versions = "warn"
