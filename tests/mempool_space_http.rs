@@ -79,11 +79,13 @@ async fn establishment_deadline_covers_delegated_genesis_read()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture = Fixture::start(vec![Reply::delayed(
         Network::Mainnet.genesis_hash().to_string(),
-        Duration::from_millis(150),
+        Duration::from_secs(5),
     )])
     .await?;
     assert_eq!(
-        configured(&fixture, Duration::from_millis(100), 1024, 0)
+        // Include real HTTP client setup in the deadline, while allowing ample
+        // setup/scheduling time before the deliberately stalled genesis body.
+        configured(&fixture, Duration::from_secs(3), 1024, 0)
             .await
             .err(),
         Some(Error::Timeout)
@@ -402,13 +404,20 @@ async fn total_budget_covers_genesis_and_body_and_body_size_is_bounded()
         genesis(),
         Reply::delayed(
             Network::Mainnet.genesis_hash().to_string(),
-            Duration::from_millis(60),
+            Duration::from_secs(2),
         ),
-        Reply::delayed(FEES, Duration::from_millis(60)),
+        Reply::delayed(FEES, Duration::from_secs(2)),
     ])
     .await?;
-    let client = configured(&fixture, Duration::from_millis(100), 16 * 1024, 0).await?;
+    // Each two-second body fits a fresh three-second request deadline. Together
+    // they exceed the single operation deadline, after a separately completed
+    // establishment with enough room for HTTP client setup on loaded runners.
+    let client = configured(&fixture, Duration::from_secs(3), 16 * 1024, 0).await?;
     assert_eq!(client.get_recommended_fees().await, Err(Error::Timeout));
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert!(requests[1].starts_with("GET /api/block-height/0 HTTP/1.1"));
+    assert!(requests[2].starts_with("GET /api/v1/fees/recommended HTTP/1.1"));
     let fixture = Fixture::start(vec![genesis(), genesis(), Reply::ok(" ".repeat(1000))]).await?;
     let client = configured(&fixture, Duration::from_secs(2), 100, 0).await?;
     assert_eq!(
