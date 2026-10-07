@@ -21,6 +21,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`jupiter_live`](../tests/jupiter_live.rs) | `jupiter-http` | V2 quote-only selection, fresh Metis build, local canonical V0 preparation/handoff and exact-message Solana fee/simulation; explicit API/RPC/config/request/settings inputs |
 | [`uniswap_live`](../tests/uniswap_live.rs) | `uniswap-http` | V3 exact-input quotes, supplied-path comparison and local unsigned Universal Router 2.1.2 preparation; explicit EVM/deployment/path/input/call/recipient/slippage/deadline/handoff inputs |
 | [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
+| [`rubic_live`](../tests/rubic_live.rs) | `rubic-http` | API-v2 chain catalogue, direct all/best quotes, fresh unsigned EVM preparation/handoff and extended status; complete explicit public input file with no credentials |
 
 After setting the linked test's required inputs, select its feature and target:
 
@@ -442,3 +443,66 @@ the linked harness’s explicit inputs, run the four read-only methods with:
 cargo test --locked --no-default-features --features helius-http \
   --test helius_live -- --ignored --nocapture
 ```
+
+## Rubic direct API-v2 quotes and unsigned preparation
+
+`rubic` supplies the five-method `RubicReader` capability, exact family-qualified
+records and a bounded pure JSON codec for provider metadata. `rubic-http` adds
+an explicitly configured outgoing API-v2 backend. Caller-qualified aliases,
+optional provider numbers, EVM chain IDs and Solana genesis identities stay
+separate; API catalogue agreement does not attest genesis.
+
+| Method | Operation |
+| --- | --- |
+| `chains` | Complete bounded source catalogue with explicit testnet selection |
+| `quote_all` | All source-selected direct routes within caller capacities |
+| `quote_best` | Source-selected best direct quote, without a global optimality claim |
+| `prepare` | Fresh unsigned data for the selected direct route and a new immutable review |
+| `status` | `statusExtended` source progress for an explicit route ID and source transaction |
+
+[Public live inputs](../tests/fixtures/rubic/live_inputs.json) supply the API base,
+provider label, descriptive User-Agent, ETH/Polygon family catalogue, gross
+amount/slippage and direct-route filters, sender/receiver, expected router,
+caller output floor/native-value ceiling and handoff ID. The fixture contains
+no credentials or signed submission input. From the repository root:
+
+```sh
+REGIT_WEB3_RUBIC_INPUTS_JSON="$(cat tests/fixtures/rubic/live_inputs.json)" \
+  cargo test --locked --no-default-features --features rubic-http \
+    --test rubic_live -- --ignored --exact \
+    direct_v2_chains_quotes_unsigned_handoff_and_status_live --nocapture
+```
+
+The harness explicitly supplies a 2 MiB response ceiling, ten-second connect
+and sixty-second total deadlines with one safe-read retry. It paces independent
+operations by 6.2 seconds for the documented public keyless access; this is
+harness policy, with no hidden backend pacing or quota guarantee. The configured
+User-Agent is explicit; the backend does not add a source-specific header.
+
+On 2026-10-07 the native Mac Rust replay passed all five methods and six typed
+observation/handoff roundtrips: 101 catalogue rows, five direct routes and an
+unsigned Squid route from native ETH to native POL. Quoted output/minimum were
+`250563173209872053350` / `248057541477773332817` destination base units;
+fresh preparation reported `250552520982339526027` /
+`248046995772516130767`. Original, fresh and caller-selected floor values remain
+separate. The supplied unrelated public transaction hash returned `NotFound`;
+this qualifies that status lookup, without an executed-transfer or destination
+success claim. The current 35 pure/loopback fixtures include Solana preparation;
+Solana source-build live qualification remains unproved.
+
+Supported preparation retains exact EVM router/value/calldata fields or a
+maintained canonical zero-signature Solana transaction, with explicit accounts,
+router/spender or required-signer constraints. The native-value ceiling checks
+EVM call value; Solana native spending requires independent instruction review.
+EVM nonce/fees and Solana
+last-valid height are not supplied by these payloads. Calldata/instruction
+semantics require independent review. Source gross, fee-adjusted and leg amounts
+need not agree, missing fresh token metadata stays unavailable, and source-expanded
+integrators/filters remain source facts. No expiry, atomic snapshot or consensus
+finality is invented. Deposit/private orders, approval, signing, relay and
+execution are outside this direct preparation; no funded write was performed.
+
+All collections fail whole on excess: at most 512 chains and 128 routes,
+legs per route, tokens per leg and warnings per route, with caller-selected lower
+capacities. The [fixture reference](../tests/fixtures/rubic/README.md) records primary
+contracts, source captures and exact metadata/encoding limits.

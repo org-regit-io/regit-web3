@@ -212,7 +212,8 @@ uniswap-http = ["uniswap", "evm-http"]
 oneinch = ["evm"]
 lifi = ["dep:bs58", "dep:base64", "dep:bitcoin"]
 lifi-http = ["lifi", "http"]
-rubic = []
+rubic = ["evm", "solana", "dep:base64", "dep:serde_json"]
+rubic-http = ["rubic", "http"]
 
 coingecko = []
 coingecko-http = ["coingecko", "http"]
@@ -253,6 +254,7 @@ all = [
   "lifi",
   "lifi-http",
   "rubic",
+  "rubic-http",
   "coingecko",
   "coingecko-http",
   "defillama",

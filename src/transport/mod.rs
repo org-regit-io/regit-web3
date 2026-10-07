@@ -21,6 +21,7 @@ mod budget;
         feature = "lifi-http",
         feature = "ton-http",
         feature = "helius-http",
+        feature = "rubic-http",
         test
     )
 ))]
@@ -46,6 +47,7 @@ pub(crate) use budget::OperationBudget;
         feature = "lifi-http",
         feature = "ton-http",
         feature = "helius-http",
+        feature = "rubic-http",
         test
     )
 ))]

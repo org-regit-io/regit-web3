@@ -40,11 +40,13 @@ pub mod jupiter;
 pub mod lifi;
 #[cfg(feature = "litecoin")]
 pub mod litecoin;
-#[cfg(any(feature = "coingecko", feature = "defillama"))]
+#[cfg(any(feature = "coingecko", feature = "defillama", feature = "rubic"))]
 pub mod market;
 #[cfg(feature = "mempool-space")]
 pub mod mempool_space;
 mod observation;
+#[cfg(feature = "rubic")]
+pub mod rubic;
 #[cfg(feature = "solana")]
 pub mod solana;
 #[cfg(feature = "thorchain")]

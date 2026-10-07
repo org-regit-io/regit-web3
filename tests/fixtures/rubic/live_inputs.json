@@ -1,0 +1,110 @@
+{
+  "api_url": "https://api-v2.rubic.exchange/api",
+  "provider_id": "rubic-api-v2",
+  "user_agent": "regit-web3/0.1.0",
+  "catalogue": [
+    {
+      "alias": "ETH",
+      "provider_id": 1,
+      "family": {
+        "family": "evm",
+        "chain_id": "1"
+      },
+      "testnet": false
+    },
+    {
+      "alias": "POLYGON",
+      "provider_id": 137,
+      "family": {
+        "family": "evm",
+        "chain_id": "137"
+      },
+      "testnet": false
+    }
+  ],
+  "limits": {
+    "chains": 512,
+    "routes": 128,
+    "legs": 128,
+    "path_tokens": 128,
+    "warnings": 128
+  },
+  "quote_request": {
+    "source": {
+      "chain": {
+        "alias": "ETH",
+        "provider_id": 1,
+        "family": {
+          "family": "evm",
+          "chain_id": "1"
+        },
+        "testnet": false
+      },
+      "identifier": {
+        "kind": "native"
+      },
+      "decimals": 18
+    },
+    "destination": {
+      "chain": {
+        "alias": "POLYGON",
+        "provider_id": 137,
+        "family": {
+          "family": "evm",
+          "chain_id": "137"
+        },
+        "testnet": false
+      },
+      "identifier": {
+        "kind": "native"
+      },
+      "decimals": 18
+    },
+    "amount": {
+      "raw": "10000000000000000",
+      "decimals": 18,
+      "formatted": "0.010000000000000000"
+    },
+    "slippage": 100,
+    "calculation_timeout": 20,
+    "referrer": "regit-web3",
+    "excluded_providers": [],
+    "preferred_provider": null,
+    "allow_dangerous_routes": false,
+    "skip_fee_providers": false,
+    "sender": null,
+    "receiver": null,
+    "integrator": null,
+    "limits": {
+      "chains": 512,
+      "routes": 128,
+      "legs": 128,
+      "path_tokens": 128,
+      "warnings": 128
+    }
+  },
+  "sender": {
+    "family": "evm",
+    "address": "0xb72de277a58577c955b0c52acd8fd2a7cfdafd17"
+  },
+  "receiver": {
+    "family": "evm",
+    "address": "0xb72de277a58577c955b0c52acd8fd2a7cfdafd17"
+  },
+  "minimum_output": {
+    "raw": "1",
+    "decimals": 18,
+    "formatted": "0.000000000000000001"
+  },
+  "maximum_native_value": {
+    "raw": "20000000000000000",
+    "decimals": 18,
+    "formatted": "0.020000000000000000"
+  },
+  "expected_evm_router": "0x3335733c454805df6a77f825f266e136fb4a3333",
+  "source_transaction": {
+    "family": "evm",
+    "id": "0x6a851726e31e207dcea611424c194fb3ce132404598646b6903ee43fe8930e95"
+  },
+  "handoff_id": "rubic-public-read-v2"
+}

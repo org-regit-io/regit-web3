@@ -150,6 +150,15 @@
 //! unsigned transaction fields and typed wallet handoff without signing or
 //! submission. V3 quote/comparison have representative live proof; deployment
 //! declarations are caller-verified and no global route discovery is implied.
+//! Rubic supplies the direct API-v2 chain catalogue, all/best quotes, fresh unsigned
+//! preparation and extended source status. Pure contracts retain caller-qualified
+//! families, exact amounts/fees and bounded JSON source metadata; `rubic-http`
+//! selects a separate outgoing backend. Original selections and explicit caller
+//! constraints remain beside recalculated estimates and EVM/Solana payloads.
+//! Structural checks do not establish calldata/instruction intent, genesis,
+//! expiry or finality. Five operations and EVM review/handoff have representative
+//! native Mac live proof; the supplied unrelated public hash returned `NotFound`.
+//! Solana preparation has fixture proof. Direct preparation does not execute.
 //! The [`wallets`] module supplies generic typed preparation, read-only review and
 //! external handoff. Caller-generated IDs and exact snapshots are correlated
 //! before a trusted caller-supplied verifier checks actual signed-content binding.
@@ -157,7 +166,8 @@
 //! `evm` feature supplies canonical transaction preparation; the `xrpl` feature
 //! supplies an ordinary Payment JSON adapter; `uniswap` supplies an unsigned
 //! router-field adapter; `solana` supplies a canonical-message adapter; `ton`
-//! supplies an internal-message adapter. Concrete cryptographic
+//! supplies an internal-message adapter; `rubic` composes direct EVM/Solana
+//! preparation with generic review/handoff. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
 //! other protocol operations remain pending.
@@ -212,6 +222,7 @@ pub mod providers;
             feature = "lifi-http",
             feature = "ton-http",
             feature = "helius-http",
+            feature = "rubic-http",
             test
         )
     )

@@ -312,6 +312,16 @@ validation_errors! {
     InvalidHeliusAsset => "invalid Helius asset",
     /// A Helius transaction violates its bounded typed contract.
     InvalidHeliusTransaction => "invalid Helius transaction",
+    /// A Rubic identity violates its bounded typed contract.
+    InvalidRubicIdentity => "invalid Rubic identity",
+    /// A Rubic request violates its bounded typed contract.
+    InvalidRubicRequest => "invalid Rubic request",
+    /// A Rubic quote violates its bounded typed contract.
+    InvalidRubicQuote => "invalid Rubic quote",
+    /// A Rubic preparation violates its bounded typed contract.
+    InvalidRubicPreparation => "invalid Rubic preparation",
+    /// A Rubic status violates its bounded typed contract.
+    InvalidRubicStatus => "invalid Rubic status",
     /// A LI.FI identity violates its qualified encoding contract.
     InvalidLifiIdentity => "invalid LI.FI identity",
     /// A LI.FI request or source record violates its typed contract.

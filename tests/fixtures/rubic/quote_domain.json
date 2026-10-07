@@ -1,0 +1,282 @@
+{
+  "request": {
+    "source": {
+      "chain": {
+        "alias": "ETH",
+        "provider_id": 1,
+        "family": {
+          "family": "evm",
+          "chain_id": "1"
+        },
+        "testnet": false
+      },
+      "identifier": {
+        "kind": "native"
+      },
+      "decimals": 18
+    },
+    "destination": {
+      "chain": {
+        "alias": "POLYGON",
+        "provider_id": 137,
+        "family": {
+          "family": "evm",
+          "chain_id": "137"
+        },
+        "testnet": false
+      },
+      "identifier": {
+        "kind": "native"
+      },
+      "decimals": 18
+    },
+    "amount": {
+      "raw": "10000000000000000",
+      "decimals": 18,
+      "formatted": "0.010000000000000000"
+    },
+    "slippage": 100,
+    "calculation_timeout": 20,
+    "referrer": "regit-web3",
+    "excluded_providers": [],
+    "preferred_provider": null,
+    "allow_dangerous_routes": false,
+    "skip_fee_providers": false,
+    "sender": null,
+    "receiver": null,
+    "integrator": null,
+    "limits": {
+      "chains": 512,
+      "routes": 128,
+      "legs": 128,
+      "path_tokens": 128,
+      "warnings": 128
+    }
+  },
+  "id": "d8d6599f-56c0-4e17-9b2e-6f8320ee0588",
+  "input": {
+    "token": {
+      "asset": {
+        "chain": {
+          "alias": "ETH",
+          "provider_id": 1,
+          "family": {
+            "family": "evm",
+            "chain_id": "1"
+          },
+          "testnet": false
+        },
+        "identifier": {
+          "kind": "native"
+        },
+        "decimals": 18
+      },
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "price_usd": "2608.94"
+    },
+    "amount": {
+      "raw": "9960000000000000",
+      "decimals": 18,
+      "formatted": "0.009960000000000000"
+    }
+  },
+  "destination": {
+    "asset": {
+      "chain": {
+        "alias": "POLYGON",
+        "provider_id": 137,
+        "family": {
+          "family": "evm",
+          "chain_id": "137"
+        },
+        "testnet": false
+      },
+      "identifier": {
+        "kind": "native"
+      },
+      "decimals": 18
+    },
+    "symbol": "MATIC",
+    "name": "Matic Network",
+    "price_usd": "0.103158"
+  },
+  "provider": "lifi",
+  "kind": "cross-chain",
+  "estimate": {
+    "output": {
+      "raw": "251507041920000000000",
+      "decimals": 18,
+      "formatted": "251.507041920000000000"
+    },
+    "minimum_output": {
+      "raw": "248991971500800000000",
+      "decimals": 18,
+      "formatted": "248.991971500800000000"
+    },
+    "output_usd": "25.94",
+    "minimum_output_usd": "25.69",
+    "duration_minutes": "4",
+    "slippage_fraction": "0.01",
+    "price_impact": "0.15",
+    "intermediate_raw": {
+      "raw": "0",
+      "decimals": null,
+      "formatted": null
+    }
+  },
+  "fees": {
+    "native_token": {
+      "asset": {
+        "chain": {
+          "alias": "ETH",
+          "provider_id": 1,
+          "family": {
+            "family": "evm",
+            "chain_id": "1"
+          },
+          "testnet": false
+        },
+        "identifier": {
+          "kind": "native"
+        },
+        "decimals": 18
+      },
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "price_usd": "2608.94"
+    },
+    "gas": {
+      "gas_limit": {
+        "raw": "279192",
+        "decimals": null,
+        "formatted": null
+      },
+      "gas_price": null,
+      "base_fee": {
+        "raw": "128570112",
+        "decimals": null,
+        "formatted": null
+      },
+      "max_fee_per_gas": {
+        "raw": "159331084",
+        "decimals": null,
+        "formatted": null
+      },
+      "max_priority_fee_per_gas": {
+        "raw": "5046950",
+        "decimals": null,
+        "formatted": null
+      },
+      "total": {
+        "raw": "44483964004128",
+        "decimals": 18,
+        "formatted": "0.000044483964004128"
+      },
+      "total_usd": "0.12"
+    },
+    "percent": "0.4",
+    "percent_token": {
+      "asset": {
+        "chain": {
+          "alias": "ETH",
+          "provider_id": 1,
+          "family": {
+            "family": "evm",
+            "chain_id": "1"
+          },
+          "testnet": false
+        },
+        "identifier": {
+          "kind": "native"
+        },
+        "decimals": 18
+      },
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "price_usd": "2608.94"
+    },
+    "protocol": {
+      "amount": {
+        "raw": "0",
+        "decimals": 18,
+        "formatted": "0.000000000000000000"
+      },
+      "usd": "0"
+    },
+    "provider": {
+      "amount": {
+        "raw": "0",
+        "decimals": 18,
+        "formatted": "0.000000000000000000"
+      },
+      "usd": "0"
+    }
+  },
+  "legs": [
+    {
+      "kind": "cross-chain",
+      "provider": "lifi",
+      "path": [
+        {
+          "token": {
+            "asset": {
+              "chain": {
+                "alias": "ETH",
+                "provider_id": 1,
+                "family": {
+                  "family": "evm",
+                  "chain_id": "1"
+                },
+                "testnet": false
+              },
+              "identifier": {
+                "kind": "native"
+              },
+              "decimals": 18
+            },
+            "symbol": "ETH",
+            "name": "Ethereum",
+            "price_usd": "2608.94"
+          },
+          "amount": {
+            "raw": "9958008000000000",
+            "decimals": 18,
+            "formatted": "0.009958008000000000"
+          }
+        },
+        {
+          "token": {
+            "asset": {
+              "chain": {
+                "alias": "POLYGON",
+                "provider_id": 137,
+                "family": {
+                  "family": "evm",
+                  "chain_id": "137"
+                },
+                "testnet": false
+              },
+              "identifier": {
+                "kind": "native"
+              },
+              "decimals": 18
+            },
+            "symbol": "MATIC",
+            "name": "Matic Network",
+            "price_usd": "0.1"
+          },
+          "amount": {
+            "raw": "251507041920000000000",
+            "decimals": 18,
+            "formatted": "251.507041920000000000"
+          }
+        }
+      ]
+    }
+  ],
+  "warnings": [],
+  "use_rubic_contract": true,
+  "approval_address": "0x3335733c454805df6a77f825f266e136fb4a3333",
+  "permit2_address": null
+}
