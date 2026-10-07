@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize, Serializer, ser::SerializeStruct};
 
 use crate::error::{Error, ValidationError};
 
+use super::{ArithmeticError, ExactDecimal, RoundingMode};
+
 /// An exact nonnegative base-unit amount with optional decimal precision.
 ///
 /// The raw value is an unsigned 256-bit integer. Decimal precision does not
@@ -79,6 +81,131 @@ impl Amount {
             return Some(format!("{}.{}", &digits[..split], &digits[split..]));
         }
         Some(format!("0.{}{digits}", "0".repeat(decimals - digits.len())))
+    }
+
+    /// Adds base units while retaining explicitly known equal precision.
+    ///
+    /// This numeric operation does not establish that the amounts identify the
+    /// same asset. Callers must establish asset identity separately.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::UnknownPrecision`] for either unknown precision,
+    /// [`ArithmeticError::PrecisionMismatch`] for different declared precision,
+    /// or [`ArithmeticError::Overflow`] for an unsigned 256-bit overflow.
+    pub fn checked_add(self, other: Self) -> Result<Self, ArithmeticError> {
+        let decimals = self.shared_precision(other)?;
+        let raw = self
+            .raw
+            .checked_add(other.raw)
+            .ok_or(ArithmeticError::Overflow)?;
+        Ok(Self::new(raw, Some(decimals)))
+    }
+
+    /// Subtracts base units while retaining explicitly known equal precision.
+    ///
+    /// This numeric operation does not establish asset identity.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::UnknownPrecision`] for either unknown precision,
+    /// [`ArithmeticError::PrecisionMismatch`] for different declared precision,
+    /// or [`ArithmeticError::Underflow`] for a negative unsigned result.
+    pub fn checked_sub(self, other: Self) -> Result<Self, ArithmeticError> {
+        let decimals = self.shared_precision(other)?;
+        let raw = self
+            .raw
+            .checked_sub(other.raw)
+            .ok_or(ArithmeticError::Underflow)?;
+        Ok(Self::new(raw, Some(decimals)))
+    }
+
+    /// Multiplies base units by a dimensionless unsigned integer scalar.
+    ///
+    /// The declared precision is preserved. This does not multiply two asset
+    /// amounts or infer the units of an exchange rate.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::UnknownPrecision`] without declared precision
+    /// or [`ArithmeticError::Overflow`] for an unsigned 256-bit overflow.
+    pub fn checked_mul(self, scalar: U256) -> Result<Self, ArithmeticError> {
+        let decimals = self.decimals.ok_or(ArithmeticError::UnknownPrecision)?;
+        let raw = self
+            .raw
+            .checked_mul(scalar)
+            .ok_or(ArithmeticError::Overflow)?;
+        Ok(Self::new(raw, Some(decimals)))
+    }
+
+    /// Converts base units to their exact decimal numeric value.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::UnknownPrecision`] without declared precision.
+    /// The bounded uint256 value and u8 precision fit the decimal resource limits.
+    pub fn to_exact_decimal(self) -> Result<ExactDecimal, ArithmeticError> {
+        ExactDecimal::from_amount(self)
+    }
+
+    /// Converts an exact nonnegative decimal to base units at explicit precision.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::NegativeAmount`] for negative values,
+    /// [`ArithmeticError::Inexact`] for fractional base units, or
+    /// [`ArithmeticError::Overflow`] for an unsigned 256-bit overflow.
+    pub fn from_exact_decimal(value: &ExactDecimal, decimals: u8) -> Result<Self, ArithmeticError> {
+        Self::from_exact_decimal_rounded(value, decimals, RoundingMode::RejectInexact)
+    }
+
+    /// Converts a decimal to base units with explicit precision and rounding.
+    ///
+    /// Negative inputs are rejected before rounding, including values that would
+    /// otherwise round to zero. No rounding rule or precision is inferred.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::NegativeAmount`] for negative inputs,
+    /// [`ArithmeticError::Inexact`] when the selected rule rejects rounding, or
+    /// [`ArithmeticError::Overflow`] for an unsigned 256-bit overflow.
+    pub fn from_exact_decimal_rounded(
+        value: &ExactDecimal,
+        decimals: u8,
+        rounding: RoundingMode,
+    ) -> Result<Self, ArithmeticError> {
+        Ok(Self::new(
+            value.to_base_units(decimals, rounding)?,
+            Some(decimals),
+        ))
+    }
+
+    /// Changes declared precision while preserving the numeric value or rounding
+    /// according to the explicitly supplied rule.
+    ///
+    /// The raw base-unit integer changes with precision. Use
+    /// [`RoundingMode::RejectInexact`] to require exact preservation.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::UnknownPrecision`] without declared precision,
+    /// [`ArithmeticError::Inexact`] when the selected rule rejects rounding, or
+    /// [`ArithmeticError::Overflow`] if the new base units exceed uint256.
+    pub fn checked_rescale(
+        self,
+        decimals: u8,
+        rounding: RoundingMode,
+    ) -> Result<Self, ArithmeticError> {
+        Self::from_exact_decimal_rounded(&self.to_exact_decimal()?, decimals, rounding)
+    }
+
+    fn shared_precision(self, other: Self) -> Result<u8, ArithmeticError> {
+        let decimals = self.decimals.ok_or(ArithmeticError::UnknownPrecision)?;
+        let other_decimals = other.decimals.ok_or(ArithmeticError::UnknownPrecision)?;
+        if decimals != other_decimals {
+            return Err(ArithmeticError::PrecisionMismatch);
+        }
+        Ok(decimals)
     }
 }
 

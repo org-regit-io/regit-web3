@@ -1,8 +1,20 @@
 # Catalogue
 
-[Overview](../README.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
+[Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
 All twenty modules provide the operations described below. Qualification remains specific to recorded operations and providers; authenticated 1inch live data and current Linux/Windows qualification remain pending.
+
+## Shared primitives
+
+These core APIs require no optional features and compose with the catalogue:
+
+| API | Operations |
+| --- | --- |
+| `Amount`, `ExactDecimal` | Checked exact arithmetic, explicit rounding and decimal/base-unit conversion |
+| `domain::asset_binding` | Bounded caller-declared full-asset-key mappings to provider-scoped market listings, with source/time and exact lookup |
+| `domain::collections` | Bounded ordered typed outcomes, unique keys, exact lookup and supplied success/failure counts |
+
+Examples and contracts are in the [primitive guide](primitives.md). Family-specific keys and observations select their own capability feature.
 
 ## Chains
 

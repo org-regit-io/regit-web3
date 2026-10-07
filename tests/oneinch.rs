@@ -4,7 +4,7 @@
 //! Runtime-independent Classic Swap v6.1 identity, graph and immutable review invariants.
 #![cfg(test)]
 #![cfg(feature = "oneinch")]
-#[path = "fixtures/oneinch/support.rs"]
+#[path = "support/oneinch.rs"]
 mod fixture;
 use fixture::{
     DST, SRC, asset, context, graph, network, prepared, quote, request, settings, spender,

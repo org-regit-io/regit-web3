@@ -1,6 +1,6 @@
 # Features and targets
 
-[Overview](../README.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
+[Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
 Default features are empty. Pure capabilities use standard Rust futures and do not select an HTTP client or asynchronous runtime. Concrete implementations enable their own dependencies explicitly.
 
@@ -8,7 +8,7 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 
 | Feature | API / composition |
 | --- | --- |
-| No features | Shared exact values, typed errors and generic wallet preparation/review/handoff; no networking dependencies |
+| No features | Shared exact values and checked arithmetic, core market identifiers/records, explicit asset bindings, bounded observation collections, typed errors and generic wallet preparation/review/handoff; no networking dependencies |
 | `evm` | Pure native/ERC-20/transaction, `FeeReader`, `ExecutionReader` and separate `EvmSubmitter` capabilities; exact preparation and bounded signed-envelope types |
 | `litecoin`, `dogecoin` | Distinct family address/genesis/unit contracts and five-method reader capabilities |
 | `bitcoin-cash` | Pure CashAddr/legacy address, network/fork/header identities, exact CashToken/source records and six-method `BitcoinCashReader` |
@@ -73,8 +73,13 @@ Private implementation roles remain separate:
 
 | Location | Responsibility |
 | --- | --- |
-| `src/domain/` | Exact values, family identities and validated records |
+| `src/domain/mod.rs` and `src/domain/` | Public domain composition; exact values/arithmetic, asset bindings, observation collections and family identities/records |
+| `src/config/mod.rs`, `src/config/http.rs`, `src/config/limits.rs`, `src/config/evm.rs` | Configuration composition; shared HTTP endpoints, transport limits and separate EVM configuration |
 | Chain/provider capability modules | Runtime-independent typed operation contracts |
 | Backend modules, such as `src/chains/solana/http.rs` | Network calls, operation stages and source attribution |
 | Integration `wire.rs` modules | Typed remote request/result fields and integration-specific validation |
-| `src/transport/http.rs`, `src/transport/http/`, `src/transport/budget.rs`, `src/transport/clock.rs`, `src/transport/rpc.rs` | Shared HTTP orchestration plus native/browser exchanges; operation deadlines and target clocks; pure JSON-RPC encoding/decoding |
+| `src/transport/http.rs`, `src/transport/http/{native,browser}.rs` | Shared HTTP policy and separate native/browser exchanges |
+| `src/transport/{budget,clock,rpc}.rs` | Operation deadlines, target clocks and pure JSON-RPC encoding/decoding |
+| `src/transport/http/{tests,write_tests}.rs`, `tests/wasm_http.rs` | Native shared-transport fixtures and actual browser HTTP/RPC behavior |
+
+The [primitive guide](primitives.md) shows default-core arithmetic and explicitly selected Solana composition without a backend.

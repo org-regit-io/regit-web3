@@ -278,7 +278,6 @@ impl AttemptFailure {
 }
 
 #[cfg(all(test, not(all(target_arch = "wasm32", target_os = "unknown"))))]
-#[path = "tests.rs"]
 mod tests;
 
 #[cfg(all(
@@ -292,5 +291,4 @@ mod tests;
         feature = "blockfrost-http"
     )
 ))]
-#[path = "write_tests.rs"]
 mod write_tests;

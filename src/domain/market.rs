@@ -303,6 +303,7 @@ impl<T> Observation<T> {
     }
 }
 
+#[cfg(any(feature = "coingecko", feature = "defillama", feature = "rubic"))]
 pub(crate) fn unique<T: Ord>(items: impl IntoIterator<Item = T>) -> bool {
     let mut seen = std::collections::BTreeSet::new();
     items.into_iter().all(|item| seen.insert(item))

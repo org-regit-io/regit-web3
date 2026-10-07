@@ -1,6 +1,6 @@
 # Development and verification
 
-[Overview](../README.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
+[Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
 Use [rustup](https://rustup.rs/) and [just](https://just.systems/), then run:
 
@@ -12,7 +12,7 @@ just tools
 | Command | Verifies |
 | --- | --- |
 | `just test` | Meaningful domain/capability and deterministic HTTP/RPC fixture behavior, including the executable example |
-| `just doctest` | Compiled public Rust examples |
+| `just doctest` | Rustdoc examples in the public API documentation |
 | `just gate` | Native formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
 | `just wasm-tools` | Install the WASM target, LLVM tools and pinned matching wasm-bindgen runner |
 | `just wasm-test-node` | Execute the existing pure catalogue/value/encoding/preparation assertions as WASM in Node |
@@ -22,6 +22,15 @@ just tools
 WASM tests require Node 19+ and Chrome with a compatible ChromeDriver on `PATH` or selected by `CHROMEDRIVER`. The runner can be selected with `CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER`; its version must match the locked wasm-bindgen crate. The Node recipe selects the toolchain's `llvm-ar` dynamically: native macOS archive tools cannot index WASM C objects used by Bitcoin. Browser fixtures replace Fetch with deterministic responses while exercising real browser requests, streams, timers and abort signals; they use fake credentials and make no provider calls.
 
 Ordinary tests require no external provider credentials. Live read qualification is explicit and opt-in. Nextest retains `--no-tests fail`. `just sbom` generates an all-feature CycloneDX bill of materials in `sbom/`. GitHub workflows run only when manually dispatched.
+
+## Focused primitive checks
+
+```sh
+cargo test --locked --no-default-features --test decimal --test amount_arithmetic
+cargo test --locked --no-default-features --features solana --test asset_binding --test observation_collections
+```
+
+These tests exercise exact arithmetic and rounding, qualified identity lookup, constructor/deserialization bounds and preservation of partial outcomes. The Node recipe also executes them as WASM. The [primitive guide](primitives.md) labels the required features for each example; its synthetic inputs require no provider credentials.
 
 ## API documentation and package review
 

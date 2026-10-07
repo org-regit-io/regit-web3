@@ -1,6 +1,6 @@
 # Qualification
 
-[Overview](../README.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
+[Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
 Qualification applies to the recorded operation, network, provider plan and query variant. Fixtures, feature compilation and live reads provide different evidence; none establish every variant or funded execution.
 
@@ -8,8 +8,9 @@ Qualification applies to the recorded operation, network, provider plan and quer
 
 | Evidence | Qualified behavior / limits |
 | --- | --- |
-| Native macOS | Strict gate passed: 713 behavior tests, 24 opt-in live tests skipped, eight doctests, formatting, Clippy, documentation and dependency policy |
-| JavaScript WASM in Node | 315 assertions across 30 pure integration targets execute exact values, family identities, encodings, preparation and typed capabilities across the catalogue |
+| Native macOS | Strict gate passed: 753 behavior tests across 85 test binaries, 24 opt-in live tests skipped, eight doctests, formatting, Clippy, documentation and dependency policy |
+| Core composition | Checked exact arithmetic/rounding, qualified EVM/Solana mapping keys and ordered partial outcomes have deterministic fixture proof. Synthetic identities and observations do not qualify remote assets, listings or prices |
+| JavaScript WASM in Node | 355 assertions across 33 pure integration targets execute exact values/arithmetic, explicit mappings, bounded collections, family identities, encodings, preparation and typed capabilities across the catalogue |
 | Browser HTTP fixtures | Twelve headless Chrome cases execute actual Request/Response, streams, timers and abort signals with deterministic Fetch fixtures. EVM RPC and typed CoinGecko GET cover bounded bodies, explicit headers/query parameters, frozen-hash retries, shared deadlines, cancellation, timer cleanup and one-shot unknown submission outcomes. Fake credentials only; no provider browser live calls |
 | Feature boundaries | All twenty pure catalogue features and nineteen HTTP backends compile for JavaScript WASM. Empty defaults and pure selections exclude HTTP/runtime dependencies. Electrum-Cash TCP/TLS remains native |
 | Wallet contracts | Generic preparation/review/external handoff and EVM/XRPL adapters have deterministic fixture proof. Returned signed content requires trusted caller-supplied verification; metadata correlation does not verify signed content |

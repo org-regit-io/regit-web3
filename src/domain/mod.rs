@@ -15,6 +15,8 @@
 //! strings.
 
 mod amount;
+mod arithmetic;
+pub mod asset_binding;
 #[cfg(feature = "bitcoin")]
 pub mod bitcoin;
 #[cfg(feature = "bitcoin-cash")]
@@ -23,6 +25,7 @@ pub mod bitcoin_cash;
 pub mod cardano;
 #[cfg(feature = "coingecko")]
 pub mod coingecko;
+pub mod collections;
 mod decimal;
 #[cfg(feature = "defillama")]
 pub mod defillama;
@@ -40,7 +43,6 @@ pub mod jupiter;
 pub mod lifi;
 #[cfg(feature = "litecoin")]
 pub mod litecoin;
-#[cfg(any(feature = "coingecko", feature = "defillama", feature = "rubic"))]
 pub mod market;
 #[cfg(feature = "mempool-space")]
 pub mod mempool_space;
@@ -61,6 +63,7 @@ pub mod uniswap;
 pub mod xrpl;
 
 pub use amount::Amount;
+pub use arithmetic::{ArithmeticError, RoundingMode};
 pub use decimal::ExactDecimal;
 pub use identity::{Address, Asset, AssetId, AssetKind, ChainId, MetadataOrigin, NetworkId};
 pub use observation::{

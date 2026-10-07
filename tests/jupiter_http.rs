@@ -6,7 +6,7 @@
 #![cfg(feature = "jupiter-http")]
 #[path = "support/rpc_server.rs"]
 mod rpc_server;
-#[path = "jupiter_support/mod.rs"]
+#[path = "support/jupiter.rs"]
 mod support;
 use regit_web3::{
     chains::solana::{SolanaClient, SolanaHttpConfig},

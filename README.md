@@ -8,11 +8,12 @@
 
 An open-source library developed by [Regit](https://www.regit.io).
 
-[Catalogue](https://github.com/org-regit-io/regit-web3/blob/main/guides/catalogue.md) · [Contracts](https://github.com/org-regit-io/regit-web3/blob/main/guides/contracts.md) · [Features](https://github.com/org-regit-io/regit-web3/blob/main/guides/features.md) · [Qualification](https://github.com/org-regit-io/regit-web3/blob/main/guides/qualification.md)
+[Primitives](https://github.com/org-regit-io/regit-web3/blob/main/guides/primitives.md) · [Catalogue](https://github.com/org-regit-io/regit-web3/blob/main/guides/catalogue.md) · [Contracts](https://github.com/org-regit-io/regit-web3/blob/main/guides/contracts.md) · [Features](https://github.com/org-regit-io/regit-web3/blob/main/guides/features.md) · [Qualification](https://github.com/org-regit-io/regit-web3/blob/main/guides/qualification.md)
 
 ## Design
 
 - Exact integer and decimal values; validation applies equally to constructors and deserialization.
+- Checked arithmetic with explicit rounding, provider-scoped asset mappings and bounded collections of typed outcomes.
 - Family-specific network and observation contracts retain actual block, slot, ledger and indexed-source semantics.
 - Pure typed capabilities, modular preparation/review/handoff and optional replaceable RPC/provider backends.
 - Empty default features. Explicit configuration, bounded responses and deadlines, fixed errors and credential-redacted diagnostics.
@@ -44,27 +45,35 @@ This registry form becomes available after publication.
 
 </details>
 
-## Exact values
+## Core primitives
 
 The core API needs no optional features or runtime:
 
 ```rust
-use regit_web3::{
-    domain::{Amount, ExactDecimal},
-    error::Error,
-};
+use regit_web3::domain::{Amount, ExactDecimal, RoundingMode};
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let amount = Amount::from_decimal("9007199254740993", Some(6))?;
     assert_eq!(amount.formatted().as_deref(), Some("9007199254.740993"));
 
     let decimal = ExactDecimal::parse("-9007199254740993.12500")?;
     assert_eq!(decimal.canonical(), "-9007199254740993.125");
+
+    let rounded = amount.to_exact_decimal()?.quantize(2, RoundingMode::HalfEven)?;
+    assert_eq!(rounded.canonical(), "9007199254.74");
     Ok(())
 }
 ```
 
-Amounts retain unsigned 256-bit base units and explicit optional precision. Signed decimals preserve their exact value; numeric amount and decimal values serialize as strings. See the [operation contracts](https://github.com/org-regit-io/regit-web3/blob/main/guides/contracts.md) for validation and bounds.
+Amounts retain unsigned 256-bit base units and explicit optional precision. Signed decimals preserve their exact value; numeric amount and decimal values serialize as strings.
+
+| Primitive | Contract |
+| --- | --- |
+| Checked arithmetic | Exact addition, subtraction, multiplication and base-unit conversion; explicit precision and rounding |
+| Asset-to-market bindings | Caller-supplied full asset keys mapped to exact provider/listing IDs, with attribution and bounded lookup |
+| Observation collections | Ordered unique keys, typed successes and failures, and unchanged family observation contexts |
+
+The [primitive guide](https://github.com/org-regit-io/regit-web3/blob/main/guides/primitives.md) provides examples and bounds. Identity validation, source attribution and [operation contracts](https://github.com/org-regit-io/regit-web3/blob/main/guides/contracts.md) remain explicit.
 
 ## Catalogue
 

@@ -1,6 +1,6 @@
 # Operation contracts
 
-[Overview](../README.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
+[Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
 Exact values and typed observations retain each family’s actual network, ledger and source semantics. Preparation, signed-content verification and submission remain separate operations.
 
@@ -9,8 +9,13 @@ Exact values and typed observations retain each family’s actual network, ledge
 | Area | Contract |
 | --- | --- |
 | Exact values | `Amount` retains unsigned 256-bit base units and explicit optional decimals; `ExactDecimal` retains bounded signed decimals. Exact numeric values serialize as strings; no floating-point transaction amounts |
+| Checked arithmetic | Exact bounded decimal addition/subtraction/multiplication; explicit quantization and base-unit conversion. Amount arithmetic requires known precision, and addition/subtraction require equal precision. Callers establish asset identity, units and price policy separately |
+| Asset-to-market bindings | Immutable caller-declared relationships between fully qualified asset keys and exact provider/listing IDs, with mapping source/time. Capacity 1–1,024; duplicate or conflicting asset/provider pairs fail. Lookup uses exact keys and provider namespaces; construction does not verify identity, infer decimals or select prices |
+| Observation collections | Explicit item limit 1–1,024, unique caller keys and original order. Each item preserves its typed observation or fixed `Error`; supplied counts do not establish remote coverage or a shared snapshot. Each key/value type retains its own validation, context and resource bounds |
 | Validation | Constructors and deserialization enforce matching identity, precision, schema and observation invariants. Typed errors use fixed diagnostics |
 | Wallet handoff | Immutable family-specific network/intent/unsigned snapshots, bounded caller-generated IDs and read-only review. Correlation is checked before trusted signed-content verification; confirmed output has no unchecked constructor or deserialization path. Custom snapshots and verifiers must honor their documented contracts |
+
+See [core primitives](primitives.md) for executable examples, rounding rules and composition boundaries.
 
 ## Chain records and operations
 

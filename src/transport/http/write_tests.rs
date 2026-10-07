@@ -11,7 +11,7 @@ use crate::{
     error::{Error, SubmissionFailure},
 };
 
-#[path = "../../tests/support/rpc_server.rs"]
+#[path = "../../../tests/support/rpc_server.rs"]
 mod server;
 use server::{Fixture, Framing, Reply};
 

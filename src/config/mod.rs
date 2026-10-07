@@ -61,7 +61,10 @@ mod limits;
 mod http;
 
 #[cfg(feature = "evm-http")]
-pub use http::EvmConfig;
+mod evm;
+
+#[cfg(feature = "evm-http")]
+pub use evm::EvmConfig;
 #[cfg(feature = "http")]
 pub use http::{HttpConfig, RpcEndpoint};
 pub use limits::RpcLimits;

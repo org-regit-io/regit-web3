@@ -13,7 +13,7 @@ use regit_web3::{
 };
 use serde_json::json;
 use std::fmt::Write;
-#[path = "fixtures/lifi/builders.rs"]
+#[path = "support/lifi/builders.rs"]
 mod build;
 
 #[cfg_attr(

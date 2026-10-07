@@ -13,7 +13,7 @@ use regit_web3::{
 };
 use serde_json::{Value, json};
 use std::time::Duration;
-#[path = "fixtures/lifi/server.rs"]
+#[path = "support/lifi/server.rs"]
 mod server;
 use server::{Fixture, Reply};
 const QUOTE: &str = include_str!("fixtures/lifi/quote.json");

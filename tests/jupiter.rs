@@ -4,7 +4,7 @@
 //! Exact Jupiter V2 requests, fresh-build preparation and wallet boundaries.
 #![cfg(test)]
 #![cfg(feature = "jupiter")]
-#[path = "jupiter_support/mod.rs"]
+#[path = "support/jupiter.rs"]
 mod support;
 use regit_web3::{
     domain::{

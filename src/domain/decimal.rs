@@ -8,6 +8,8 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer, de::Visitor};
 
 use crate::error::{Error, ValidationError};
 
+use super::{Amount, ArithmeticError, RoundingMode, U256};
+
 /// A finite signed decimal value retained exactly, without floating point.
 ///
 /// Parsing accepts the JSON-number grammar: an optional minus sign, an integer
@@ -24,8 +26,9 @@ use crate::error::{Error, ValidationError};
 /// Input and canonical output are each limited to [`Self::MAX_TEXT_BYTES`]. The
 /// exponent and effective/normalized scale magnitudes are separately bounded.
 /// These checks precede expanded formatting, and serialized values remain valid
-/// inputs under the same limits. No arithmetic or floating-point conversion API
-/// bypasses these invariants.
+/// inputs under the same limits. Checked arithmetic retains these invariants,
+/// bounds intermediate coefficient work before expansion, and never rounds.
+/// Quantization requires an explicit caller-selected rounding rule.
 ///
 /// ```
 /// use regit_web3::domain::ExactDecimal;
@@ -42,6 +45,10 @@ use crate::error::{Error, ValidationError};
 pub struct ExactDecimal(BigDecimal);
 
 impl ExactDecimal {
+    // Addition can align two opposite scale extremes, and multiplication can
+    // combine two maximal coefficients. Include one digit for an addition carry.
+    const MAX_ARITHMETIC_DIGITS: u64 = 2 * Self::MAX_TEXT_BYTES as u64 + 1;
+
     /// Maximum input or canonical-output length in bytes, including punctuation.
     pub const MAX_TEXT_BYTES: usize = 4096;
 
@@ -98,6 +105,130 @@ impl ExactDecimal {
     #[must_use]
     pub fn is_integer(&self) -> bool {
         self.0.fractional_digit_count() <= 0
+    }
+
+    /// Adds two decimal values exactly, with no rounding.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::OutOfBounds`] if intermediate coefficient work
+    /// or the normalized result exceeds the decimal resource bounds.
+    pub fn checked_add(&self, other: &Self) -> Result<Self, ArithmeticError> {
+        self.check_alignment(other)?;
+        Self::from_arithmetic(&(&self.0 + &other.0))
+    }
+
+    /// Subtracts a decimal value exactly, including signed results.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::OutOfBounds`] if intermediate coefficient work
+    /// or the normalized result exceeds the decimal resource bounds.
+    pub fn checked_sub(&self, other: &Self) -> Result<Self, ArithmeticError> {
+        self.check_alignment(other)?;
+        Self::from_arithmetic(&(&self.0 - &other.0))
+    }
+
+    /// Multiplies two decimal values exactly, retaining every result digit.
+    ///
+    /// Intermediate coefficients are limited to twice the input text bound plus
+    /// one carry digit. Multiplication never uses a rounded decimal context.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::OutOfBounds`] if intermediate coefficient work
+    /// or the normalized result exceeds the decimal resource bounds.
+    pub fn checked_mul(&self, other: &Self) -> Result<Self, ArithmeticError> {
+        Self::check_work_digits(self.0.digits() + other.0.digits())?;
+        Self::from_arithmetic(&(&self.0 * &other.0))
+    }
+
+    /// Quantizes to a decimal scale using an explicit rounding rule.
+    ///
+    /// A scale of `2` means hundredths, `0` means integers, and `-2` means
+    /// hundreds. The result remains a normalized numeric value: this method does
+    /// not retain display padding or declare asset precision. Increasing the
+    /// scale returns the same value without allocating fractional zeros.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ArithmeticError::OutOfBounds`] when the requested scale magnitude
+    /// or normalized result exceeds this type's bounds. Returns
+    /// [`ArithmeticError::Inexact`] when [`RoundingMode::RejectInexact`] would
+    /// discard nonzero digits. Bounds are checked even when the value is zero.
+    pub fn quantize(&self, scale: i64, rounding: RoundingMode) -> Result<Self, ArithmeticError> {
+        if !(-Self::MAX_SCALE_MAGNITUDE..=Self::MAX_SCALE_MAGNITUDE).contains(&scale) {
+            return Err(ArithmeticError::OutOfBounds);
+        }
+        if self.is_zero() || scale >= self.0.fractional_digit_count() {
+            return Ok(self.clone());
+        }
+        // A normalized nonzero coefficient has no trailing zeros: lowering its
+        // scale necessarily discards a nonzero digit. Reject before any work.
+        let mode = rounding.decimal_mode().ok_or(ArithmeticError::Inexact)?;
+        Self::check_work_digits(self.0.digits() + 1)?;
+        Self::from_arithmetic(&self.0.with_scale_round(scale, mode))
+    }
+
+    pub(super) fn to_base_units(
+        &self,
+        decimals: u8,
+        rounding: RoundingMode,
+    ) -> Result<U256, ArithmeticError> {
+        if self.is_negative() {
+            return Err(ArithmeticError::NegativeAmount);
+        }
+        let scale = i64::from(decimals);
+        let rounded = self.quantize(scale, rounding)?;
+        if rounded.is_zero() {
+            return Ok(U256::ZERO);
+        }
+        let expansion = (scale - rounded.0.fractional_digit_count()).unsigned_abs();
+        // Check the uint256 text bound before scaling an integer coefficient.
+        if rounded.0.digits() + expansion > 78 {
+            return Err(ArithmeticError::Overflow);
+        }
+        let (coefficient, _) = rounded.0.with_scale(scale).into_bigint_and_exponent();
+        U256::from_str_radix(&coefficient.to_str_radix(10), 10)
+            .map_err(|_| ArithmeticError::Overflow)
+    }
+
+    pub(super) fn from_amount(amount: Amount) -> Result<Self, ArithmeticError> {
+        // A uint256 and u8 precision expand to at most 257 ASCII bytes.
+        let formatted = amount
+            .formatted()
+            .ok_or(ArithmeticError::UnknownPrecision)?;
+        Self::parse(&formatted).map_err(|_| ArithmeticError::OutOfBounds)
+    }
+
+    fn check_alignment(&self, other: &Self) -> Result<(), ArithmeticError> {
+        let scale = self
+            .0
+            .fractional_digit_count()
+            .max(other.0.fractional_digit_count());
+        for value in [self, other] {
+            let expansion = (scale - value.0.fractional_digit_count()).unsigned_abs();
+            Self::check_work_digits(value.0.digits() + expansion + 1)?;
+        }
+        Ok(())
+    }
+
+    fn check_work_digits(digits: u64) -> Result<(), ArithmeticError> {
+        if digits > Self::MAX_ARITHMETIC_DIGITS {
+            return Err(ArithmeticError::OutOfBounds);
+        }
+        Ok(())
+    }
+
+    fn from_arithmetic(value: &BigDecimal) -> Result<Self, ArithmeticError> {
+        let decimal = Self(value.normalized());
+        let scale = decimal.0.fractional_digit_count();
+        if !(-Self::MAX_SCALE_MAGNITUDE..=Self::MAX_SCALE_MAGNITUDE).contains(&scale)
+            || decimal.canonical_length() > Self::MAX_TEXT_BYTES as u64
+        {
+            return Err(ArithmeticError::OutOfBounds);
+        }
+        Ok(decimal)
     }
 
     fn validate_input(input: &str) -> Result<(), Error> {
