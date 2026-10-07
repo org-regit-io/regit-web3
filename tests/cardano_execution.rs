@@ -26,6 +26,67 @@ use serde_json::json;
 
 fn assert_send<T: Send>(_: T) {}
 
+// Independently splice the transmitted components into the ledger's three-field
+// encoding. In particular, do not re-encode their original CBOR through Pallas.
+fn principal_components(encoded: &[u8]) -> Result<[Vec<u8>; 3], Error> {
+    let mut decoder = minicbor::Decoder::new(encoded);
+    if decoder.array().map_err(|_| Error::Configuration)? != Some(4) {
+        return Err(Error::Configuration);
+    }
+    let body_start = decoder.position();
+    decoder.skip().map_err(|_| Error::Configuration)?;
+    let witness_start = decoder.position();
+    decoder.skip().map_err(|_| Error::Configuration)?;
+    let witness_end = decoder.position();
+    if !decoder.bool().map_err(|_| Error::Configuration)? {
+        return Err(Error::Configuration);
+    }
+    let auxiliary_start = decoder.position();
+    decoder.skip().map_err(|_| Error::Configuration)?;
+    if decoder.position() != encoded.len() {
+        return Err(Error::Configuration);
+    }
+    Ok([
+        encoded[body_start..witness_start].to_vec(),
+        encoded[witness_start..witness_end].to_vec(),
+        encoded[auxiliary_start..].to_vec(),
+    ])
+}
+
+fn ledger_encoding(encoded: &[u8]) -> Result<Vec<u8>, Error> {
+    let mut ledger = vec![0x83];
+    for component in principal_components(encoded)? {
+        ledger.extend(component);
+    }
+    Ok(ledger)
+}
+
+fn parameters_for_size(size: u32) -> Result<ProtocolParameters, Error> {
+    let mut parameters = support::parameters()?.data().clone();
+    parameters.max_transaction_bytes = size;
+    ProtocolParameters::new(support::network()?, parameters)
+}
+
+fn alternate_witness_framing(encoded: &[u8], indefinite: bool) -> Result<Vec<u8>, Error> {
+    let [body, witness, auxiliary] = principal_components(encoded)?;
+    if witness.first() != Some(&0xa1) {
+        return Err(Error::Configuration);
+    }
+    let mut alternate = vec![0x84];
+    alternate.extend(body);
+    if indefinite {
+        alternate.push(0xbf);
+        alternate.extend(&witness[1..]);
+        alternate.push(0xff);
+    } else {
+        alternate.extend([0xb8, 1]);
+        alternate.extend(&witness[1..]);
+    }
+    alternate.push(0xf5);
+    alternate.extend(auxiliary);
+    Ok(alternate)
+}
+
 #[test]
 fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> Result<(), Error> {
     let prep = support::preparation()?;
@@ -49,7 +110,7 @@ fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> R
     assert!(prep.estimate().minimum_fee() < 500_000);
     assert_eq!(
         prep.estimate().minimum_fee(),
-        155_381 + 44 * u64::from(prep.estimate().signed_size_bytes())
+        155_381 + 44 * u64::from(prep.estimate().ledger_size_bytes())
     );
     assert!(prep.estimate().output_minimum_lovelaces()[0] > 1_000_000);
     let reviewed = PreparedRequest::new(prep.clone())?;
@@ -58,6 +119,152 @@ fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> R
         serde_json::from_value::<PaymentPreparation>(serde_json::to_value(&prep).unwrap()).unwrap(),
         prep
     );
+    Ok(())
+}
+
+#[test]
+fn ledger_fee_and_maximum_size_use_three_fields_with_exact_boundaries() -> Result<(), Error> {
+    let initial = support::preparation()?;
+    let transmitted = support::signed_bytes(&initial, 1)?;
+    let ledger = ledger_encoding(&transmitted)?;
+    assert_eq!(ledger[0], 0x83);
+    assert_eq!(transmitted[0], 0x84);
+    assert_eq!(transmitted.len(), ledger.len() + 1);
+    let ledger_size = u32::try_from(ledger.len()).map_err(|_| Error::Configuration)?;
+    let minimum_fee = 155_381 + 44 * u64::from(ledger_size);
+    assert_eq!(initial.estimate().ledger_size_bytes(), ledger_size);
+    assert_eq!(initial.estimate().minimum_fee(), minimum_fee);
+    assert_eq!(155_381 + 44 * transmitted.len() as u64, minimum_fee + 44);
+
+    // These fee/output values retain the same widths as the original vector.
+    let preparation = PaymentPreparation::new(
+        support::intent(minimum_fee)?,
+        parameters_for_size(ledger_size)?,
+    )?;
+    let bytes = support::signed_bytes(&preparation, 1)?;
+    assert_eq!(ledger_encoding(&bytes)?.len(), ledger.len());
+    assert_eq!(preparation.estimate().minimum_fee(), minimum_fee);
+    let signed = SignedSubmission::new(preparation, TransactionCbor::from_bytes(bytes)?)?;
+    assert_eq!(signed.transaction().body_fee(), Some(minimum_fee));
+    // Full transmitted size is deliberately above the ledger maximum by one.
+    assert_eq!(signed.transaction().bytes().len(), ledger.len() + 1);
+    assert!(
+        PaymentPreparation::new(
+            support::intent(minimum_fee - 1)?,
+            parameters_for_size(ledger_size)?
+        )
+        .is_err()
+    );
+    assert!(
+        PaymentPreparation::new(
+            support::intent(minimum_fee)?,
+            parameters_for_size(ledger_size - 1)?
+        )
+        .is_err()
+    );
+    let estimate = signed.preparation().estimate();
+    for field in ["signed_size_bytes", "ledger_size_bytes"] {
+        let mut forged = serde_json::to_value(estimate).unwrap();
+        forged[field] = json!(forged[field].as_u64().unwrap() + 1);
+        assert!(serde_json::from_value::<PaymentEstimate>(forged).is_err());
+    }
+    Ok(())
+}
+
+#[test]
+fn signed_ledger_size_retains_original_nonminimal_and_indefinite_witness_framing()
+-> Result<(), Error> {
+    let initial = support::preparation()?;
+    let bytes = support::signed_bytes(&initial, 1)?;
+    let canonical_size =
+        u32::try_from(ledger_encoding(&bytes)?.len()).map_err(|_| Error::Configuration)?;
+    let actual_size = canonical_size + 1;
+    let actual_fee = 155_381 + 44 * u64::from(actual_size);
+    for indefinite in [false, true] {
+        let preparation = PaymentPreparation::new(
+            support::intent(actual_fee)?,
+            parameters_for_size(actual_size)?,
+        )?;
+        let original = support::signed_bytes(&preparation, 1)?;
+        let alternate = alternate_witness_framing(&original, indefinite)?;
+        assert_eq!(alternate.len(), original.len() + 1);
+        assert_eq!(ledger_encoding(&alternate)?.len(), actual_size as usize);
+        let transaction = TransactionCbor::from_bytes(alternate.clone())?;
+        assert_eq!(transaction.bytes(), &alternate);
+        assert_eq!(
+            transaction.body_bytes(),
+            preparation.unsigned_payload().body_bytes()
+        );
+        assert_eq!(transaction.transaction_id(), preparation.transaction_id());
+        let signed = SignedSubmission::new(preparation, transaction)?;
+        assert_eq!(
+            serde_json::from_value::<SignedSubmission>(serde_json::to_value(&signed).unwrap())
+                .unwrap(),
+            signed
+        );
+
+        let too_small = PaymentPreparation::new(
+            support::intent(actual_fee)?,
+            parameters_for_size(canonical_size)?,
+        )?;
+        let bytes = alternate_witness_framing(&support::signed_bytes(&too_small, 1)?, indefinite)?;
+        assert!(SignedSubmission::new(too_small, TransactionCbor::from_bytes(bytes)?).is_err());
+
+        // Placeholder witnesses fit and the fee exceeds the placeholder minimum,
+        // but the exact original witness encoding needs one extra byte's fee.
+        let underpaid = PaymentPreparation::new(
+            support::intent(actual_fee - 1)?,
+            parameters_for_size(actual_size)?,
+        )?;
+        let bytes = alternate_witness_framing(&support::signed_bytes(&underpaid, 1)?, indefinite)?;
+        assert!(SignedSubmission::new(underpaid, TransactionCbor::from_bytes(bytes)?).is_err());
+    }
+
+    // The ledger's outer wrapper is canonical even if the transmitted wrapper
+    // itself uses a nonminimal length encoding; principal components stay exact.
+    let preparation = PaymentPreparation::new(
+        support::intent(actual_fee - 44)?,
+        parameters_for_size(canonical_size)?,
+    )?;
+    let original = support::signed_bytes(&preparation, 1)?;
+    let mut alternate = vec![0x98, 4];
+    alternate.extend(&original[1..]);
+    assert_eq!(alternate.len(), original.len() + 1);
+    assert_eq!(ledger_encoding(&alternate)?.len(), canonical_size as usize);
+    SignedSubmission::new(preparation, TransactionCbor::from_bytes(alternate)?)?;
+    Ok(())
+}
+
+#[test]
+fn original_transmitted_cbor_has_an_independent_64_kib_resource_bound() -> Result<(), Error> {
+    let mut encoder = minicbor::Encoder::new(Vec::new());
+    encoder
+        .array(4)
+        .and_then(|e| e.map(3))
+        .and_then(|e| e.u8(0))
+        .and_then(|e| e.array(0))
+        .and_then(|e| e.u8(1))
+        .and_then(|e| e.array(0))
+        .and_then(|e| e.u8(2))
+        .and_then(|e| e.u8(0))
+        .and_then(|e| e.map(1))
+        .and_then(|e| e.u8(0))
+        .and_then(|e| e.bytes(&vec![0; TransactionCbor::MAX_BYTES - 15]))
+        .and_then(|e| e.bool(true))
+        .and_then(|e| e.null())
+        .map_err(|_| Error::Configuration)?;
+    let bytes = encoder.into_writer();
+    assert_eq!(bytes.len(), TransactionCbor::MAX_BYTES);
+    assert_eq!(
+        ledger_encoding(&bytes)?.len(),
+        TransactionCbor::MAX_BYTES - 1
+    );
+    TransactionCbor::from_bytes(bytes.clone())?;
+    let mut too_large = bytes;
+    // Expand only the outer wrapper; the component facts themselves stay equal.
+    too_large.splice(0..1, [0x98, 4]);
+    assert_eq!(too_large.len(), TransactionCbor::MAX_BYTES + 1);
+    assert!(TransactionCbor::from_bytes(too_large).is_err());
     Ok(())
 }
 

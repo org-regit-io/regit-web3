@@ -25,6 +25,7 @@ pub struct TransactionCbor {
     total_collateral: Option<u64>,
     script_valid: Option<bool>,
     ordinary_witnesses: bool,
+    ledger_size_bytes: Option<usize>,
 }
 impl TransactionCbor {
     /// Maximum retained original transaction size, independently of network parameters.
@@ -69,6 +70,7 @@ impl TransactionCbor {
             return Err(invalid_transaction());
         };
         let body = start..d.position();
+        let witness_start = d.position();
         let ordinary_witnesses = if length == Some(2) {
             if !matches!(
                 d.datatype().map_err(|_| invalid_transaction())?,
@@ -84,17 +86,25 @@ impl TransactionCbor {
                 .into_iter()
                 .all(|key| key == 0)
         };
+        let witness_end = d.position();
         let script_valid = if length == Some(4) {
             Some(d.bool().map_err(|_| invalid_transaction())?)
         } else {
             None
         };
+        let auxiliary_start = d.position();
         if length != Some(2) {
             auxiliary(&mut d)?;
         }
         if d.position() != bytes.len() {
             return Err(invalid_transaction());
         }
+        // Alonzo/Conway ledger accounting encodes a canonical three-field outer
+        // array, omitting IsValid. Each principal component retains its original
+        // CBOR, including accepted nonminimal or indefinite component framing.
+        let ledger_size_bytes = (length != Some(2)).then(|| {
+            1 + body.len() + (witness_end - witness_start) + (d.position() - auxiliary_start)
+        });
         let digest = pallas_crypto::hash::Hasher::<256>::hash(&bytes[body.clone()]);
         let hash = Hash::from_bytes(*digest);
         Ok(Self {
@@ -105,6 +115,7 @@ impl TransactionCbor {
             total_collateral: decoded.total_collateral,
             script_valid,
             ordinary_witnesses,
+            ledger_size_bytes,
         })
     }
     /// Parses bounded unprefixed hexadecimal original CBOR bytes.
@@ -148,6 +159,9 @@ impl TransactionCbor {
     }
     pub(super) const fn ordinary_witnesses(&self) -> bool {
         self.ordinary_witnesses
+    }
+    pub(super) const fn ledger_size_bytes(&self) -> Option<usize> {
+        self.ledger_size_bytes
     }
     /// Returns actual encoded Alonzo-family script-validity bit when present.
     /// This is separate from validating scripts or source block inclusion.
@@ -336,7 +350,7 @@ pub struct TransactionData {
     pub fees: Lovelace,
     /// Source signed deposit/refund in lovelace units; fraction/exponent is not a unit.
     pub deposit: ExactDecimal,
-    /// Source full transaction serialized size in bytes.
+    /// Source indexed transaction size in bytes, separate from original CBOR wire length.
     pub size_bytes: u32,
     /// Source optional inclusive validity-start slot.
     pub invalid_before: Option<u64>,

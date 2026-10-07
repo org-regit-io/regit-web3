@@ -257,6 +257,7 @@ pub struct PaymentEstimate {
     parameters: ProtocolParameters,
     minimum_fee: u64,
     signed_size_bytes: u32,
+    ledger_size_bytes: u32,
     output_minimum_lovelaces: Vec<u64>,
 }
 impl PaymentEstimate {
@@ -308,13 +309,19 @@ impl PaymentEstimate {
             Some(NonEmptySet::try_from(witnesses).map_err(|_| invalid())?),
         )?;
         let signed_size_bytes = u32::try_from(signed.len()).map_err(|_| invalid())?;
-        if signed.len() > TransactionCbor::MAX_BYTES || signed_size_bytes > p.max_transaction_bytes
-        {
+        let ledger_size_bytes = u32::try_from(
+            TransactionCbor::from_bytes(signed)
+                .map_err(|_| invalid())?
+                .ledger_size_bytes()
+                .ok_or_else(invalid)?,
+        )
+        .map_err(|_| invalid())?;
+        if ledger_size_bytes > p.max_transaction_bytes {
             return Err(invalid());
         }
         let minimum_fee = p
             .min_fee_coefficient
-            .checked_mul(u64::from(signed_size_bytes))
+            .checked_mul(u64::from(ledger_size_bytes))
             .and_then(|fee| fee.checked_add(p.min_fee_constant))
             .ok_or_else(invalid)?;
         Ok(Self {
@@ -322,6 +329,7 @@ impl PaymentEstimate {
             parameters,
             minimum_fee,
             signed_size_bytes,
+            ledger_size_bytes,
             output_minimum_lovelaces: minimum,
         })
     }
@@ -340,10 +348,18 @@ impl PaymentEstimate {
     pub const fn minimum_fee(&self) -> u64 {
         self.minimum_fee
     }
-    /// Returns full serialized size with the explicit placeholder witness count.
+    /// Returns full transmitted CBOR size with the explicit placeholder witness count.
+    /// This includes `IsValid` and is separate from ledger fee/maximum-size accounting.
     #[must_use]
     pub const fn signed_size_bytes(&self) -> u32 {
         self.signed_size_bytes
+    }
+    /// Returns the Conway ledger size with the explicit placeholder witness count.
+    /// The canonical three-field wrapper omits `IsValid` and retains encoded body,
+    /// witness-set and auxiliary-data components for fee/maximum-size accounting.
+    #[must_use]
+    pub const fn ledger_size_bytes(&self) -> u32 {
+        self.ledger_size_bytes
     }
     /// Returns each output's exact byte-based minimum ADA requirement.
     #[must_use]
@@ -363,6 +379,7 @@ struct PaymentEstimateFields {
     parameters: ProtocolParameters,
     minimum_fee: u64,
     signed_size_bytes: u32,
+    ledger_size_bytes: u32,
     #[serde(deserialize_with = "minimum_outputs")]
     output_minimum_lovelaces: Vec<u64>,
 }
@@ -375,6 +392,7 @@ impl TryFrom<PaymentEstimateFields> for PaymentEstimate {
         let e = Self::new(v.intent, v.parameters)?;
         if e.minimum_fee != v.minimum_fee
             || e.signed_size_bytes != v.signed_size_bytes
+            || e.ledger_size_bytes != v.ledger_size_bytes
             || e.output_minimum_lovelaces != v.output_minimum_lovelaces
         {
             return Err(invalid());
@@ -623,7 +641,8 @@ impl SignedSubmission {
             }
         }
         let p = preparation.estimate.parameters.data();
-        let len = u64::try_from(transaction.bytes().len()).map_err(|_| invalid())?;
+        let len = u64::try_from(transaction.ledger_size_bytes().ok_or_else(invalid)?)
+            .map_err(|_| invalid())?;
         let fee = p
             .min_fee_coefficient
             .checked_mul(len)
