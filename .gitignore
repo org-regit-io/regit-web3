@@ -5,6 +5,8 @@
 AGENTS.md
 .env
 .env.*
+/key.txt
+/key-*.txt
 .DS_Store
 .idea/
 .vscode/
