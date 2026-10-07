@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Runtime-independent Classic Swap v6.1 identity, graph and immutable review invariants.
+#![cfg(test)]
 #![cfg(feature = "oneinch")]
 #[path = "fixtures/oneinch/support.rs"]
 mod fixture;
@@ -23,7 +24,11 @@ use regit_web3::{
 };
 use serde_json::json;
 type TestError = Box<dyn std::error::Error>;
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_identity_has_only_provider_sentinel_and_exact_units() -> Result<(), TestError> {
     let native = Asset::new(ChainId::from(1_u64), AssetKind::Native)?;
     assert_eq!(native.provider_address().bytes(), [0xee; 20]);
@@ -45,7 +50,11 @@ fn native_identity_has_only_provider_sentinel_and_exact_units() -> Result<(), Te
     assert!(serde_json::from_value::<QuoteRequest>(fields).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn explicit_routing_filters_and_collections_are_validated() -> Result<(), TestError> {
     let r = request()?;
     let mut s = r.settings().clone();
@@ -69,7 +78,11 @@ fn explicit_routing_filters_and_collections_are_validated() -> Result<(), TestEr
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn graph_keeps_fractional_shares_and_nonindex_terminal_ids_without_invented_sums()
 -> Result<(), TestError> {
     let g = graph()?;
@@ -86,7 +99,11 @@ fn graph_keeps_fractional_shares_and_nonindex_terminal_ids_without_invented_sums
     assert!(g.check_limits(Limits::new(2, 1)?).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn graph_constructor_and_serde_reject_conflicting_ids_chains_or_shares() -> Result<(), TestError> {
     for n in ["-1", "100.000000000000000001"] {
         let mut groups = graph()?.groups().to_vec();
@@ -103,7 +120,11 @@ fn graph_constructor_and_serde_reject_conflicting_ids_chains_or_shares() -> Resu
     assert!(serde_json::from_value::<RouteGraph>(fields).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn quote_checks_source_asset_and_context_without_fake_expiry() -> Result<(), TestError> {
     let q = quote(Method::Quote, 1000)?;
     let mut data = q.data().clone();
@@ -119,7 +140,11 @@ fn quote_checks_source_asset_and_context_without_fake_expiry() -> Result<(), Tes
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_return_policy_and_native_value_are_not_implicitly_invented() -> Result<(), TestError> {
     assert_eq!(SlippageBps::new(123)?.percent(), "1.23");
     assert_eq!(SlippageBps::new(5000)?.percent(), "50.00");
@@ -135,7 +160,11 @@ fn caller_return_policy_and_native_value_are_not_implicitly_invented() -> Result
     assert!(serde_json::from_value::<SwapRequest>(fields).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fresh_review_correlates_payload_floor_and_separate_spender() -> Result<(), TestError> {
     let p = prepared()?;
     assert_eq!(
@@ -186,7 +215,11 @@ fn fresh_review_correlates_payload_floor_and_separate_spender() -> Result<(), Te
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn unsigned_payload_is_bounded_opaque_and_not_semantically_verified() -> Result<(), TestError> {
     let t = transaction()?;
     assert!(!format!("{t:?}").contains("deadbeef"));
@@ -202,7 +235,11 @@ fn unsigned_payload_is_bounded_opaque_and_not_semantically_verified() -> Result<
     assert!(PreparedSwap::new(swap_request()?, quote(Method::Swap, 950)?, t, spender()?).is_ok());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_composes_with_immutable_generic_review_and_external_handoff() -> Result<(), TestError>
 {
     let p = prepared()?;
@@ -219,7 +256,11 @@ fn preparation_composes_with_immutable_generic_review_and_external_handoff() -> 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn source_text_preserves_display_controls_and_byte_bounds() -> Result<(), TestError> {
     let t = SourceText::new("symbol\u{8}é")?;
     assert_eq!(
@@ -238,7 +279,11 @@ fn source_text_preserves_display_controls_and_byte_bounds() -> Result<(), TestEr
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn reported_liquidity_ids_must_match_exact_caller_filters_in_constructor_and_serde()
 -> Result<(), TestError> {
     let source = quote(Method::Quote, 1000)?;
@@ -288,7 +333,11 @@ fn reported_liquidity_ids_must_match_exact_caller_filters_in_constructor_and_ser
     assert!(Quote::new(request, source.data().clone(), context(Method::Quote)?).is_ok());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn empty_source_graph_is_retained_without_filter_completeness_or_execution_claim()
 -> Result<(), TestError> {
     let source = quote(Method::Quote, 1000)?;

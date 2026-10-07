@@ -3,6 +3,7 @@
 
 //! Canonical/indexed Bitcoin retrieval over bounded real loopback HTTP fixtures.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "bitcoin-esplora")]
 
 use std::time::Duration;

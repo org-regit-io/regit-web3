@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure V3 request, source observation and Universal Router 2.1.2 preparation behavior.
+#![cfg(test)]
 #![cfg(feature = "uniswap")]
 
 use regit_web3::{
@@ -107,7 +108,11 @@ fn word(bytes: &[u8], offset: usize) -> U256 {
     U256::from_be_slice(&bytes[offset..offset + 32])
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn deployment_versions_and_constructor_serde_validation_agree() -> TestResult {
     let deployed = V3Deployment::ethereum_mainnet()?;
     assert_eq!(deployed.chain_id(), ChainId::from(1));
@@ -128,7 +133,11 @@ fn deployment_versions_and_constructor_serde_validation_agree() -> TestResult {
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn paths_preserve_forward_tokens_fees_repeats_and_exact_bounds() -> TestResult {
     let p = path(500)?;
     let bytes = p.encoded()?;
@@ -182,7 +191,11 @@ fn paths_preserve_forward_tokens_fees_repeats_and_exact_bounds() -> TestResult {
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_quote_calldata_and_signed_swap_amount_boundary() -> TestResult {
     let request = request(500)?;
     let call = request.call()?;
@@ -216,7 +229,11 @@ fn exact_quote_calldata_and_signed_swap_amount_boundary() -> TestResult {
     assert!(serde_json::from_value::<CallSettings>(serde_json::to_value(bad)?).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn quote_cardinality_width_network_and_attribution_cannot_be_fabricated() -> TestResult {
     let q = quote(500, Quantity::new(U256::MAX))?;
     assert_eq!(
@@ -243,7 +260,11 @@ fn quote_cardinality_width_network_and_attribution_cannot_be_fabricated() -> Tes
     assert!(serde_json::from_value::<V3QuoteObservation>(wire).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn supplied_route_comparison_has_stable_ties_and_honest_all_reverted_outcome() -> TestResult {
     let request = route()?;
     let outcomes = vec![
@@ -280,7 +301,11 @@ fn supplied_route_comparison_has_stable_ties_and_honest_all_reverted_outcome() -
     assert!(record.best_quote().is_none());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn route_comparison_rejects_reordering_changed_candidates_and_source_state() -> TestResult {
     let request = route()?;
     let outcomes = vec![
@@ -320,7 +345,11 @@ fn route_comparison_rejects_reordering_changed_candidates_and_source_state() -> 
     assert!(V3RouteRequest::new(request).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn slippage_uses_exact_floor_and_handles_entire_u256_width() -> TestResult {
     assert_eq!(
         SlippageBps::new(100)?.minimum_output(Quantity::from(10_001)),
@@ -344,7 +373,11 @@ fn slippage_uses_exact_floor_and_handles_entire_u256_width() -> TestResult {
     assert!(serde_json::from_str::<SlippageBps>("10001").is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn router_2_1_2_six_field_command_binds_intent_recipient_output_deadline_and_allowances()
 -> TestResult {
     let prepared = PreparedSwap::new(intent()?)?;
@@ -398,7 +431,11 @@ fn router_2_1_2_six_field_command_binds_intent_recipient_output_deadline_and_all
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_rejects_reserved_recipient_expired_quote_and_permit2_overflow() -> TestResult {
     let original = intent()?;
     for marker in [0, 1, 2] {
@@ -430,7 +467,11 @@ fn preparation_rejects_reserved_recipient_expired_quote_and_permit2_overflow() -
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn prepared_snapshot_handoff_is_immutable_and_redacts_payload_debug() -> TestResult {
     let first = PreparedSwap::new(intent()?)?;
     let request = PreparedRequest::new(first.clone())?;
@@ -455,7 +496,11 @@ fn prepared_snapshot_handoff_is_immutable_and_redacts_payload_debug() -> TestRes
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn retained_live_observations_rebuild_exact_unsigned_intent_without_precision_defaults()
 -> TestResult {
     let quote: V3QuoteObservation =

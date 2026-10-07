@@ -3,6 +3,7 @@
 
 //! Deterministic public Solana HTTP contracts over loopback fixtures.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "solana-http")]
 
 use std::{

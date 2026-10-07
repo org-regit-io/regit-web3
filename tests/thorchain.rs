@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Offline THOR identities, exact units, source records and replaceable capabilities.
+#![cfg(test)]
 #![cfg(feature = "thorchain")]
 
 use bech32::{Bech32, Bech32m, ByteIterExt, Fe32, Fe32IterExt, Hrp};
@@ -158,7 +159,11 @@ fn transaction(txid: Txid) -> Result<ChainTransaction, Error> {
     })
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_chain_id_and_supported_prefix_are_independent_facts() {
     let custom = Network::new("thorchain-next", AccountPrefix::Sthor, "caller-alias").unwrap();
     assert_eq!(custom.chain_id(), "thorchain-next");
@@ -184,7 +189,11 @@ fn exact_chain_id_and_supported_prefix_are_independent_facts() {
         Error::Validation(ValidationError::NetworkMismatch)
     );
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn maintained_account_checks_checksum_case_payload_and_canonical_padding() {
     let canonical = Address::parse(ACCOUNT).unwrap();
     assert_eq!(
@@ -216,7 +225,11 @@ fn maintained_account_checks_checksum_case_payload_and_canonical_padding() {
     assert!(bech32::primitives::decode::CheckedHrpstring::new::<Bech32>(&invalid_padding).is_ok());
     assert!(Address::parse(&invalid_padding).is_err());
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn full_asset_forms_preserve_holding_chain_and_contract_identity() {
     for (input, kind, held) in [
         ("btc.btc", AssetKind::LayerOne, false),
@@ -280,7 +293,11 @@ fn full_asset_forms_preserve_holding_chain_and_contract_identity() {
     assert!(ChainAddress::new(Chain::parse("BTC").unwrap(), "bad address").is_err());
     assert!(ChainAddress::new(Chain::parse("BTC").unwrap(), "é").is_err());
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn transaction_identifiers_retain_all_supported_source_forms_and_semantic_aliases() {
     let bare = id().unwrap();
     let prefixed = Txid::parse(&format!("0x{bare}")).unwrap();
@@ -331,7 +348,11 @@ fn transaction_identifiers_retain_all_supported_source_forms_and_semantic_aliase
     }
     assert!(Txid::parse(&"0".repeat(64)).unwrap().is_blank());
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn protocol_and_external_native_values_are_exact_and_distinct() {
     let value = amount("9007199254740993").unwrap();
     assert_eq!(value.raw().to_string(), "9007199254740993");
@@ -365,7 +386,11 @@ fn protocol_and_external_native_values_are_exact_and_distinct() {
         "satsperbyte"
     );
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn pool_ownership_sum_is_checked_without_float_or_overflow() {
     let valid = Pool::new(pool_data().unwrap()).unwrap();
     assert_eq!(
@@ -388,7 +413,11 @@ fn pool_ownership_sum_is_checked_without_float_or_overflow() {
     assert!(Pool::new(wrapped).is_err());
     assert!(Pools::new(vec![valid.clone(), valid]).is_err());
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn quote_expiry_fee_denomination_and_partial_components_are_strict() {
     assert_eq!(
         SwapQuote::new(
@@ -428,7 +457,11 @@ fn quote_expiry_fee_denomination_and_partial_components_are_strict() {
         .is_err()
     );
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn schema_query_and_observation_time_bindings_survive_deserialization() {
     let quote = SwapQuote::new(
         request().unwrap(),
@@ -482,7 +515,11 @@ fn schema_query_and_observation_time_bindings_survive_deserialization() {
         .is_err()
     );
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn source_heights_counts_and_completion_are_not_invented_finality() {
     let block = LastBlock::new(
         Chain::parse("ETH").unwrap(),
@@ -526,7 +563,11 @@ fn source_heights_counts_and_completion_are_not_invented_finality() {
         status
     );
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn status_checks_identity_chains_refunds_and_nonblank_duplicate_ids() {
     let alias = Txid::parse(&format!("0x{}", id().unwrap())).unwrap();
     assert!(
@@ -610,7 +651,11 @@ fn status_checks_identity_chains_refunds_and_nonblank_duplicate_ids() {
         TransactionStatus::new(id().unwrap(), None, Some(vec![planned]), None, stages()).unwrap();
     assert!(status.planned_outbounds().unwrap()[0].data().refund);
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_limits_and_redacted_source_text_are_enforced() {
     assert!(CollectionLimit::new(0).is_err());
     assert!(CollectionLimit::new(100_001).is_err());
@@ -653,52 +698,69 @@ impl ThorchainReader for IndependentReader {
     fn get_rune_balance(
         &self,
         address: Address,
-    ) -> impl Future<Output = Result<Observation<RuneBalance>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<RuneBalance>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(
             context(Operation::RuneBalance { address }, 100).and_then(|context| {
                 Observation::rune_balance(self.balance.as_ref().clone(), context)
             }),
         )
     }
-    fn get_pool(&self, _: Asset) -> impl Future<Output = Result<Observation<Pool>, Error>> + Send {
+    fn get_pool(
+        &self,
+        _: Asset,
+    ) -> impl Future<Output = Result<Observation<Pool>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_pools(
         &self,
         _: CollectionLimit,
-    ) -> impl Future<Output = Result<Observation<Pools>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<Pools>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
-    fn get_network(&self) -> impl Future<Output = Result<Observation<NetworkData>, Error>> + Send {
+    fn get_network(
+        &self,
+    ) -> impl Future<Output = Result<Observation<NetworkData>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_swap_quote(
         &self,
         _: SwapRequest,
-    ) -> impl Future<Output = Result<Observation<SwapQuote>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<SwapQuote>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_inbound_addresses(
         &self,
         _: CollectionLimit,
-    ) -> impl Future<Output = Result<Observation<InboundAddresses>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<InboundAddresses>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_last_blocks(
         &self,
         _: CollectionLimit,
-    ) -> impl Future<Output = Result<Observation<LastBlocks>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<LastBlocks>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_transaction_status(
         &self,
         _: Txid,
         _: CollectionLimit,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn independent_non_send_implementor_returns_owned_send_futures_without_runtime() {
     let address = Address::parse(ACCOUNT).unwrap();
     let reader = IndependentReader {
@@ -719,7 +781,11 @@ fn independent_non_send_implementor_returns_owned_send_futures_without_runtime()
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn deserialization_stops_at_the_collection_ceiling_before_duplicate_validation() {
     let block = LastBlock::new(Chain::parse("BTC").unwrap(), 1, 1, 1).unwrap();
     let item = serde_json::to_string(&block).unwrap();
@@ -733,7 +799,11 @@ fn deserialization_stops_at_the_collection_ceiling_before_duplicate_validation()
     assert!(error.to_string().contains("collection exceeds bound"));
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn quote_tolerance_modes_enforce_constructor_and_serde_parity() {
     for (ordinary, liquidity, accepted) in [
         (Some(10_000), None, true),
@@ -766,7 +836,11 @@ fn quote_tolerance_modes_enforce_constructor_and_serde_parity() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observed_transaction_memos_preserve_raw_utf8_controls_empty_and_byte_bounds() {
     let raw = "private memo\n\0\t雪";
     for text in [raw, ""] {
@@ -794,7 +868,11 @@ fn observed_transaction_memos_preserve_raw_utf8_controls_empty_and_byte_bounds()
     assert!(Text::new(raw).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn explicit_quote_input_resolution_correlates_reported_assets_without_inferring_absence() {
     for resolution in [
         QuoteInputResolution::Unreported,

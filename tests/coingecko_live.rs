@@ -4,6 +4,7 @@
 //! Explicit opt-in public `CoinGecko` qualification through the typed Rust API.
 //! All configuration and range inputs belong to this test; the library does not
 //! read environment variables. Each result is a separate provider observation.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "coingecko-http")]
 #[path = "support/live.rs"]
 mod live;

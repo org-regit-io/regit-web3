@@ -34,7 +34,7 @@ impl EvmClient {
     /// # Errors
     /// Reports source execution revert, null data, bad ABI and fixed backend errors.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_erc20_balance(
         &self,
         contract: Address,
@@ -71,7 +71,7 @@ impl EvmClient {
     /// # Errors
     /// Reports source execution revert, null data, bad ABI and fixed backend errors.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_erc20_allowance(
         &self,
         contract: Address,
@@ -124,7 +124,7 @@ impl EvmClient {
     /// Reports chain/state/protocol/transport failures; supported optional method
     /// absence, revert and invalid ABI remain separate per-field outcomes.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_erc20_metadata(
         &self,
         contract: Address,
@@ -166,7 +166,7 @@ impl EvmClient {
     /// # Errors
     /// Reports identity/network/field mismatch, unsupported type and backend errors.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction(
         &self,
         hash: TransactionId,
@@ -195,7 +195,7 @@ impl EvmClient {
     /// # Errors
     /// Reports malformed/mismatched receipt/logs and fixed backend failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_receipt(
         &self,
         hash: TransactionId,
@@ -221,7 +221,7 @@ impl EvmClient {
     /// # Errors
     /// Reports contradictory identities/inclusion/addresses/type/gas and backend errors.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction_status(
         &self,
         hash: TransactionId,

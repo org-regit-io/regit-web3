@@ -32,20 +32,20 @@ pub trait CoinGeckoReader {
     fn search(
         &self,
         query: SearchQuery,
-    ) -> impl Future<Output = Result<Observation<SearchResults>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<SearchResults>, Error>> + crate::future::MaybeSend;
     /// Returns every requested ID/currency pair with explicit missing/null values.
     fn prices(
         &self,
         request: PricesRequest,
-    ) -> impl Future<Output = Result<Observation<Prices>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Prices>, Error>> + crate::future::MaybeSend;
     /// Returns one explicitly requested market page, without implicit pagination.
     fn markets(
         &self,
         request: MarketsRequest,
-    ) -> impl Future<Output = Result<Observation<MarketsPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<MarketsPage>, Error>> + crate::future::MaybeSend;
     /// Returns exact historical price, capitalization and volume series.
     fn history(
         &self,
         request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<HistoricalChart>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<HistoricalChart>, Error>> + crate::future::MaybeSend;
 }

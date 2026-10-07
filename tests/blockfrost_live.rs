@@ -3,6 +3,7 @@
 
 //! Opt-in actual Cardano indexed reads and unsigned review, with explicit credentials.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "blockfrost-http")]
 
 #[path = "support/live.rs"]

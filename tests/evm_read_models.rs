@@ -3,6 +3,7 @@
 
 //! Pure EVM read contracts and constructor/serialization invariants.
 
+#![cfg(test)]
 #![cfg(feature = "evm")]
 
 use regit_web3::{
@@ -104,7 +105,11 @@ fn receipt_data() -> Result<ReceiptData, Error> {
     })
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_quantity_hash_and_opaque_bytes_validate_without_echoing_inputs() -> TestResult {
     assert_eq!(
         Quantity::from_decimal(&U256::MAX.to_string())?.value(),
@@ -143,7 +148,11 @@ fn exact_quantity_hash_and_opaque_bytes_validate_without_echoing_inputs() -> Tes
     assert!(serde_json::from_str::<Data>("\"0x0\"").is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_raw_units_and_metadata_availability_do_not_invent_precision() -> TestResult {
     let balance = Erc20Balance::new(ChainId::from(1), address(1), address(2), U256::MAX);
     assert_eq!(balance.amount().decimals(), None);
@@ -184,7 +193,11 @@ fn token_raw_units_and_metadata_availability_do_not_invent_precision() -> TestRe
     assert!(serde_json::from_value::<MetadataText>(json!("a".repeat(4097))).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observations_reject_network_operation_anchor_and_finality_tampering() -> TestResult {
     let balance = Erc20Balance::new(ChainId::from(1), address(1), address(2), U256::ZERO);
     assert!(
@@ -228,7 +241,11 @@ fn observations_reject_network_operation_anchor_and_finality_tampering() -> Test
     assert!(context(ReadOperation::Erc20Balance, state).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn transactions_preserve_u256_values_and_reject_replay_or_parity_mismatch() -> TestResult {
     let transaction = Transaction::new(ChainId::from(1), transaction_data()?)?;
     assert_eq!(transaction.data().value.value(), U256::MAX);
@@ -263,7 +280,11 @@ fn transactions_preserve_u256_values_and_reject_replay_or_parity_mismatch() -> T
     assert!(Transaction::new(ChainId::from(1), typed).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn legal_ordered_access_list_duplicates_are_preserved_and_bounds_enforced() -> TestResult {
     let entry = AccessListEntry {
         address: address(3),
@@ -288,7 +309,11 @@ fn legal_ordered_access_list_duplicates_are_preserved_and_bounds_enforced() -> T
     assert!(Transaction::new(ChainId::from(1), data).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn receipts_keep_failed_and_historical_unknown_execution_separate_from_inclusion() -> TestResult {
     let receipt = Receipt::new(ChainId::from(1), receipt_data()?)?;
     assert_eq!(receipt.execution(), ExecutionOutcome::Failed);
@@ -338,7 +363,11 @@ fn receipts_keep_failed_and_historical_unknown_execution_separate_from_inclusion
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn lifecycle_distinguishes_absence_pending_inclusion_and_missing_execution() -> TestResult {
     let none_tx = TransactionLookup::new(ChainId::from(1), hash(1), None)?;
     let none_receipt = ReceiptLookup::new(ChainId::from(1), hash(1), None)?;
@@ -411,7 +440,8 @@ impl Erc20Reader for LocalReader {
         contract: Address,
         owner: Address,
         _: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Balance>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Balance>, Error>>
+    + regit_web3::future::MaybeSend {
         let _ = &self.0;
         ready(
             context(ReadOperation::Erc20Balance, canonical()).and_then(|context| {
@@ -428,14 +458,16 @@ impl Erc20Reader for LocalReader {
         _: Address,
         _: Address,
         _: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Allowance>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Allowance>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_erc20_metadata(
         &self,
         _: Address,
         _: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Metadata>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Metadata>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
 }
@@ -443,23 +475,30 @@ impl TransactionReader for LocalReader {
     fn get_transaction(
         &self,
         _: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<TransactionLookup>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<TransactionLookup>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_receipt(
         &self,
         _: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<ReceiptLookup>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<ReceiptLookup>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_transaction_status(
         &self,
         _: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<TransactionStatus>, Error>> + Send {
+    ) -> impl Future<Output = Result<OperationObservation<TransactionStatus>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn pure_reader_contracts_return_send_futures_without_send_sync_supertraits() {
     fn require_send<T: Send>(value: T) -> T {
         value

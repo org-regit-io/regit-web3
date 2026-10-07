@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{HeliusReader, wire};
 use crate::{
     config::HttpConfig,
@@ -15,11 +20,7 @@ use crate::{
     error::{Error, ProviderError},
     transport::{HttpClient, OperationBudget, decode_response, encode_request},
 };
-use std::{
-    fmt,
-    sync::Arc,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{fmt, sync::Arc};
 
 /// Explicit expected Solana genesis and one RPC/Parsed Events HTTP base.
 /// Credentials belong to the caller-supplied endpoint/query/headers. No key,
@@ -74,7 +75,7 @@ impl fmt::Debug for HistoryContinuation {
 }
 /// Bounded read-only Helius DAS/current Parsed Events implementation.
 /// Safe-read retries freeze query bytes; no fallback, raw canonical fetch or
-/// automatic pagination occurs. The caller supplies Tokio I/O/time drivers.
+/// automatic pagination occurs. On native targets, the caller supplies Tokio I/O/time drivers.
 pub struct HeliusClient {
     config: HeliusHttpConfig,
     http: HttpClient,
@@ -92,7 +93,7 @@ impl HeliusClient {
     /// # Errors
     /// Returns fixed network/provider/configuration/budget errors without credentials.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking/time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking/time drivers.
     pub async fn connect(config: HeliusHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http.limits())?;
         let http = HttpClient::new(&config.http)?;
@@ -159,7 +160,7 @@ impl HeliusClient {
     /// Returns safe typed provider/network/bounds/identity failures; source not-found
     /// is unavailable data, while missing/null successful results are malformed.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn get_asset(&self, request: AssetRequest) -> Result<Observation<Asset>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -178,7 +179,7 @@ impl HeliusClient {
     /// Returns safe typed errors for malformed quantities, capacity, query/owner
     /// mismatches, network changes, retries or the one shared deadline.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn get_assets_by_owner(
         &self,
         request: OwnerRequest,
@@ -206,7 +207,7 @@ impl HeliusClient {
     /// Rejects malformed or reordered/missing/extra responses, network changes,
     /// body/decode limits and expired shared budgets with fixed diagnostics.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn parse_transactions(
         &self,
         request: ParseRequest,
@@ -249,7 +250,7 @@ impl HeliusClient {
     /// # Errors
     /// Returns safe typed errors for malformed pages/identity/limits/network/deadlines.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn get_address_history(
         &self,
         request: HistoryRequest,
@@ -314,7 +315,7 @@ impl HeliusClient {
     /// # Errors
     /// Rejects another client's handle before any request; otherwise returns read errors.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn continue_assets(
         &self,
         continuation: AssetContinuation,
@@ -346,7 +347,7 @@ impl HeliusClient {
     /// # Errors
     /// Rejects another client's handle before dispatch; otherwise returns read errors.
     /// # Panics
-    /// Tokio may panic without enabled runtime I/O/time drivers.
+    /// On native targets, Tokio may panic without enabled runtime I/O/time drivers.
     pub async fn continue_history(
         &self,
         continuation: HistoryContinuation,

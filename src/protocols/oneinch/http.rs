@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{ClassicSwapReader, wire};
 use crate::{
     config::HttpConfig,
@@ -14,10 +19,7 @@ use crate::{
     error::Error,
     transport::{HttpClient, OperationBudget},
 };
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 /// Explicit Classic Swap API base, caller-owned Bearer header, EVM network and bounds.
 /// The base is the swap API prefix (normally `/swap/`); this backend appends literal
@@ -75,7 +77,7 @@ impl OneinchHttpConfig {
 }
 /// Optional outgoing Classic Swap v6.1 backend. All operations use GET and never execute a swap.
 /// One total deadline covers all source reads, safe retries, body transfer and typed decoding.
-/// A Tokio runtime with time/network drivers is supplied by the caller.
+/// On native targets, a Tokio runtime with time/network drivers is supplied by the caller.
 pub struct OneinchClient {
     config: OneinchHttpConfig,
     http: HttpClient,
@@ -148,7 +150,7 @@ impl OneinchClient {
     /// # Errors
     /// Returns typed configuration, provider, body, identity or total-deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn quote_exact_input(&self, request: QuoteRequest) -> Result<Quote, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -170,7 +172,7 @@ impl OneinchClient {
     /// # Errors
     /// Rejects duplicate IDs, malformed/oversize results and transport/deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn get_liquidity_sources(&self) -> Result<LiquiditySources, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -192,7 +194,7 @@ impl OneinchClient {
     /// # Errors
     /// Returns fixed malformed/provider/body/deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn get_spender(&self) -> Result<Spender, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget.run(self.spender(&budget)).await
@@ -204,7 +206,7 @@ impl OneinchClient {
     /// # Errors
     /// Rejects source conflicts, unsupported fee-on-transfer/access-list profile and provider limits.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn prepare_swap(&self, request: SwapRequest) -> Result<PreparedSwap, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget

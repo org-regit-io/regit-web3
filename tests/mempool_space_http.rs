@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Real loopback qualification for bounded mempool-space HTTP operations.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "mempool-space-http")]
 
 use std::time::Duration;

@@ -4,8 +4,13 @@
 //! Explicit, validated transport limits and optional HTTP(S) configuration.
 //!
 //! Endpoint URLs and headers are excluded from diagnostics. RPC configuration
-//! and credentials are supplied by the caller. HTTPS uses verified standard
-//! platform trust, including the platform's certificate-store discovery rules.
+//! and credentials are supplied by the caller. Native HTTPS uses verified
+//! standard platform trust, including certificate-store discovery. On
+//! `wasm32-unknown-unknown`, the JavaScript host owns TLS and CORS policy; outgoing
+//! backends require Fetch, streams, abort signals, performance clocks and timers.
+//! Redirects and ambient cookies are disabled; explicit headers and endpoint
+//! credentials remain caller-owned. A browser backend rejects URL user information
+//! and browser-controlled headers instead of silently dropping them.
 //!
 //! ```
 //! # #[cfg(feature = "http")]

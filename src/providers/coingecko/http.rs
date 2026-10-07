@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{CoinGeckoReader, wire};
 use crate::{
     config::HttpConfig,
@@ -15,10 +20,7 @@ use crate::{
     error::Error,
     transport::{HttpClient, OperationBudget},
 };
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 /// Explicit `CoinGecko` API credential header variant; no base URL is inferred.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -105,7 +107,7 @@ fn has_provider_credentials(http: &HttpConfig) -> bool {
 }
 /// Bounded `CoinGecko` reader of typed data, without automatic pagination.
 /// Reads use one operation deadline across retries, body reads and decoding.
-/// The caller supplies a Tokio runtime with networking and time enabled.
+/// On native targets, the caller supplies a Tokio runtime with networking and time enabled.
 pub struct CoinGeckoClient {
     config: CoinGeckoHttpConfig,
     http: HttpClient,
@@ -149,7 +151,7 @@ impl CoinGeckoClient {
     /// # Errors
     /// Returns bounded fixed provider, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn search(&self, query: SearchQuery) -> Result<Observation<SearchResults>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -169,7 +171,7 @@ impl CoinGeckoClient {
     /// # Errors
     /// Returns bounded fixed provider, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn prices(&self, request: PricesRequest) -> Result<Observation<Prices>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -213,7 +215,7 @@ impl CoinGeckoClient {
     /// # Errors
     /// Returns bounded fixed provider, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn markets(
         &self,
         request: MarketsRequest,
@@ -257,7 +259,7 @@ impl CoinGeckoClient {
     /// # Errors
     /// Returns bounded fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn history(
         &self,
         request: HistoryRequest,

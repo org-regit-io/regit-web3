@@ -27,7 +27,7 @@ pub trait JupiterReader {
     fn quote(
         &self,
         request: QuoteRequest,
-    ) -> impl Future<Output = Result<Observation<Quote>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Quote>, Error>> + crate::future::MaybeSend;
     /// Reads fresh Metis V0 instructions and actual hash/height expiry.
     /// An earlier order's route is not implicitly preserved or approved.
     /// # Errors
@@ -35,5 +35,5 @@ pub trait JupiterReader {
     fn build(
         &self,
         request: BuildRequest,
-    ) -> impl Future<Output = Result<Observation<SwapBuild>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<SwapBuild>, Error>> + crate::future::MaybeSend;
 }

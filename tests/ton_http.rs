@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 //! Actual bounded TON API-v2 requests through loopback fixtures.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "ton-http")]
 
 use regit_web3::{

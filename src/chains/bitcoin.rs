@@ -31,29 +31,30 @@ pub use esplora::{EsploraClient, EsploraConfig};
 /// Implementations must validate query identity and retain exact units, source
 /// and retrieval context. Pagination limits and source-reported inclusion must
 /// remain explicit; no current index query establishes lasting finality or a
-/// historical state pin. Returned futures are `Send`; the reader itself need
-/// not be `Send` or `Sync`. This trait supports static, generic dispatch.
+/// historical state pin. Futures are `Send` on native targets and host-local on
+/// JavaScript WebAssembly; the reader itself need not be `Send` or `Sync`.
+/// This trait supports static, generic dispatch.
 pub trait BitcoinReader {
     /// Reads confirmed funds and the separate signed mempool delta.
     fn get_address_balance(
         &self,
         address: Address,
-    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + crate::future::MaybeSend;
     /// Reads one bounded history chunk with its exact requested cursor.
     fn get_address_history(
         &self,
         address: Address,
         cursor: HistoryCursor,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + crate::future::MaybeSend;
     /// Reads exact satoshi-per-vbyte estimates by positive block horizon.
     fn get_fee_estimates(
         &self,
-    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + crate::future::MaybeSend;
     /// Reads source-reported inclusion for a transaction; absence is an error.
     fn get_transaction_status(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + crate::future::MaybeSend;
 }
 
 /// A separate full-transaction capability without expanding existing reader implementors.
@@ -68,5 +69,5 @@ pub trait TransactionReader {
     fn get_transaction(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + crate::future::MaybeSend;
 }

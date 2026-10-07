@@ -3,6 +3,7 @@
 
 //! Exact Cardano indexed records, original CBOR and explicit payment review.
 
+#![cfg(test)]
 #![cfg(feature = "cardano")]
 
 #[path = "support/cardano.rs"]
@@ -87,7 +88,11 @@ fn alternate_witness_framing(encoded: &[u8], indefinite: bool) -> Result<Vec<u8>
     Ok(alternate)
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> Result<(), Error> {
     let prep = support::preparation()?;
     prep.validate()?;
@@ -122,7 +127,11 @@ fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> R
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn supported_conway_versions_preserve_ordinary_encoding_fee_and_minimum_ada() -> Result<(), Error> {
     let baseline = support::preparation()?;
     let baseline_signed = support::signed_bytes(&baseline, 1)?;
@@ -184,7 +193,11 @@ fn supported_conway_versions_preserve_ordinary_encoding_fee_and_minimum_ada() ->
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn ledger_fee_and_maximum_size_use_three_fields_with_exact_boundaries() -> Result<(), Error> {
     let initial = support::preparation()?;
     let transmitted = support::signed_bytes(&initial, 1)?;
@@ -233,7 +246,11 @@ fn ledger_fee_and_maximum_size_use_three_fields_with_exact_boundaries() -> Resul
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_ledger_size_retains_original_nonminimal_and_indefinite_witness_framing()
 -> Result<(), Error> {
     let initial = support::preparation()?;
@@ -297,7 +314,11 @@ fn signed_ledger_size_retains_original_nonminimal_and_indefinite_witness_framing
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn original_transmitted_cbor_has_an_independent_64_kib_resource_bound() -> Result<(), Error> {
     let mut encoder = minicbor::Encoder::new(Vec::new());
     encoder
@@ -330,7 +351,11 @@ fn original_transmitted_cbor_has_an_independent_64_kib_resource_bound() -> Resul
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn estimate_does_not_mutate_fee_or_change_and_rejects_forged_serialized_totals() -> Result<(), Error>
 {
     let estimate = PaymentEstimate::new(support::intent(1)?, support::parameters()?)?;
@@ -346,7 +371,11 @@ fn estimate_does_not_mutate_fee_or_change_and_rejects_forged_serialized_totals()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn conservation_intervals_duplicates_and_witness_policy_have_constructor_serde_parity()
 -> Result<(), Error> {
     let intent = support::intent(500_000)?;
@@ -398,7 +427,11 @@ fn conservation_intervals_duplicates_and_witness_policy_have_constructor_serde_p
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn parameter_profile_minimum_ada_value_size_transaction_size_and_arithmetic_are_checked()
 -> Result<(), Error> {
     for change in [
@@ -438,7 +471,11 @@ fn parameter_profile_minimum_ada_value_size_transaction_size_and_arithmetic_are_
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_submission_checks_actual_body_keys_and_size_without_claiming_signature_verification()
 -> Result<(), Error> {
     let signed = support::signed()?;
@@ -470,7 +507,11 @@ fn signed_submission_checks_actual_body_keys_and_size_without_claiming_signature
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn original_body_hash_uses_source_bytes_and_unsupported_witness_keys_are_not_accepted()
 -> Result<(), Error> {
     let prep = support::preparation()?;
@@ -506,7 +547,11 @@ fn original_body_hash_uses_source_bytes_and_unsupported_witness_keys_are_not_acc
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn cbor_framing_checks_duplicates_trailing_map_parity_depth_and_item_limits() -> Result<(), Error> {
     let valid = support::preparation()?.unsigned_payload().bytes().to_vec();
     let mut trailing = valid.clone();
@@ -540,7 +585,11 @@ fn cbor_framing_checks_duplicates_trailing_map_parity_depth_and_item_limits() ->
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_lovelace_metadata_and_staking_identities_preserve_units_and_controls() -> Result<(), Error>
 {
     let amount = Lovelace::parse("18446744073709551616")?;
@@ -579,7 +628,11 @@ fn exact_lovelace_metadata_and_staking_identities_preserve_units_and_controls() 
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn bounded_pages_validate_target_quantities_duplicate_identity_and_serialized_status()
 -> Result<(), Error> {
     let target = PageTarget::Assets;
@@ -624,7 +677,11 @@ fn bounded_pages_validate_target_quantities_duplicate_identity_and_serialized_st
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn address_metadata_correlates_actual_header_and_base_stake_credential() -> Result<(), Error> {
     let balance = AddressBalance::new(
         support::network()?,
@@ -678,7 +735,11 @@ fn address_metadata_correlates_actual_header_and_base_stake_credential() -> Resu
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn failed_script_paid_collateral_is_separate_from_declared_body_fee() -> Result<(), Error> {
     use regit_web3::domain::cardano::{Transaction, TransactionData};
     let mut encoder = minicbor::Encoder::new(Vec::new());
@@ -777,7 +838,11 @@ fn failed_script_paid_collateral_is_separate_from_declared_body_fee() -> Result<
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn published_cip14_vectors_use_exact_policy_and_asset_name_bytes() -> Result<(), Error> {
     use regit_web3::domain::cardano::{AssetId, AssetName, NetworkId, PolicyId};
     let policy = PolicyId::parse("7eae28af2208be856f7a119668ae52a49b73725e326dc16579dcc373")?;
@@ -798,7 +863,11 @@ fn published_cip14_vectors_use_exact_policy_and_asset_name_bytes() -> Result<(),
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn ordinary_preparation_rejects_script_or_datum_spends_and_supports_generic_external_handoff()
 -> Result<(), Error> {
     use regit_web3::{

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::wire::Switch;
 use super::{RubicReader, wire};
 use crate::{
@@ -17,10 +22,7 @@ use crate::{
 };
 use serde::Serialize;
 use serde_json::value::RawValue;
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 /// Explicit API-v2 base, caller family catalogue and response capacities.
 /// Optional `apikey` and descriptive `user-agent` headers are caller-supplied.

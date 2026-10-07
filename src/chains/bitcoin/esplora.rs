@@ -3,10 +3,12 @@
 
 //! Esplora operation orchestration over the shared bounded HTTP backend.
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
+use std::fmt;
 
 use serde::de::DeserializeOwned;
 
@@ -58,7 +60,7 @@ impl EsploraConfig {
 /// address balances, mempool changes and history are source-reported index
 /// facts. Inclusion fields are retained without inferred confirmations/finality.
 ///
-/// The caller supplies a Tokio runtime with I/O and time drivers. The client
+/// On native targets, the caller supplies a Tokio runtime with I/O and time drivers. The client
 /// creates no runtime and loads no RPC endpoints, credentials or proxies.
 /// HTTPS uses the shared backend's verified platform trust. Redirects,
 /// decompression and implicit transport retries are disabled.
@@ -75,7 +77,7 @@ impl EsploraClient {
     /// network-mismatch errors. Remote bodies and credentials are never echoed.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn connect(config: EsploraConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         let http = HttpClient::new(config.http_config())?;
@@ -100,7 +102,7 @@ impl EsploraClient {
     /// inconsistent sums, and bounded transport failures. Null is never zero.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_address_balance(
         &self,
         address: Address,
@@ -134,7 +136,7 @@ impl EsploraClient {
     /// duplicate transactions, exceeded source limits or a nonadvancing cursor.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_address_history(
         &self,
         address: Address,
@@ -180,7 +182,7 @@ impl EsploraClient {
     /// Returns fixed identity/transport failures or malformed numeric/map data.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_fee_estimates(&self) -> Result<Observation<FeeEstimates>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget
@@ -206,7 +208,7 @@ impl EsploraClient {
     /// malformed-response failures for incomplete/inconsistent inclusion fields.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction_status(
         &self,
         txid: Txid,
@@ -246,7 +248,7 @@ impl EsploraClient {
     /// error. Missing previous output/fee data remain explicit nullable values.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction(&self, txid: Txid) -> Result<Observation<Transaction>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget

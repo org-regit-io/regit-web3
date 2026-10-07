@@ -8,9 +8,12 @@ use crate::error::Error;
 /// Positive bounded transport settings and an explicit safe-read retry count.
 ///
 /// The request timeout bounds the entire operation, including retries, their
-/// delays, and response-body consumption. The connect timeout independently
-/// bounds each connection attempt within that total budget. The retry count
-/// bounds additional safe-read attempts as documented by each backend. All
+/// delays, and response-body consumption. On native targets, the connect timeout
+/// independently bounds each connection attempt within that total budget. On
+/// `wasm32-unknown-unknown`, Fetch exposes no socket-connection phase, so this
+/// timeout instead bounds each attempt until its response headers arrive.
+/// The retry count bounds additional safe-read attempts as documented by each
+/// backend. All
 /// network, negotiation, verification and read stages share one request timeout.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RpcLimits {
@@ -52,7 +55,7 @@ impl RpcLimits {
         })
     }
 
-    /// Returns the per-connection-attempt timeout.
+    /// Returns the native connection or browser response-header attempt timeout.
     #[must_use]
     pub const fn connect_timeout(self) -> Duration {
         self.connect_timeout

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Public `CoinGecko` HTTP behavior using real ephemeral loopback exchanges.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "coingecko-http")]
 #[path = "support/market_server.rs"]
 mod market_server;

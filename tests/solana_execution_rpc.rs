@@ -3,6 +3,7 @@
 
 //! Deterministic Solana execution/read and isolated one-shot write contracts.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "solana-http")]
 
 use base64::{Engine as _, engine::general_purpose::STANDARD};

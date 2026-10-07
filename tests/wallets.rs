@@ -3,6 +3,7 @@
 
 //! Runtime-independent review/handoff and trusted verifier extension contracts.
 
+#![cfg(test)]
 use std::{
     cell::Cell,
     future::{Future, ready},
@@ -71,7 +72,8 @@ impl SignedPayloadVerifier<FixturePreparation, SignedFixture> for Verifier {
         &self,
         prepared: &PreparedRequest<FixturePreparation>,
         signed: &SignedFixture,
-    ) -> impl Future<Output = Result<VerificationDecision, Error>> + Send {
+    ) -> impl Future<Output = Result<VerificationDecision, Error>> + regit_web3::future::MaybeSend
+    {
         self.calls.set(self.calls.get() + 1);
         let result = if let Some(error) = self.failure {
             Err(error)
@@ -118,7 +120,11 @@ fn verifier() -> Verifier {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn handoff_id_is_bounded_caller_generated_and_secret_safe() -> Result<(), TestError> {
     let maximum = "a".repeat(HandoffId::MAX_BYTES);
     assert_eq!(HandoffId::new(&maximum)?.as_str(), maximum);
@@ -139,7 +145,11 @@ fn handoff_id_is_bounded_caller_generated_and_secret_safe() -> Result<(), TestEr
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn review_preserves_exact_typed_snapshot_without_invoking_verifier() -> Result<(), TestError> {
     let verifier = verifier();
     let request = request()?;
@@ -167,7 +177,11 @@ fn review_preserves_exact_typed_snapshot_without_invoking_verifier() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn id_network_intent_and_unsigned_payload_mismatches_skip_verifier() -> Result<(), TestError> {
     let request = request()?;
     let verifier = verifier();
@@ -208,7 +222,11 @@ fn id_network_intent_and_unsigned_payload_mismatches_skip_verifier() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn matching_echo_metadata_does_not_qualify_altered_actual_signed_content() -> Result<(), TestError>
 {
     let request = request()?;
@@ -253,7 +271,11 @@ fn matching_echo_metadata_does_not_qualify_altered_actual_signed_content() -> Re
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn verifier_confirmation_error_and_rejection_remain_distinct() -> Result<(), TestError> {
     let request = request()?;
     let verifier = verifier();
@@ -280,7 +302,11 @@ fn verifier_confirmation_error_and_rejection_remain_distinct() -> Result<(), Tes
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn composed_verification_future_is_send_for_ordinary_thread_safe_snapshots() -> Result<(), TestError>
 {
     struct ThreadSafeVerifier;
@@ -289,7 +315,8 @@ fn composed_verification_future_is_send_for_ordinary_thread_safe_snapshots() -> 
             &self,
             prepared: &PreparedRequest<FixturePreparation>,
             signed: &SignedFixture,
-        ) -> impl Future<Output = Result<VerificationDecision, Error>> + Send {
+        ) -> impl Future<Output = Result<VerificationDecision, Error>> + regit_web3::future::MaybeSend
+        {
             ready(Ok(
                 if signed.actual == *prepared.preparation() && signed.signature_valid {
                     VerificationDecision::Confirmed
@@ -299,7 +326,12 @@ fn composed_verification_future_is_send_for_ordinary_thread_safe_snapshots() -> 
             ))
         }
     }
-    fn requires_send<F: Future + Send>(future: F) -> F {
+    fn requires_send<F: Future + regit_web3::future::MaybeSend>(future: F) -> F {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+        {
+            fn assert_send<T: Send>(_: &T) {}
+            assert_send(&future);
+        }
         future
     }
     let request = request()?;
@@ -313,7 +345,11 @@ fn composed_verification_future_is_send_for_ordinary_thread_safe_snapshots() -> 
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn constructor_and_serde_validation_match_for_all_unverified_records() -> Result<(), TestError> {
     let request = request()?;
     let encoded = serde_json::to_string(&request)?;

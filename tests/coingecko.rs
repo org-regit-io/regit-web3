@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure market request and exact provider-data invariant tests.
+#![cfg(test)]
 #![cfg(feature = "coingecko")]
 use regit_web3::{
     domain::{
@@ -11,7 +12,11 @@ use regit_web3::{
     },
     error::Error,
 };
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn request_identity_and_capacity_invariants_survive_deserialization()
 -> Result<(), Box<dyn std::error::Error>> {
     let id = CoinId::parse("bitcoin")?;
@@ -38,7 +43,11 @@ fn request_identity_and_capacity_invariants_survive_deserialization()
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_signed_and_nonnegative_values_never_round() -> Result<(), Error> {
     let value =
         NonnegativeDecimal::new(ExactDecimal::parse("9007199254740993.000000000000000001")?)?;
@@ -49,7 +58,11 @@ fn exact_signed_and_nonnegative_values_never_round() -> Result<(), Error> {
     assert!(NonnegativeDecimal::new(ExactDecimal::parse("-0.1")?).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn utc_calendar_fixed_digits_and_fraction_contract_match_serde()
 -> Result<(), Box<dyn std::error::Error>> {
     for raw in [

@@ -3,6 +3,7 @@
 
 //! Opt-in actual LI.FI Rust quote/routes/preparation and transaction/transfer status.
 //! Inputs belong to this harness. No wallet, signed transaction or submission is used.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "lifi-http")]
 
 #[path = "support/live.rs"]

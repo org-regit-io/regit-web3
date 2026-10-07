@@ -46,7 +46,7 @@ pub trait NativeBalanceReader {
         &self,
         address: Pubkey,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<Observation<NativeBalance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<NativeBalance>, Error>> + crate::future::MaybeSend;
 }
 
 /// An externally implemented reader of one SPL token account's exact raw units.
@@ -62,7 +62,7 @@ pub trait TokenBalanceReader {
         &self,
         token_account: Pubkey,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<Observation<TokenBalance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<TokenBalance>, Error>> + crate::future::MaybeSend;
 }
 
 /// An externally implemented reader retaining present and absent account results.
@@ -78,7 +78,7 @@ pub trait AccountReader {
         &self,
         address: Pubkey,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<Observation<AccountLookup>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<AccountLookup>, Error>> + crate::future::MaybeSend;
 }
 
 /// Replaceable transaction retrieval and source status capabilities.
@@ -92,7 +92,8 @@ pub trait TransactionReader {
         &self,
         signature: Signature,
         options: TransactionReadOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<TransactionLookup>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<TransactionLookup>, Error>>
+    + crate::future::MaybeSend;
     /// Reads recent-cache or explicitly requested history status without invented controls.
     /// # Errors
     /// Returns typed implementation or observation-correlation failures.
@@ -100,7 +101,7 @@ pub trait TransactionReader {
         &self,
         signature: Signature,
         options: StatusOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<StatusLookup>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<StatusLookup>, Error>> + crate::future::MaybeSend;
 }
 /// Replaceable recent-blockhash, validity and actual block-height readers.
 pub trait BlockhashReader {
@@ -112,7 +113,8 @@ pub trait BlockhashReader {
     fn get_latest_blockhash(
         &self,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<LatestBlockhash>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<LatestBlockhash>, Error>>
+    + crate::future::MaybeSend;
     /// Checks the exact caller-supplied hash without implicit replacement.
     /// # Errors
     /// Returns typed source, budget or context failures.
@@ -120,14 +122,15 @@ pub trait BlockhashReader {
         &self,
         blockhash: Hash,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<BlockhashValidity>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<BlockhashValidity>, Error>>
+    + crate::future::MaybeSend;
     /// Reads exact actual block height without an invented evaluation slot.
     /// # Errors
     /// Returns typed source, budget or context failures.
     fn get_block_height(
         &self,
         commitment: Commitment,
-    ) -> impl Future<Output = Result<ExecutionObservation<BlockHeight>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<BlockHeight>, Error>> + crate::future::MaybeSend;
 }
 /// Replaceable exact fee estimation and unsigned simulation capabilities.
 pub trait ExecutionReader {
@@ -140,7 +143,7 @@ pub trait ExecutionReader {
         &self,
         message: UnsignedMessage,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<MessageFee>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<MessageFee>, Error>> + crate::future::MaybeSend;
     /// Simulates exact zero-placeholder bytes without signing or submission.
     /// # Errors
     /// Returns typed source failures; execution errors remain actual result values.
@@ -148,7 +151,7 @@ pub trait ExecutionReader {
         &self,
         transaction: UnsignedTransaction,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<Simulation>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<Simulation>, Error>> + crate::future::MaybeSend;
 }
 /// Separate explicitly invoked one-shot caller-signed submission capability.
 /// Signature and reviewed-intent verification, secrets and approval remain external.
@@ -162,5 +165,5 @@ pub trait SolanaSubmitter {
         &self,
         transaction: SignedTransaction,
         options: SubmitOptions,
-    ) -> impl Future<Output = Result<ExecutionObservation<Submission>, Error>> + Send;
+    ) -> impl Future<Output = Result<ExecutionObservation<Submission>, Error>> + crate::future::MaybeSend;
 }

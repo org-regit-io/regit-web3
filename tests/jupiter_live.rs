@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Explicit read-only V2 quote/build, local handoff and exact Solana fee/simulation proof.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "jupiter-http")]
 use regit_web3::{
     chains::solana::{SolanaClient, SolanaHttpConfig},

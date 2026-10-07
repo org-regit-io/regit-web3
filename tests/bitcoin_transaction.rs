@@ -3,6 +3,7 @@
 
 //! Offline canonical transaction and indexed-fact contracts through public APIs.
 
+#![cfg(test)]
 #![cfg(feature = "bitcoin")]
 
 use std::{
@@ -55,7 +56,11 @@ fn body(outputs: &[u64]) -> Result<TransactionBody, Error> {
     TransactionBody::from_bytes(&bitcoin::consensus::serialize(&raw_transaction(outputs)))
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn genesis_retains_coinbase_identity_fields_and_nonaddress_script()
 -> Result<(), Box<dyn std::error::Error>> {
     let body = TransactionBody::from_hex(GENESIS_HEX)?;
@@ -88,7 +93,11 @@ fn genesis_retains_coinbase_identity_fields_and_nonaddress_script()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn segwit_preserves_witness_and_network_independent_body() -> Result<(), Box<dyn std::error::Error>>
 {
     let body = TransactionBody::from_hex(SEGWIT_HEX)?;
@@ -116,7 +125,11 @@ fn segwit_preserves_witness_and_network_independent_body() -> Result<(), Box<dyn
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn canonical_bytes_and_raw_serde_reject_malformed_trailing_and_unbounded_inputs()
 -> Result<(), Error> {
     let body = TransactionBody::from_hex(GENESIS_HEX)?;
@@ -147,7 +160,11 @@ fn canonical_bytes_and_raw_serde_reject_malformed_trailing_and_unbounded_inputs(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn structural_null_duplicate_coinbase_and_empty_output_failures_are_explicit() {
     let mut transaction = raw_transaction(&[1]);
     transaction.output.clear();
@@ -165,7 +182,11 @@ fn structural_null_duplicate_coinbase_and_empty_output_failures_are_explicit() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_money_and_fee_arithmetic_rejects_wide_output_and_overflow_without_panics()
 -> Result<(), Error> {
     let maximum = BitcoinAmount::MAX_MONEY.to_sat();
@@ -229,7 +250,11 @@ fn exact_money_and_fee_arithmetic_rejects_wide_output_and_overflow_without_panic
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn known_prevout_lower_bound_rejects_impossible_fee_with_an_unknown_input()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut raw = raw_transaction(&[5]);
@@ -270,7 +295,11 @@ fn known_prevout_lower_bound_rejects_impossible_fee_with_an_unknown_input()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn absent_index_facts_stay_nullable_and_constructor_serde_identity_agree()
 -> Result<(), Box<dyn std::error::Error>> {
     let body = TransactionBody::from_hex(SEGWIT_HEX)?;
@@ -315,7 +344,11 @@ fn absent_index_facts_stay_nullable_and_constructor_serde_identity_agree()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_transaction_reader_requires_no_runtime_or_reader_send_sync() -> Result<(), Error> {
     struct Reader {
         value: Observation<Transaction>,
@@ -325,7 +358,8 @@ fn caller_transaction_reader_requires_no_runtime_or_reader_send_sync() -> Result
         fn get_transaction(
             &self,
             _txid: Txid,
-        ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send {
+        ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + regit_web3::future::MaybeSend
+        {
             ready(Ok(self.value.clone()))
         }
     }

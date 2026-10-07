@@ -3,6 +3,7 @@
 
 //! Pure signed-payload assertions and preliminary XRPL submission facts.
 
+#![cfg(test)]
 #![cfg(feature = "xrpl")]
 
 use std::{
@@ -52,7 +53,11 @@ fn context() -> Result<Context, Error> {
     ))
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_submission_verifies_exact_byte_identity_without_signing_claims()
 -> Result<(), Box<dyn std::error::Error>> {
     // Arbitrary bounded bytes are accepted: the caller asserts signing readiness.
@@ -77,7 +82,11 @@ fn signed_submission_verifies_exact_byte_identity_without_signing_claims()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn engine_results_are_preliminary_and_support_all_actual_protocol_classes()
 -> Result<(), Box<dyn std::error::Error>> {
     for (code, class) in [
@@ -110,7 +119,11 @@ fn engine_results_are_preliminary_and_support_all_actual_protocol_classes()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preliminary_handling_and_latest_ledger_do_not_fabricate_inclusion()
 -> Result<(), Box<dyn std::error::Error>> {
     let hash = HexData::parse("ABCD")?.transaction_hash();
@@ -178,7 +191,11 @@ fn preliminary_handling_and_latest_ledger_do_not_fabricate_inclusion()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn submitter_trait_has_no_runtime_or_send_sync_supertrait_requirement()
 -> Result<(), Box<dyn std::error::Error>> {
     struct Pure(Rc<()>);
@@ -186,8 +203,8 @@ fn submitter_trait_has_no_runtime_or_send_sync_supertrait_requirement()
         fn submit_signed(
             &self,
             _submission: SignedSubmission,
-        ) -> impl std::future::Future<Output = Result<Observation<SubmissionResult>, Error>> + Send
-        {
+        ) -> impl std::future::Future<Output = Result<Observation<SubmissionResult>, Error>>
+        + regit_web3::future::MaybeSend {
             let _count = Rc::strong_count(&self.0);
             ready(Err(Error::UnsupportedCapability))
         }
@@ -203,7 +220,11 @@ fn submitter_trait_has_no_runtime_or_send_sync_supertrait_requirement()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn ambiguous_submission_errors_serialize_fixed_safe_categories()
 -> Result<(), Box<dyn std::error::Error>> {
     for reason in [

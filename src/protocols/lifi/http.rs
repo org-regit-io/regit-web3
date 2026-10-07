@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{LifiReader, wire};
 use crate::{
     config::HttpConfig,
@@ -16,10 +21,7 @@ use crate::{
 };
 use serde::{Serialize, Serializer};
 use serde_json::value::RawValue;
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 /// Explicit LI.FI API base (including `/v1`), qualified chains and capacities.
 /// Optional credentials are caller-supplied endpoint headers; no key, URL,
@@ -155,7 +157,7 @@ impl Serialize for LifiStepHandle {
 /// Outgoing bounded LI.FI quote/routes/preparation/status backend.
 /// GET and documented no-submit POST operations retain identical encoded inputs
 /// across safe read retries. One deadline covers retries, body reads and decoding.
-/// The caller supplies a Tokio runtime with networking/time enabled.
+/// On native targets, the caller supplies a Tokio runtime with networking/time enabled.
 pub struct LifiClient {
     config: LifiHttpConfig,
     http: HttpClient,
@@ -245,7 +247,7 @@ impl LifiClient {
     /// # Errors
     /// Returns fixed bounded transport, provider, identity and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn get_quote(&self, request: Request) -> Result<LifiStepHandle, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -288,7 +290,7 @@ impl LifiClient {
     /// # Errors
     /// Returns fixed bounded transport, provider, identity and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn get_routes(&self, request: Request) -> Result<Routes<LifiStepHandle>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -324,7 +326,7 @@ impl LifiClient {
     /// Rejects another endpoint/key/provider binding before any request, and
     /// rejects source rewrites of selected identities/units/settings.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn prepare_step(&self, selected: &LifiStepHandle) -> Result<PreparedStep, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -364,7 +366,7 @@ impl LifiClient {
     /// # Errors
     /// Returns fixed bounded provider failures for mismatched hashes/chains.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn get_status(&self, query: StatusQuery) -> Result<Status, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget

@@ -3,12 +3,14 @@
 
 //! Bounded Solana reads and explicitly invoked one-shot submission over HTTP.
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 mod execution;
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 use crate::{
     config::HttpConfig,
@@ -56,7 +58,7 @@ impl SolanaHttpConfig {
 
 /// An optional HTTP backend verifying full Solana genesis identity at every operation.
 ///
-/// The caller supplies a Tokio runtime with I/O and time drivers. The library
+/// On native targets, the caller supplies a Tokio runtime with I/O and time drivers. The library
 /// creates no runtime and loads no endpoints or credentials. Requested
 /// commitment and minimum slot are retained; the minimum is not a historical
 /// anchor. A per-operation genesis check does not make separate responses atomic.
@@ -74,7 +76,7 @@ impl SolanaClient {
     /// response, or genesis-mismatch failures without supplied credentials.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn connect(config: SolanaHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         let http = HttpClient::new(config.http_config())?;
@@ -107,7 +109,7 @@ impl SolanaClient {
     /// a slot below the supplied minimum. Null never means a zero balance.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_native_balance(
         &self,
         address: Pubkey,
@@ -152,7 +154,7 @@ impl SolanaClient {
     /// A missing `value` field is malformed; an explicit null is valid absence.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_account(
         &self,
         address: Pubkey,
@@ -202,7 +204,7 @@ impl SolanaClient {
     /// malformed data, unexpected token programs or token-account parser kinds.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_token_balance(
         &self,
         token_account: Pubkey,

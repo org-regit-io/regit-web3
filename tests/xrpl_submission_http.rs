@@ -3,6 +3,7 @@
 
 //! Explicit XRPL submit-only exchanges with honest post-dispatch ambiguity.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "xrpl-http")]
 
 use std::time::Duration;

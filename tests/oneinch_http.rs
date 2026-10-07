@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Classic Swap v6.1 public HTTP behavior using actual bounded loopback exchanges.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "oneinch-http")]
 #[path = "fixtures/oneinch/support.rs"]
 mod fixture;

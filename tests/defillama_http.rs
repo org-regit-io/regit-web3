@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Public typed analytics operations over independent real loopback HTTP sources.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "defillama-http")]
 #[path = "support/market_server.rs"]
 mod market_server;

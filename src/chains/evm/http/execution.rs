@@ -35,7 +35,7 @@ impl EvmClient {
     /// Reports chain/header mismatch, malformed required prices and backend failures.
     /// Unknown optional-method RPC failures fail rather than invent a suggestion.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_fee_suggestions(&self) -> Result<OperationObservation<FeeSuggestions>, Error> {
         let budget = OperationBudget::new(self.config.limits())?;
         budget
@@ -84,7 +84,7 @@ impl EvmClient {
     /// # Errors
     /// Reports unavailable state, inconsistent identity, nonce overflow and backend failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_account_nonce(
         &self,
         address: Address,
@@ -133,7 +133,7 @@ impl EvmClient {
     /// # Errors
     /// Reports source code3 revert, null result, chain/state and fixed backend failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn call(
         &self,
         call: TransactionCall,
@@ -180,7 +180,7 @@ impl EvmClient {
     /// Reports source revert, unsupported capability, malformed/out-of-cap estimate,
     /// unavailable state and backend failures. No signing or submission occurs.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn estimate_gas(
         &self,
         call: TransactionCall,

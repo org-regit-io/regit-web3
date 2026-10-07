@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Offline exact mempool records, bounds and constructor/serde parity.
+#![cfg(test)]
 #![cfg(feature = "mempool-space")]
 
 use regit_web3::{
@@ -39,7 +40,11 @@ fn recent(value: u8) -> Result<RecentTransaction, Error> {
         Satoshis::new(1_999_999_999_999_993),
     )
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fee_rates_and_source_virtual_sizes_preserve_exact_units()
 -> Result<(), Box<dyn std::error::Error>> {
     let fees = RecommendedFees::new(
@@ -68,7 +73,11 @@ fn fee_rates_and_source_virtual_sizes_preserve_exact_units()
     assert_eq!(TransactionLimit::new(100_000)?.get(), 100_000);
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn summary_bins_are_individual_descending_and_can_be_partial_or_empty()
 -> Result<(), Box<dyn std::error::Error>> {
     let bins = vec![
@@ -109,7 +118,11 @@ fn summary_bins_are_individual_descending_and_can_be_partial_or_empty()
     assert!(serde_json::from_value::<MempoolSummary>(value).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn recent_entries_retain_fractional_size_and_reject_duplicates_and_money_overrun()
 -> Result<(), Box<dyn std::error::Error>> {
     let value = RecentTransactions::new(vec![recent(1)?])?;
@@ -137,7 +150,11 @@ fn recent_entries_retain_fractional_size_and_reject_duplicates_and_money_overrun
     assert!(serde_json::from_value::<RecentTransaction>(value).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn full_ids_fail_wholly_and_observations_validate_schema_operation_and_capacity()
 -> Result<(), Box<dyn std::error::Error>> {
     let limit = TransactionLimit::new(2)?;

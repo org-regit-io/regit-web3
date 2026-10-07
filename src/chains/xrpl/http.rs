@@ -3,10 +3,12 @@
 
 //! Optional bounded outgoing XRPL JSON HTTP backend.
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
+use std::fmt;
 
 use serde::{Serialize, de::DeserializeOwned};
 
@@ -55,7 +57,7 @@ impl XrplHttpConfig {
 
 /// An optional XRPL HTTP backend verifying server-reported network ID per operation.
 ///
-/// The caller supplies a Tokio runtime with I/O and time enabled. No runtime,
+/// On native targets, the caller supplies a Tokio runtime with I/O and time enabled. No runtime,
 /// credentials or endpoints are discovered. API-v2 XRPL `result.status` is
 /// decoded independently of JSON-RPC 2.0 envelopes. Read retries retain frozen
 /// serialized parameters under one deadline. Validated ledger claims are
@@ -72,7 +74,7 @@ impl XrplClient {
     /// or network mismatch errors. Missing network ID is unsupported.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn connect(config: XrplHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         let http = HttpClient::new(config.http_config())?;
@@ -105,7 +107,7 @@ impl XrplClient {
     /// return `SubmissionOutcomeUnknown`, never evidence of definite rejection.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn submit_signed(
         &self,
         submission: SignedSubmission,
@@ -151,7 +153,7 @@ impl XrplClient {
     /// validated metadata. `txnNotFound` is unavailable, never proof of failure.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction(&self, hash: Hash) -> Result<Observation<Transaction>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget
@@ -189,7 +191,7 @@ impl XrplClient {
     /// validated transaction lacking execution metadata, plus provider failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction_status(
         &self,
         hash: Hash,
@@ -231,7 +233,7 @@ impl XrplClient {
     /// malformed or unvalidated inclusion and nonadvancing continuation.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_account_history(
         &self,
         account: Address,
@@ -292,7 +294,7 @@ impl XrplClient {
     /// negative or overflow drops, missing accounts and provider failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_account_balance(
         &self,
         account: Address,
@@ -354,7 +356,7 @@ impl XrplClient {
     /// overflow or nonrepresentable exact values and nonadvancing markers.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_trust_lines(
         &self,
         account: Address,
@@ -416,7 +418,7 @@ impl XrplClient {
     /// open-ledger identity, in addition to fixed transport/provider failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_fee_estimate(&self) -> Result<Observation<FeeEstimate>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget

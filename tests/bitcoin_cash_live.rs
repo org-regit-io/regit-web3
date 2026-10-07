@@ -4,6 +4,7 @@
 //! Explicit opt-in read-only BCH qualification over certificate-verified TLS.
 //! All network, identity, address, capacity and trust-anchor inputs belong to this
 //! test harness. Ordinary tests do not use the network or require configuration.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "bitcoin-cash-electrum")]
 
 use regit_web3::{

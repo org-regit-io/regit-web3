@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Explicit ignored keyless API-v2 direct quotes, unsigned data and progress reads.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "rubic-http")]
 use regit_web3::{
     config::{HttpConfig, RpcEndpoint, RpcLimits},

@@ -3,10 +3,12 @@
 
 //! Network-qualified `THORNode` and enabled Cosmos bank reads over bounded HTTP.
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
+use std::fmt;
 
 use super::{ThorchainReader, wire};
 use crate::{
@@ -59,7 +61,7 @@ impl ThorchainHttpConfig {
 /// block-hash snapshot or independent consensus proof. Source height/finality
 /// fields remain family-specific. Expired quotes are unavailable without refresh.
 ///
-/// The caller supplies a Tokio runtime with I/O/time drivers. The client creates
+/// On native targets, the caller supplies a Tokio runtime with I/O/time drivers. The client creates
 /// no runtime and reads no environment variables, endpoints or credentials.
 pub struct ThorchainClient {
     config: ThorchainHttpConfig,
@@ -80,7 +82,7 @@ impl ThorchainClient {
     /// Remote diagnostic bodies and endpoint/credential values are not retained.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime has disabled I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime has disabled I/O or time drivers.
     pub async fn connect(config: ThorchainHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         let http = HttpClient::new(config.http_config())?;
@@ -149,7 +151,7 @@ impl ThorchainClient {
     /// and bounded transport failures. No implicit denomination fallback is used.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_rune_balance(
         &self,
         address: Address,
@@ -188,7 +190,7 @@ impl ThorchainClient {
     /// source fields, network changes and bounded transport failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_pool(&self, asset: Asset) -> Result<Observation<Pool>, Error> {
         if asset.kind() != AssetKind::LayerOne {
             return Err(ValidationError::InvalidThorchainAsset.into());
@@ -215,7 +217,7 @@ impl ThorchainClient {
     /// network changes and bounded transport failures; records are never truncated.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_pools(&self, limit: CollectionLimit) -> Result<Observation<Pools>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -235,7 +237,7 @@ impl ThorchainClient {
     /// Returns fixed malformed-source, network-mismatch and bounded transport failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_network(&self) -> Result<Observation<NetworkData>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -260,7 +262,7 @@ impl ThorchainClient {
     /// malformed data, network changes and bounded transport failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_swap_quote(
         &self,
         request: SwapRequest,
@@ -306,7 +308,7 @@ impl ThorchainClient {
     /// network changes and bounded transport failures; no records are truncated.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_inbound_addresses(
         &self,
         limit: CollectionLimit,
@@ -337,7 +339,7 @@ impl ThorchainClient {
     /// network changes and bounded transport failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_last_blocks(
         &self,
         limit: CollectionLimit,
@@ -363,7 +365,7 @@ impl ThorchainClient {
     /// nested collection excess, network changes and bounded transport failures.
     ///
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn get_transaction_status(
         &self,
         txid: Txid,

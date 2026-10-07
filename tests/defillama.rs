@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure provider units, time ordering, identity and nullable-value invariants.
+#![cfg(test)]
 #![cfg(feature = "defillama")]
 use regit_web3::{
     domain::{
@@ -18,7 +19,11 @@ use regit_web3::{
 fn value(raw: &str) -> Result<NonnegativeDecimal, Error> {
     NonnegativeDecimal::new(ExactDecimal::parse(raw)?)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_units_signed_apy_and_null_components_are_retained()
 -> Result<(), Box<dyn std::error::Error>> {
     let rates = YieldRates::new(
@@ -51,7 +56,11 @@ fn exact_units_signed_apy_and_null_components_are_retained()
     assert!(serde_json::from_str::<YieldRates>(r#"{"apy":"1","reward":null}"#).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn duplicate_and_reversed_time_series_fail_in_constructor_and_serde()
 -> Result<(), Box<dyn std::error::Error>> {
     let point = UsdPoint::new(Timestamp::from_unix_seconds(10), value("1")?);
@@ -118,7 +127,11 @@ fn duplicate_and_reversed_time_series_fail_in_constructor_and_serde()
     assert!(YieldHistory::new(ProviderId::parse("pool")?, vec![early, late]).is_ok());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn reporting_components_and_stablecoin_identity_are_not_assumed_or_summed() -> Result<(), Error> {
     assert!(StablecoinId::new(0).is_err());
     let component = BreakdownValue::new(Label::new("Ethereum-borrowed")?, value("5")?);

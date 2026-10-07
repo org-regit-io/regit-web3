@@ -4,6 +4,7 @@
 //! Explicit opt-in read-only qualification through all six public Rust methods.
 //! Endpoint, expected network, provider, transaction and capacity are test inputs.
 //! Each moving mempool result is independent; this test never submits a transaction.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "mempool-space-http")]
 
 use std::{fmt::Debug, time::Duration};

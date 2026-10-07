@@ -3,6 +3,7 @@
 
 //! Pure canonical Solana execution/preparation invariants and public source vectors.
 
+#![cfg(test)]
 #![cfg(feature = "solana")]
 
 use regit_web3::{
@@ -71,7 +72,11 @@ fn metadata(count: usize) -> TransactionMetadataData {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn canonical_legacy_preparation_encodes_exact_system_transfer_and_wallet_review() -> TestResult {
     let p = preparation()?;
     let m = p.unsigned_transaction().message().decoded_message();
@@ -104,7 +109,11 @@ fn canonical_legacy_preparation_encodes_exact_system_transfer_and_wallet_review(
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn classic_spl_transfer_checked_has_exact_amount_precision_and_explicit_accounts() -> TestResult {
     let p = TransferPreparation::new(
         network()?,
@@ -148,7 +157,11 @@ fn classic_spl_transfer_checked_has_exact_amount_precision_and_explicit_accounts
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_serde_rejects_changed_intent_or_message_but_preserves_unencoded_height() -> TestResult
 {
     let p = preparation()?;
@@ -168,7 +181,11 @@ fn preparation_serde_rejects_changed_intent_or_message_but_preserves_unencoded_h
     assert_eq!(p.unsigned_transaction(), changed.unsigned_transaction());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn unsigned_and_structurally_signed_classes_are_distinct_without_crypto_claim() -> TestResult {
     let p = preparation()?;
     let unsigned = p.unsigned_transaction();
@@ -187,7 +204,11 @@ fn unsigned_and_structurally_signed_classes_are_distinct_without_crypto_claim() 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn malformed_trailing_noncanonical_and_oversized_byte_inputs_are_fixed_errors() -> TestResult {
     let p = preparation()?;
     let bytes = p.unsigned_transaction().bytes();
@@ -220,7 +241,11 @@ fn malformed_trailing_noncanonical_and_oversized_byte_inputs_are_fixed_errors() 
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn actual_mainnet_v1_source_exceeds_legacy_size_and_retains_real_signature() -> TestResult {
     let bytes = const_hex::decode(
         include_str!("fixtures/solana_execution/mainnet_v1_transaction.hex").trim(),
@@ -244,7 +269,11 @@ fn actual_mainnet_v1_source_exceeds_legacy_size_and_retains_real_signature() -> 
     assert_eq!(u.bytes().len(), tx.bytes().len());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn maintained_v0_lookup_message_roundtrips_without_inventing_loaded_addresses() -> TestResult {
     let solana_message::VersionedMessage::Legacy(m) = preparation()?
         .unsigned_transaction()
@@ -270,7 +299,11 @@ fn maintained_v0_lookup_message_roundtrips_without_inventing_loaded_addresses() 
     assert_eq!(UnsignedMessage::from_bytes(m.bytes().to_vec())?, m);
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn metadata_retains_exact_above_f64_units_and_validates_native_account_counts() -> TestResult {
     let body = signed_legacy()?;
     let count = body.message().account_count();
@@ -296,7 +329,11 @@ fn metadata_retains_exact_above_f64_units_and_validates_native_account_counts() 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn metadata_checks_loaded_count_token_indices_duplicate_groups_and_execution_index() -> TestResult {
     let body = signed_legacy()?;
     let count = body.message().account_count();
@@ -377,7 +414,11 @@ fn metadata_checks_loaded_count_token_indices_duplicate_groups_and_execution_ind
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn rpc_request_controls_are_method_specific_and_context_constructor_serde_match() -> TestResult {
     assert!(TransactionReadOptions::new(Commitment::Processed, 1).is_err());
     assert!(TransactionReadOptions::new(Commitment::Confirmed, 2).is_err());
@@ -403,7 +444,11 @@ fn rpc_request_controls_are_method_specific_and_context_constructor_serde_match(
     assert!(context(tx, Some(100)).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn status_and_transaction_observations_reject_wrong_query_and_source_slot_facts() -> TestResult {
     let s = Signature::from_bytes([1; 64]);
     let r = ExecutionRequest::Status {
@@ -446,7 +491,11 @@ fn status_and_transaction_observations_reject_wrong_query_and_source_slot_facts(
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn logs_preserve_empty_and_control_bytes_without_diagnostic_leak_or_unbounded_recording()
 -> TestResult {
     let log = LogMessage::new("FAKE_SECRET\n\0")?;
@@ -482,7 +531,11 @@ fn logs_preserve_empty_and_control_bytes_without_diagnostic_leak_or_unbounded_re
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn partially_signed_multi_authority_payload_is_neither_unsigned_nor_signed() -> TestResult {
     let prepared = TransferPreparation::new(
         network()?,
@@ -517,7 +570,11 @@ fn partially_signed_multi_authority_payload_is_neither_unsigned_nor_signed() -> 
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn format_specific_packet_and_v1_header_bounds_are_enforced_before_encoding() -> TestResult {
     let mut legacy = preparation()?
         .unsigned_transaction()

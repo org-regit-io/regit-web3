@@ -3,6 +3,7 @@
 
 //! Public Cardano contracts independent of a provider or runtime.
 
+#![cfg(test)]
 #![cfg(feature = "cardano")]
 
 use regit_web3::{
@@ -77,7 +78,11 @@ fn context(operation: Operation) -> Result<Context, Error> {
     ))
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn published_vectors_roundtrip_with_conventional_roles_and_encoding() {
     for text in [MAIN, TEST, BYRON] {
         let parsed = PaymentAddress::parse(text).unwrap();
@@ -101,7 +106,11 @@ fn published_vectors_roundtrip_with_conventional_roles_and_encoding() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn address_validation_checks_byron_crc_surplus_bytes_and_pointer_canonicality() {
     let parsed = PaymentAddress::parse(MAIN).unwrap();
     let mut surplus = parsed.bytes().to_vec();
@@ -139,7 +148,11 @@ fn byron_with_attributes(
     Ok(pallas_addresses::byron::ByronAddress::from_decoded(payload).to_base58())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn byron_inner_network_magic_requires_canonical_full_cbor_even_with_valid_crc() {
     use pallas_addresses::byron::AddrAttrProperty;
     let canonical =
@@ -167,7 +180,11 @@ fn byron_inner_network_magic_requires_canonical_full_cbor_even_with_valid_crc() 
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn byron_derivation_payload_is_canonical_bytes_without_claiming_ciphertext_validity() {
     use pallas_addresses::byron::AddrAttrProperty;
     for inner in [vec![0x40], vec![0x42, 0, 255]] {
@@ -198,7 +215,11 @@ fn byron_derivation_payload_is_canonical_bytes_without_claiming_ciphertext_valid
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn byron_attributes_are_strictly_ordered_unique_and_in_the_supported_profile() {
     use pallas_addresses::byron::{AddrAttrProperty, AddrDistr};
     let path = AddrAttrProperty::DerivationPath(vec![0x42, 0, 255].into());
@@ -232,7 +253,11 @@ fn byron_attributes_are_strictly_ordered_unique_and_in_the_supported_profile() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn network_magic_distinguishes_testnets_without_inventing_address_evidence() {
     let address = PaymentAddress::parse(TEST).unwrap();
     assert!(address.is_compatible_with(NetworkId::preprod()));
@@ -254,7 +279,11 @@ fn network_magic_distinguishes_testnets_without_inventing_address_evidence() {
     assert!(Network::new(NetworkId::mainnet(), "https://secret").is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn hashes_and_binary_asset_names_have_exact_width_and_canonical_hex() {
     assert_eq!(
         Hash::parse(&"AB".repeat(32)).unwrap().to_string(),
@@ -276,7 +305,11 @@ fn hashes_and_binary_asset_names_have_exact_width_and_canonical_hex() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn aggregate_balances_preserve_uint256_and_unknown_token_precision() {
     let wide = U256::from(u64::MAX) + U256::from(1);
     let value = AddressBalance::new(
@@ -301,7 +334,11 @@ fn aggregate_balances_preserve_uint256_and_unknown_token_precision() {
     assert!(AssetAmount::new(AssetId::native(NetworkId::mainnet()), U256::from(1), None).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn constructors_and_serde_reject_duplicate_assets_precision_and_network_bypass() {
     assert!(
         AddressBalance::new(
@@ -327,7 +364,11 @@ fn constructors_and_serde_reject_duplicate_assets_precision_and_network_bypass()
     assert!(serde_json::from_value::<AddressBalance>(fields).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn output_width_positive_tokens_and_required_nullable_fields_are_enforced() {
     let wide = U256::from(u64::MAX) + U256::from(1);
     assert_eq!(
@@ -356,7 +397,11 @@ fn output_width_positive_tokens_and_required_nullable_fields_are_enforced() {
     assert!(serde_json::from_value::<Utxo>(fields).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn pages_preserve_bounds_request_completeness_and_unique_outpoints() {
     let request = PageRequest::new(4, 1, Order::Desc).unwrap();
     let item = output(0, vec![native(U256::from(1)).unwrap()]).unwrap();
@@ -403,7 +448,11 @@ fn pages_preserve_bounds_request_completeness_and_unique_outpoints() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observations_check_network_operation_schema_unknown_and_raw_duplicate_keys() {
     let value =
         Observation::balance(balance().unwrap(), context(Operation::Balance).unwrap()).unwrap();
@@ -424,7 +473,11 @@ fn observations_check_network_operation_schema_unknown_and_raw_duplicate_keys() 
     assert!(serde_json::from_value::<Observation<AddressBalance>>(fields).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn opaque_data_has_explicit_absence_application_bounds_and_redacted_debug() {
     let present = HexData::parse("19a6aa").unwrap();
     assert_eq!(present.bytes(), [0x19, 0xa6, 0xaa]);
@@ -437,7 +490,11 @@ fn opaque_data_has_explicit_absence_application_bounds_and_redacted_debug() {
     assert_eq!(serde_json::to_value(data).unwrap()["inline_datum"], "");
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_backend_is_runtime_independent_without_send_sync_supertraits() {
     struct Reader(Rc<Network>);
     impl BalanceReader for Reader {
@@ -447,7 +504,8 @@ fn caller_backend_is_runtime_independent_without_send_sync_supertraits() {
         fn get_balance(
             &self,
             _address: PaymentAddress,
-        ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + Send {
+        ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>>
+        + regit_web3::future::MaybeSend {
             ready(
                 balance()
                     .and_then(|value| Observation::balance(value, context(Operation::Balance)?)),
@@ -457,7 +515,8 @@ fn caller_backend_is_runtime_independent_without_send_sync_supertraits() {
     fn read<R: BalanceReader>(
         reader: &R,
         address: PaymentAddress,
-    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + regit_web3::future::MaybeSend
+    {
         reader.get_balance(address)
     }
     let reader = Reader(Rc::new(network("caller").unwrap()));

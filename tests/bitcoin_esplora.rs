@@ -3,6 +3,7 @@
 
 //! Public Bitcoin Esplora reads through deterministic real HTTP exchanges.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "bitcoin-esplora")]
 
 use std::time::{Duration, SystemTime, UNIX_EPOCH};

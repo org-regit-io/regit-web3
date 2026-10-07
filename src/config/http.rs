@@ -17,6 +17,7 @@ use super::RpcLimits;
 /// URLs may contain explicitly supplied user information or query parameters.
 /// Both the entire URL and all headers are redacted from `Debug`. The endpoint
 /// cannot be serialized through this API.
+/// Browser backends reject URL user information because Fetch cannot send it.
 #[derive(Clone)]
 pub struct RpcEndpoint {
     pub(crate) url: Url,
@@ -65,6 +66,8 @@ impl RpcEndpoint {
     /// determined by the validated endpoint and request body. Explicit
     /// `authorization` cannot be combined with URL user information; this avoids
     /// ambiguous authentication precedence.
+    /// Browser backends additionally reject host-controlled or silently removed
+    /// headers, including cookies, referrer, origin and user agent, before dispatch.
     pub fn with_header(mut self, name: &str, value: &str) -> Result<Self, Error> {
         let name = HeaderName::from_bytes(name.as_bytes()).map_err(|_| Error::Configuration)?;
         if matches!(
@@ -95,6 +98,10 @@ impl fmt::Debug for RpcEndpoint {
 ///
 /// Configuration is independent of chain identity and performs no requests.
 /// Integrations validate their own network and protocol contracts.
+/// Native outgoing backends use the caller's Tokio runtime. Browser backends
+/// use the JavaScript host's Fetch and timers without a Tokio runtime. Browser
+/// requests omit ambient credentials, referrer and caches, reject redirects,
+/// and require the endpoint's CORS policy to permit the explicit request.
 #[derive(Clone, Debug)]
 pub struct HttpConfig {
     endpoint: RpcEndpoint,

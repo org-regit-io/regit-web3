@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Exact Jupiter V2 requests, fresh-build preparation and wallet boundaries.
+#![cfg(test)]
 #![cfg(feature = "jupiter")]
 #[path = "jupiter_support/mod.rs"]
 mod support;
@@ -22,7 +23,11 @@ use support::{
     route, settings, taker,
 };
 type TestResult = Result<(), Box<dyn std::error::Error>>;
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn requests_validate_network_and_all_explicit_bounds_with_serde_parity() -> TestResult {
     let q = quote_request()?;
     assert_eq!(
@@ -58,7 +63,11 @@ fn requests_validate_network_and_all_explicit_bounds_with_serde_parity() -> Test
     assert!(BuildRequest::new(bad).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_threshold_rounding_and_maximum_raw_units_never_default_precision() -> TestResult {
     let build = SwapBuild::new(build_data()?)?;
     assert_eq!(build.data().other_amount_threshold, 9_901);
@@ -75,7 +84,11 @@ fn exact_threshold_rounding_and_maximum_raw_units_never_default_precision() -> T
     assert!(SwapBuild::new(d).is_ok());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn connected_serial_routes_preserve_percentages_and_leg_amounts_without_summing() -> TestResult {
     let middle = Pubkey::from_bytes([8; 32]);
     let mut d = build_data()?;
@@ -93,7 +106,11 @@ fn connected_serial_routes_preserve_percentages_and_leg_amounts_without_summing(
     assert!(serde_json::from_value::<RouteStep>(serde_json::to_value(r)?).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn lookup_table_order_and_legitimate_duplicate_entries_are_preserved() -> TestResult {
     let p = Pubkey::from_bytes([2; 32]);
     let t = LookupTable::new(Pubkey::from_bytes([3; 32]), vec![p, p, taker()?])?;
@@ -104,7 +121,11 @@ fn lookup_table_order_and_legitimate_duplicate_entries_are_preserved() -> TestRe
     assert!(SwapBuild::new(d).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn instruction_bytes_require_canonical_base64_and_opaque_debug() -> TestResult {
     let bytes = InstructionData::parse("AQID")?;
     assert_eq!(bytes.bytes(), &[1, 2, 3]);
@@ -116,7 +137,11 @@ fn instruction_bytes_require_canonical_base64_and_opaque_debug() -> TestResult {
     assert!(!format!("{:?}", Label::new("private-source-label")?).contains("private-source-label"));
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn source_compute_price_profile_and_explicit_ceiling_are_enforced() -> TestResult {
     let mut d = build_data()?;
     d.compute_budget[0] = instruction(
@@ -146,7 +171,11 @@ fn source_compute_price_profile_and_explicit_ceiling_are_enforced() -> TestResul
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn compilation_uses_maintained_v0_and_exact_source_hash_height_budget_fields() -> TestResult {
     let p = prepared()?;
     p.validate()?;
@@ -178,7 +207,11 @@ fn compilation_uses_maintained_v0_and_exact_source_hash_height_budget_fields() -
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn hidden_budget_overrides_and_unexpected_structural_signers_are_rejected() -> TestResult {
     let mut d = build_data()?;
     d.other = vec![instruction(
@@ -221,7 +254,11 @@ fn hidden_budget_overrides_and_unexpected_structural_signers_are_rejected() -> T
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn wallet_handoff_retains_fresh_intent_and_never_signs_or_submits() -> TestResult {
     let p = prepared()?;
     let handoff = HandoffRequest::new(
@@ -239,7 +276,11 @@ fn wallet_handoff_retains_fresh_intent_and_never_signs_or_submits() -> TestResul
     assert_ne!(PreparedSwap::new(SwapIntent::new(data)?)?, p);
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observations_reject_wrong_operation_network_and_unknown_serialized_fields() -> TestResult {
     let b = SwapBuild::new(build_data()?)?;
     let c = Context::new(
@@ -267,7 +308,11 @@ fn execution_context(
         Timestamp::from_unix_seconds(311),
     )
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn estimate_preserves_independent_slots_fee_absence_and_actual_simulation_failure() -> TestResult {
     let p = prepared()?;
     let options = ReadOptions::new(Commitment::Confirmed, Some(100));
@@ -304,7 +349,11 @@ fn estimate_preserves_independent_slots_fee_absence_and_actual_simulation_failur
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn estimate_rejects_changed_message_network_and_controls() -> TestResult {
     let p = prepared()?;
     let options = ReadOptions::new(Commitment::Confirmed, None);
@@ -369,7 +418,11 @@ fn estimate_rejects_changed_message_network_and_controls() -> TestResult {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn explicit_other_instruction_placement_changes_bytes_and_review_even_for_empty_groups()
 -> TestResult {
     let mut data = build_data()?;
@@ -440,7 +493,11 @@ fn explicit_other_instruction_placement_changes_bytes_and_review_even_for_empty_
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn build_source_labels_respect_explicit_case_sensitive_include_exclude_filters() -> TestResult {
     let data = build_data()?;
     for filter in [
@@ -462,7 +519,11 @@ fn build_source_labels_respect_explicit_case_sensitive_include_exclude_filters()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn optional_source_expiry_literal_has_no_invented_format_or_ttl() -> TestResult {
     let literal = ExpiryLiteral::new("Wed, 07 Oct 2026 08:00:00 GMT")?;
     assert_eq!(literal.as_str(), "Wed, 07 Oct 2026 08:00:00 GMT");

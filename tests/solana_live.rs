@@ -7,6 +7,7 @@
 //! on missing configuration or provider errors. Account and token-account reads
 //! are independent so an unavailable token account cannot hide account proof.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "solana-http")]
 
 use regit_web3::{

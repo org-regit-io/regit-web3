@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Offline BCH identity, exact-value, source-record and observation contracts.
+#![cfg(test)]
 #![cfg(feature = "bitcoin-cash")]
 
 use cashaddr::CashEnc;
@@ -22,7 +23,11 @@ fn roundtrip<T: Serialize + for<'de> Deserialize<'de> + Eq + std::fmt::Debug>(v:
     assert_eq!(&serde_json::from_str::<T>(&serde_json::to_string(v)?)?, v);
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn primary_cashaddr_vectors_preserve_supported_kinds_widths_and_tokens() -> TestResult {
     #[derive(Deserialize)]
     struct Vector {
@@ -68,7 +73,11 @@ fn primary_cashaddr_vectors_preserve_supported_kinds_widths_and_tokens() -> Test
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn p2sh32_bytecode_legacy_conversion_and_namespace_are_explicit() -> TestResult {
     let hash = vec![9; 32];
     let a = Address::from_hash(
@@ -105,7 +114,11 @@ fn p2sh32_bytecode_legacy_conversion_and_namespace_are_explicit() -> TestResult 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn malformed_short_checksum_unsupported_kinds_and_mixed_case_are_rejected() -> TestResult {
     for v in [
         "bitcoincash:x64nx6hz",
@@ -126,7 +139,11 @@ fn malformed_short_checksum_unsupported_kinds_and_mixed_case_are_rejected() -> T
     assert!(serde_json::from_value::<Address>(fields).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn genesis_and_real_fork_checkpoint_are_distinct_network_facts() -> TestResult {
     let network = NetworkIdentity::mainnet("mainnet")?;
     let genesis = BlockHeader::from_hex(include_str!("fixtures/bitcoin_cash/genesis.hex").trim())?;
@@ -143,7 +160,11 @@ fn genesis_and_real_fork_checkpoint_are_distinct_network_facts() -> TestResult {
     assert!(ForkCheckpoint::new(0, genesis.hash()).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_bch_atomic_and_fee_decimal_units_never_round() -> TestResult {
     assert_eq!(
         Satoshis::from_bch(&ExactDecimal::parse("3.12508205")?)?.raw(),
@@ -174,7 +195,11 @@ fn exact_bch_atomic_and_fee_decimal_units_never_round() -> TestResult {
     assert!(FeeEstimate::new(FeeTarget::new(1)?, Some(ExactDecimal::parse("-2")?)).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn cash_tokens_have_distinct_exact_amounts_and_bounded_nft_metadata() -> TestResult {
     let token = TokenData::new(
         TokenCategory::parse(&"ab".repeat(32))?,
@@ -191,7 +216,11 @@ fn cash_tokens_have_distinct_exact_amounts_and_bounded_nft_metadata() -> TestRes
     assert!(!format!("{:?}", Bytes::from_hex("aabb")?).contains("aabb"));
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_preserves_same_block_order_and_rejects_range_duplicates_and_capacity() -> TestResult {
     let limit = CollectionLimit::new(3)?;
     let range = HistoryRange::new(10, HistoryUpperBound::Height { height: 12 }, limit)?;
@@ -235,7 +264,11 @@ fn history_preserves_same_block_order_and_rejects_range_duplicates_and_capacity(
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_pending_height_fee_and_order_remain_source_specific() -> TestResult {
     let pending = HistoryEntry::new(
         Txid::from_display_bytes([1; 32]),
@@ -271,7 +304,11 @@ fn history_pending_height_fee_and_order_remain_source_specific() -> TestResult {
     roundtrip(&history)?;
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn unspent_filters_duplicate_outpoints_money_and_capacities_are_checked() -> TestResult {
     let token = TokenData::new(
         TokenCategory::from_display_bytes([2; 32]),
@@ -323,7 +360,11 @@ fn unspent_filters_duplicate_outpoints_money_and_capacities_are_checked() -> Tes
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn opaque_raw_computed_identity_and_zero_height_do_not_invent_consensus_or_mempool() -> TestResult {
     let raw = RawTransaction::new(Bytes::from_hex(
         include_str!("fixtures/bitcoin_cash/coinbase.hex").trim(),
@@ -344,7 +385,11 @@ fn opaque_raw_computed_identity_and_zero_height_do_not_invent_consensus_or_mempo
     assert!(serde_json::from_value::<RawTransaction>(bad).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_schema_query_filters_and_network_are_correlated() -> TestResult {
     let a = address()?;
     let value = AddressBalance {
@@ -437,7 +482,11 @@ fn full_transaction() -> Result<Transaction, Box<dyn std::error::Error>> {
         )?,
     )?)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn complete_transaction_source_integrity_checks_constructor_and_serde() -> TestResult {
     let tx = full_transaction()?;
     roundtrip(&tx)?;
@@ -471,7 +520,11 @@ fn complete_transaction_source_integrity_checks_constructor_and_serde() -> TestR
     roundtrip(&unavailable)?;
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn bounded_raw_text_and_collection_serde_do_not_expose_diagnostics() -> TestResult {
     assert!(Bytes::new(vec![0; Bytes::MAX_BYTES + 1]).is_err());
     for raw in ["0x00", "0", "gg"] {

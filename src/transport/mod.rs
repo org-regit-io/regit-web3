@@ -4,6 +4,7 @@
 //! Private transport components with separate HTTP, deadline, and codec roles.
 
 mod budget;
+mod clock;
 #[cfg(all(
     feature = "http",
     any(
@@ -31,6 +32,8 @@ mod http;
 mod rpc;
 
 pub(crate) use budget::OperationBudget;
+#[cfg(feature = "ton-http")]
+pub(crate) use clock::{Instant, sleep, sleep_until};
 #[cfg(all(
     feature = "http",
     any(

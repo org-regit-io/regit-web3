@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Explicit opt-in keyless mainnet read qualification; ordinary tests stay offline.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "dogecoin-http")]
 use regit_web3::{
     chains::dogecoin::{BlockCypherClient, BlockCypherConfig},

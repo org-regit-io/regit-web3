@@ -6,7 +6,7 @@ The full library scope comprises ten chain families, five protocols and five dat
 
 ## Catalogue and implementation status
 
-All twenty modules provide the operations described below. Qualification remains specific to recorded operations and providers; authenticated live data and final platform verification remain pending.
+All twenty modules provide the operations described below. Qualification remains specific to recorded operations and providers; authenticated 1inch live data and final platform verification remain pending.
 
 | Chain family | Scope | Current implementation |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ All twenty modules provide the operations described below. Qualification remains
 | --- | --- | --- |
 | CoinGecko | Asset search, prices, markets and historical market data | Search, exact ID/currency prices, explicit markets pages and historical price/capitalization/volume charts implemented |
 | DefiLlama | Protocol TVL, yields, stablecoins and DeFi analytics | Protocol/chain TVL and history, yields/history, stablecoins/history and DEX/fees/revenue/holders-revenue analytics implemented |
-| Helius | Solana assets, parsed transactions and address history | Four DAS/current Parsed Events reads with exact source records, bounded pages and immutable query continuations implemented; authenticated live qualification pending |
+| Helius | Solana assets, parsed transactions and address history | Four DAS/current Parsed Events reads with exact source records, bounded pages and immutable query continuations implemented; four methods have representative authenticated mainnet qualification |
 | Blockfrost | Indexed Cardano network, asset and supporting account data | Seventeen read/estimate methods covering balances, UTxOs, address/asset/reward pages, metadata, network/epoch/parameters/staking and transactions; separate raw-CBOR submission implemented |
 | mempool.space | Bitcoin mempool, fees and transaction data | Backlog summaries, recent arrivals, bounded full transaction-ID lists, exact recommended fees, canonical transaction retrieval and inclusion status implemented |
 
@@ -84,7 +84,7 @@ Generic typed wallet preparation, review and external signing-handoff contracts 
 
 EVM HTTP native reads retain configured precision, finality `unknown` and confirmations `null`; requested tags do not establish either. Bitcoin and Cardano indexed reads do not promise a hash-selected snapshot or lasting finality. Each family retains its own ledger and source semantics. Pure observation construction validates supplied records and does not independently verify a remote source.
 
-EVM ERC-20 balance/allowance/metadata, transaction/receipt/status, fee/nonce/call/estimate reads, Litecoin/Dogecoin five reads with history continuation, Bitcoin Cash six Electrum-TLS reads, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and EVM/XRPL preparation adapters have deterministic fixture qualification. EVM and XRPL explicit submission paths have deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Uniswap’s quote and supplied-path comparison have representative V3 live qualification; unsigned Universal Router 2.1.2 preparation and wallet handoff have fixture proof. TON’s seven read/estimate methods, an outgoing-fee transaction and local unsigned review have representative live qualification. TON submission has fixture proof; no funded write was performed. Solana’s seven added read/fee/simulation operations have representative mainnet qualification, including real v1 retrieval and a successful unsigned native simulation. Legacy/v0 codecs, classic SPL preparation and submission have fixture proof; no signed live submission was performed. Jupiter V2 quote/build, unsigned handoff and exact-message fee/simulation have representative mainnet qualification; the public example taker returned `AccountNotFound`, without swap-success proof. Cardano/Blockfrost operations, payment preparation/handoff and one-shot submission have deterministic and loopback fixture proof. Authenticated Blockfrost live qualification remains pending; no funded live submission was performed. Helius’s four reads and pagination contracts have deterministic and loopback fixture proof; authenticated data qualification remains pending. Rubic’s five direct API-v2 methods and unsigned EVM handoff have representative native Mac live qualification; the supplied unrelated public hash returned `NotFound`, without executed-transfer proof. Solana preparation has fixture proof. 1inch’s four operations and unsigned review/handoff have 31 deterministic/loopback tests; authenticated live data remains pending. Final platform qualification remains pending. Representative proofs apply to their recorded networks, provider plans and query variants.
+EVM ERC-20 balance/allowance/metadata, transaction/receipt/status, fee/nonce/call/estimate reads, Litecoin/Dogecoin five reads with history continuation, Bitcoin Cash six Electrum-TLS reads, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and EVM/XRPL preparation adapters have deterministic fixture qualification. EVM and XRPL explicit submission paths have deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Uniswap’s quote and supplied-path comparison have representative V3 live qualification; unsigned Universal Router 2.1.2 preparation and wallet handoff have fixture proof. TON’s seven read/estimate methods, an outgoing-fee transaction and local unsigned review have representative live qualification. TON submission has fixture proof; no funded write was performed. Solana’s seven added read/fee/simulation operations have representative mainnet qualification, including real v1 retrieval and a successful unsigned native simulation. Legacy/v0 codecs, classic SPL preparation and submission have fixture proof; no signed live submission was performed. Jupiter V2 quote/build, unsigned handoff and exact-message fee/simulation have representative mainnet qualification; the public example taker returned `AccountNotFound`, without swap-success proof. Cardano/Blockfrost operations, payment preparation/handoff and one-shot submission have deterministic and loopback fixture proof. All seventeen Blockfrost indexed reads/estimate and explicit unsigned review have representative authenticated mainnet qualification at epoch 660/protocol 11; no funded live submission was performed. Helius’s four reads have representative authenticated mainnet qualification, including duplicate parsed batches and successful history records; continuation variants retain deterministic and loopback fixture proof. Rubic’s five direct API-v2 methods and unsigned EVM handoff have representative native Mac live qualification; the supplied unrelated public hash returned `NotFound`, without executed-transfer proof. Solana preparation has fixture proof. 1inch’s four operations and unsigned review/handoff have 31 deterministic/loopback tests; authenticated live data remains pending. Final platform qualification remains pending. Representative proofs apply to their recorded networks, provider plans and query variants.
 
 ## Features
 
@@ -113,18 +113,18 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | `oneinch` | Pure exact EVM assets, v6.1 graphs/filter checks, `ClassicSwapReader` and immutable unsigned source preparation/handoff; no credentials or networking |
 | `rubic` | Pure cross-family direct-route contracts, exact bounded JSON metadata codec, `RubicReader` and unsigned EVM/Solana preparation/handoff |
 | `http` | Shared `HttpConfig` and `RpcEndpoint`; `RpcLimits` is also available with `bitcoin-cash-electrum` |
-| `evm-http` | Bounded `EvmClient` implementing read/simulation capabilities and separate explicit signed submission; Reqwest/rustls and caller-owned Tokio runtime |
+| `evm-http` | Bounded `EvmClient` implementing read/simulation capabilities and separate explicit signed submission; shared optional HTTP transport |
 | `litecoin-http`, `dogecoin-http` | Family-specific `BlockCypherClient` and explicit `BlockCypherConfig`; documented mainnet sources only |
-| `bitcoin-cash-electrum` | Certificate-verified Electrum-Cash 1.6 TLS `ElectrumClient`, explicit trust roots/network/source/limits and caller-owned Tokio runtime; no HTTP backend |
-| `solana-http` | Bounded `SolanaClient` implementing native/token/account/transaction/status/blockhash/fee/simulation capabilities and separate submission with explicit `SolanaHttpConfig`; Reqwest/rustls and caller-owned Tokio runtime |
+| `bitcoin-cash-electrum` | Native certificate-verified Electrum-Cash 1.6 TLS `ElectrumClient`, explicit trust roots/network/source/limits and caller-owned Tokio runtime; no HTTP backend |
+| `solana-http` | Bounded `SolanaClient` implementing native/token/account/transaction/status/blockhash/fee/simulation capabilities and separate submission with explicit `SolanaHttpConfig`; shared optional HTTP transport |
 | `bitcoin-esplora` | Bounded `EsploraClient` implementing Bitcoin read and transaction capabilities with explicit `EsploraConfig` |
-| `blockfrost-http` | Bounded `BlockfrostClient` for all seventeen indexed read/estimate methods and separate one-shot raw-CBOR submission; explicit `BlockfrostHttpConfig`, caller-owned project credentials and Tokio runtime |
+| `blockfrost-http` | Bounded `BlockfrostClient` for all seventeen indexed read/estimate methods and separate one-shot raw-CBOR submission; explicit `BlockfrostHttpConfig` and caller-owned project credentials |
 | `xrpl-http` | Bounded `XrplClient` with explicit expected network and `XrplHttpConfig` |
 | `coingecko-http` | Bounded `CoinGeckoClient` with explicit `CoinGeckoHttpConfig`, optional caller-supplied credential tier and item bounds |
 | `defillama-http` | Bounded `DefiLlamaClient` with independent source configurations and explicit item bounds |
 | `helius-http` | Bounded `HeliusClient` with explicit full Solana genesis and one RPC/Parsed Events base; caller-owned authentication/runtime and opaque concrete-client-bound continuation handles |
 | `mempool-space-http` | Bounded `MempoolSpaceClient` with explicit genesis/API configuration; composes the compatible Bitcoin Esplora backend |
-| `ton-http` | `TonClient` with explicit `TonHttpConfig`, zero-state identity, replaceable API-v2 endpoint and optional caller-selected request spacing; caller-owned Tokio runtime |
+| `ton-http` | `TonClient` with explicit `TonHttpConfig`, zero-state identity, replaceable API-v2 endpoint and optional caller-selected request spacing |
 | `thorchain-http` | Bounded `ThorchainClient` with explicit `ThorchainHttpConfig`, expected Cosmos chain ID and separate account prefix |
 | `lifi-http` | Bounded `LifiClient`, explicit chain-family catalogue, optional caller-provided headers and private exact continuation bound to the configured authority |
 | `jupiter-http` | `JupiterClient` for explicitly configured V2 quote/build access; composes a caller-selected Solana execution reader for exact-message fees/simulation |
@@ -133,7 +133,16 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | `rubic-http` | Bounded direct API-v2 `RubicClient`, explicit `RubicHttpConfig`/family catalogue/headers and one total deadline; quote/build requests do not execute swaps |
 | `all` | All catalogue features and currently implemented backends |
 
-Concrete HTTP backends use Reqwest/rustls and a caller-owned Tokio runtime with I/O/time drivers. The library loads no environment configuration. The [Rust example and live-test guide](examples/README.md) document explicit inputs, backend selection and read-specific qualification.
+Concrete HTTP backends use Reqwest/rustls and a caller-owned Tokio runtime with I/O/time drivers on native targets. On `wasm32-unknown-unknown`, they use host Fetch, streams, abort signals and timers without a Tokio runtime. The host owns TLS and CORS policy; browser requests reject redirects and omit ambient cookies, cache and referrers. Explicit endpoint credentials remain caller-owned. Browser-controlled headers and URL user information fail before dispatch. The library loads no environment configuration.
+
+| Target | Requirements and limits |
+| --- | --- |
+| Native Rust | Pure capabilities preserve `Send` futures and applicable `Sync` client/handle bounds; optional HTTP backends use the caller's Tokio runtime |
+| JavaScript WASM | Pure identities, exact values, encodings and preparations; capability futures and shared clients stay on their originating host thread. TON hash-map initialization requires real `crypto.getRandomValues` (browser/worker or Node 19+) |
+| Browser HTTP | Fetch/Request/Response, readable byte streams, AbortController, timers and performance clocks; provider CORS must permit explicit requests/headers. `connect_timeout` bounds response headers because Fetch does not expose a socket-connect phase; the total deadline spans all stages, retries and body consumption |
+| `bitcoin-cash-electrum` | Native certificate-verified TCP/TLS backend; browsers cannot open raw Electrum sockets. The pure `bitcoin-cash` feature remains available on WASM |
+
+The [Rust example and live-test guide](examples/README.md) document explicit inputs, backend selection and read-specific qualification.
 
 Private implementation roles remain separate:
 
@@ -143,7 +152,7 @@ Private implementation roles remain separate:
 | Chain/provider capability modules | Runtime-independent typed operation contracts |
 | Backend modules, such as `src/chains/solana/http.rs` | Network calls, operation stages and source attribution |
 | Integration `wire.rs` modules | Typed remote request/result fields and integration-specific validation |
-| `src/transport/http.rs`, `src/transport/budget.rs`, `src/transport/rpc.rs` | HTTP sending/retries/body bounds; shared operation deadlines; pure JSON-RPC encoding/decoding |
+| `src/transport/http.rs`, `src/transport/http/`, `src/transport/budget.rs`, `src/transport/clock.rs`, `src/transport/rpc.rs` | Shared HTTP orchestration plus native/browser exchanges; operation deadlines and target clocks; pure JSON-RPC encoding/decoding |
 
 ## Development
 
@@ -158,7 +167,13 @@ just tools
 | --- | --- |
 | `just test` | Meaningful domain/capability and deterministic HTTP/RPC fixture behavior, including the executable example |
 | `just doctest` | Compiled public Rust examples |
-| `just gate` | Formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
+| `just gate` | Native formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
+| `just wasm-tools` | Install the WASM target, LLVM tools and pinned matching wasm-bindgen runner |
+| `just wasm-test-node` | Execute the existing pure catalogue/value/encoding/preparation assertions as WASM in Node |
+| `just wasm-test-browser` | Execute browser HTTP/RPC fixture behavior in isolated headless Chrome |
+| `just wasm-gate` | Strict WASM library/test lint plus actual Node and browser execution |
+
+WASM tests require Node 19+ and Chrome with a compatible ChromeDriver on `PATH` or selected by `CHROMEDRIVER`. The runner can be selected with `CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER`; its version must match the locked wasm-bindgen crate. The Node recipe selects the toolchain's `llvm-ar` dynamically: native macOS archive tools cannot index WASM C objects used by Bitcoin. Browser fixtures replace Fetch with deterministic responses while exercising real browser requests, streams, timers and abort signals; they use fake credentials and make no provider calls.
 
 Ordinary tests require no external provider credentials. Live read qualification is explicit and opt-in. Nextest retains `--no-tests fail`. `just sbom` generates an all-feature CycloneDX bill of materials in `sbom/`. GitHub workflows run only when manually dispatched.
 

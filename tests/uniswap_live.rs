@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Explicit read-only Uniswap V3 public RPC qualification and local unsigned preparation.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "uniswap-http")]
 #[path = "../examples/support/inputs.rs"]
 mod inputs;

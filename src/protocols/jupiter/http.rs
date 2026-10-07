@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{JupiterReader, wire};
 use crate::{
     chains::solana::ExecutionReader,
@@ -16,10 +21,7 @@ use crate::{
     error::{Error, ProviderError},
     transport::{HttpClient, OperationBudget},
 };
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 /// Explicit Swap API V2 base (including `/swap/v2`), mainnet declaration and auth.
 /// Keyless access is selected explicitly; rate/plan access remains source-dependent.
 /// Endpoint headers and credentials are redacted and never loaded from the environment.
@@ -80,7 +82,7 @@ impl JupiterHttpConfig {
 }
 /// Bounded outgoing Jupiter Swap API V2 quote/build backend.
 /// No managed execution, signing, account funding or automatic submission exists.
-/// Callers supply a Tokio runtime with I/O/time drivers and explicit access limits.
+/// Native callers supply a Tokio runtime with I/O/time drivers and explicit access limits.
 pub struct JupiterClient {
     config: JupiterHttpConfig,
     http: HttpClient,
@@ -111,7 +113,7 @@ impl JupiterClient {
     /// # Errors
     /// Reports configuration, fixed provider, identity, response-bound or deadline failures.
     /// # Panics
-    /// Tokio may panic if the caller disables I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller disables I/O or time drivers.
     pub async fn quote(&self, request: QuoteRequest) -> Result<Observation<Quote>, Error> {
         self.network(&request.data().network)?;
         let budget = OperationBudget::new(self.config.http.limits())?;
@@ -147,7 +149,7 @@ impl JupiterClient {
     /// # Errors
     /// Reports configuration, fixed source, identity, bound or deadline failures.
     /// # Panics
-    /// Tokio may panic if the caller disables I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller disables I/O or time drivers.
     pub async fn build(&self, request: BuildRequest) -> Result<Observation<SwapBuild>, Error> {
         self.network(&request.data().network)?;
         let budget = OperationBudget::new(self.config.http.limits())?;
@@ -203,8 +205,8 @@ impl JupiterClient {
     /// # Errors
     /// Reports network/request mismatch, fixed source failures or the shared deadline.
     /// # Panics
-    /// Tokio may panic if the caller disables I/O or time drivers.
-    pub async fn estimate_swap<R: ExecutionReader + Sync>(
+    /// On native targets, Tokio may panic if the caller disables I/O or time drivers.
+    pub async fn estimate_swap<R: ExecutionReader + crate::future::MaybeSync>(
         &self,
         reader: &R,
         prepared: PreparedSwap,

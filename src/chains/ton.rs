@@ -24,45 +24,46 @@ mod wire;
 pub use http::{TonClient, TonHttpConfig};
 
 /// Runtime-independent TON read/estimate capability with replaceable backends.
-/// Futures are `Send`; implementations do not discover runtimes or credentials.
+/// Futures are `Send` on native targets and host-local on JavaScript WebAssembly.
+/// Implementations do not discover runtimes or credentials.
 pub trait TonReader {
     /// Retrieves full current masterchain and expected zero-state identity.
     fn get_network_data(
         &self,
-    ) -> impl Future<Output = Result<Observation<NetworkData>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<NetworkData>, Error>> + crate::future::MaybeSend;
     /// Reads account state against a selected full masterchain block.
     fn get_account_balance(
         &self,
         address: Address,
-    ) -> impl Future<Output = Result<Observation<AccountBalance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<AccountBalance>, Error>> + crate::future::MaybeSend;
     /// Reads one bounded linked account-history page without hidden enumeration.
     fn get_account_history(
         &self,
         request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + crate::future::MaybeSend;
     /// Retrieves exact account-qualified logical-time/hash transaction identity.
     fn get_transaction(
         &self,
         address: Address,
         cursor: Cursor,
-    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + crate::future::MaybeSend;
     /// Retrieves actual supported execution facts without invented block inclusion.
     fn get_transaction_status(
         &self,
         address: Address,
         cursor: Cursor,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + crate::future::MaybeSend;
     /// Scans one explicit bounded page for the incoming representation hash.
     fn get_message_status(
         &self,
         message_hash: Hash,
         request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<MessageStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<MessageStatus>, Error>> + crate::future::MaybeSend;
     /// Estimates exact fee components for explicit caller-supplied wallet-body bytes.
     fn estimate_fee(
         &self,
         request: FeeRequest,
-    ) -> impl Future<Output = Result<Observation<FeeEstimate>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<FeeEstimate>, Error>> + crate::future::MaybeSend;
 }
 /// Controlled one-shot external-message submission, independent of signing.
 /// Acknowledgement is not validated execution. After dispatch, unresolved errors
@@ -72,5 +73,5 @@ pub trait TonSubmitter {
     fn submit_signed(
         &self,
         submission: SignedSubmission,
-    ) -> impl Future<Output = Result<Observation<SubmissionResult>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<SubmissionResult>, Error>> + crate::future::MaybeSend;
 }

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Actual public Rust indexed APIs over deterministic offline loopback fixtures.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "dogecoin-http")]
 #[path = "support/market_server.rs"]
 mod market_server;

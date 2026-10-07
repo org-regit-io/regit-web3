@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure exact Rubic source records and immutable unsigned review boundaries.
+#![cfg(test)]
 #![cfg(feature = "rubic")]
 use regit_web3::{
     domain::{
@@ -35,7 +36,11 @@ fn roundtrip<T: Serialize + DeserializeOwned + Eq + std::fmt::Debug>(v: &T) -> T
     assert_eq!(&serde_json::from_str::<T>(&serde_json::to_string(v)?)?, v);
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_gross_net_and_route_amounts_remain_separate() -> TestResult {
     let q = quote()?;
     assert_eq!(
@@ -61,7 +66,11 @@ fn exact_gross_net_and_route_amounts_remain_separate() -> TestResult {
     assert_eq!(q.data().fees.percent.value().canonical(), "0.4");
     roundtrip(&q)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fresh_preparation_retains_both_source_snapshots_and_caller_floor() -> TestResult {
     let p = prepared()?;
     assert_eq!(
@@ -92,7 +101,11 @@ fn fresh_preparation_retains_both_source_snapshots_and_caller_floor() -> TestRes
     assert_eq!(reviewed.review().intent(), p.data());
     roundtrip(&p)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn identity_family_numbers_are_not_inferred_from_provider_catalogue() -> TestResult {
     let sol = Chain::new(
         Identifier::new("SOLANA")?,
@@ -149,7 +162,11 @@ fn identity_family_numbers_are_not_inferred_from_provider_catalogue() -> TestRes
     );
     roundtrip(&sol)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn catalogue_and_capacity_construction_matches_deserialization() -> TestResult {
     let chain = quote()?.data().request.data().source.chain().clone();
     assert!(Catalogue::new(vec![chain.clone(), chain.clone()]).is_err());
@@ -165,7 +182,11 @@ fn catalogue_and_capacity_construction_matches_deserialization() -> TestResult {
     let v = Limits::new(512, 128, 128, 128, 128)?;
     roundtrip(&v)
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn request_precision_filters_and_slippage_have_no_defaults() -> TestResult {
     let q = quote()?;
     for bps in [0, 1, 100, 2500, 5000] {
@@ -182,7 +203,11 @@ fn request_precision_filters_and_slippage_have_no_defaults() -> TestResult {
     assert!(QuoteRequest::new(data).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn quote_identity_precision_slippage_and_nested_limits_fail_closed() -> TestResult {
     for change in ["asset", "precision", "slippage", "provider", "capacity"] {
         let mut data = quote()?.data().clone();
@@ -214,7 +239,11 @@ fn quote_identity_precision_slippage_and_nested_limits_fail_closed() -> TestResu
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn duplicate_route_ids_and_request_mismatch_fail_in_constructor_and_serde() -> TestResult {
     let q = quote()?;
     let request = q.data().request.clone();
@@ -223,7 +252,11 @@ fn duplicate_route_ids_and_request_mismatch_fail_in_constructor_and_serde() -> T
     assert!(serde_json::from_value::<Routes>(raw).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn changed_router_value_signers_route_identity_and_floor_do_not_qualify() -> TestResult {
     for change in ["router", "value", "id", "provider", "floor"] {
         let mut data = prepared()?.data().clone();
@@ -262,7 +295,11 @@ fn changed_router_value_signers_route_identity_and_floor_do_not_qualify() -> Tes
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn statuses_do_not_invent_execution_hashes_precision_or_finality() -> TestResult {
     let q = quote()?;
     let source = q.data().request.data().source.chain().clone();
@@ -298,7 +335,11 @@ fn statuses_do_not_invent_execution_hashes_precision_or_finality() -> TestResult
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn untrusted_text_and_opaque_payload_debug_are_redacted() -> TestResult {
     let p = prepared()?;
     assert!(!format!("{p:?}").contains("e1fcde8e"));
@@ -322,7 +363,8 @@ impl SignedPayloadVerifier<PreparedSwap, String> for BindingVerifier {
         &self,
         _: &PreparedRequest<PreparedSwap>,
         signed: &String,
-    ) -> impl std::future::Future<Output = Result<VerificationDecision, Error>> + Send {
+    ) -> impl std::future::Future<Output = Result<VerificationDecision, Error>>
+    + regit_web3::future::MaybeSend {
         self.calls.fetch_add(1, Ordering::SeqCst);
         std::future::ready(Ok(if signed == "verified-test-body" {
             VerificationDecision::Confirmed
@@ -331,7 +373,11 @@ impl SignedPayloadVerifier<PreparedSwap, String> for BindingVerifier {
         }))
     }
 }
-#[tokio::test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), tokio::test)]
 async fn handoff_correlation_precedes_trusted_signed_content_verification() -> TestResult {
     let verifier = BindingVerifier {
         calls: AtomicUsize::new(0),
@@ -363,7 +409,11 @@ async fn handoff_correlation_precedes_trusted_signed_content_verification() -> T
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fresh_metadata_absence_is_preserved_and_present_mismatches_are_rejected() -> TestResult {
     let p = prepared()?;
     let mut facts = p.data().fresh_quote.data().clone();
@@ -382,7 +432,11 @@ fn fresh_metadata_absence_is_preserved_and_present_mismatches_are_rejected() -> 
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_solana_provider_sentinel_is_not_a_mint_or_wrapped_sol() -> TestResult {
     use regit_web3::domain::{rubic::SOLANA_NATIVE_ASSET_ADDRESS, solana::Pubkey};
     let chain = Chain::new(
@@ -421,7 +475,11 @@ fn native_solana_provider_sentinel_is_not_a_mint_or_wrapped_sol() -> TestResult 
     roundtrip(&wrapped)
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn additional_source_data_has_exact_lexical_numbers_and_bounded_validated_serde() -> TestResult {
     use regit_web3::domain::rubic::SourceAdditionalData;
     let raw =

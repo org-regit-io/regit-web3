@@ -36,7 +36,7 @@ pub trait V3QuoteReader {
         &self,
         request: V3QuoteRequest,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<V3QuoteObservation, Error>> + Send;
+    ) -> impl Future<Output = Result<V3QuoteObservation, Error>> + crate::future::MaybeSend;
     /// Compares supplied paths at one captured hash, retaining each source revert.
     /// # Errors
     /// Reports mismatched identities/state, unknown provider errors or resource excess.
@@ -44,5 +44,5 @@ pub trait V3QuoteReader {
         &self,
         request: V3RouteRequest,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<RouteComparison, Error>> + Send;
+    ) -> impl Future<Output = Result<RouteComparison, Error>> + crate::future::MaybeSend;
 }

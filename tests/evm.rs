@@ -3,6 +3,7 @@
 
 //! Native EVM balance reads through deterministic loopback JSON-RPC fixtures.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "evm-http")]
 
 #[path = "support/rpc_server.rs"]

@@ -16,34 +16,35 @@ use crate::{
 use std::future::Future;
 
 /// Replaceable runtime-independent Litecoin indexed read capability.
-/// Implementors need not be Send/Sync; each returned operation future is Send.
+/// Futures are `Send` on native targets and host-local on JavaScript WebAssembly.
+/// Implementations need not themselves be `Send` or `Sync`.
 pub trait LitecoinReader {
     /// Reads exact confirmed balance and separate signed unconfirmed delta.
     fn get_address_balance(
         &self,
         address: Address,
-    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + crate::future::MaybeSend;
     /// Reads all supplied references in a bounded height page without truncating the boundary block.
     fn get_address_history(
         &self,
         address: Address,
         request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + crate::future::MaybeSend;
     /// Reads source fee buckets in native atomic units per 1000 bytes.
     fn get_fee_estimates(
         &self,
-    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + crate::future::MaybeSend;
     /// Reads exact source inclusion/count/conflict facts for one transaction.
     fn get_transaction_status(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + crate::future::MaybeSend;
     /// Reads complete typed indexed inputs/outputs and optional opaque raw bytes.
     fn get_transaction(
         &self,
         txid: Txid,
         maximum_entries: u32,
-    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + crate::future::MaybeSend;
 }
 
 /// Explicit supported Litecoin network/genesis and bounded `BlockCypher` backend configuration.

@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Real loopback Jupiter V2 GETs, source bounds and Solana estimate composition.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "jupiter-http")]
 #[path = "support/rpc_server.rs"]
 mod rpc_server;

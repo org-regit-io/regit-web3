@@ -168,14 +168,15 @@ pub enum VerificationDecision {
 /// required signature checks. Merely comparing echoed metadata is insufficient.
 /// The library trusts this extension and provides no concrete cryptographic
 /// verifier, signer or connector. Implementations must not sign or submit here.
-/// Returned futures are `Send`; verifiers need not themselves be `Send` or `Sync`.
+/// Futures are `Send` on native targets and host-local on JavaScript WebAssembly.
+/// Verifiers need not themselves be `Send` or `Sync`.
 pub trait SignedPayloadVerifier<P: Preparation, S> {
     /// Checks immutable signed content against the exact reviewed preparation.
     fn verify_binding(
         &self,
         prepared: &PreparedRequest<P>,
         signed: &S,
-    ) -> impl Future<Output = Result<VerificationDecision, Error>> + Send;
+    ) -> impl Future<Output = Result<VerificationDecision, Error>> + crate::future::MaybeSend;
 }
 
 /// Signed content confirmed by a trusted verifier against the correlated review.

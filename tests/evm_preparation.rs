@@ -3,6 +3,7 @@
 
 //! Exact unsigned EVM encoding and bounded signed-envelope qualification.
 
+#![cfg(test)]
 #![cfg(feature = "evm")]
 
 use alloy_rlp::Header;
@@ -87,7 +88,11 @@ fn signed_typed(kind: u8, fields: &[Vec<u8>]) -> Result<SignedSubmission, Error>
     SignedSubmission::new(ChainId::from(1), Data::new(bytes)?)
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn eip155_published_signing_bytes_and_digest_match_exactly() -> TestResult {
     let prepared = request(native()?, legacy())?.prepare()?;
     assert_eq!(
@@ -115,7 +120,11 @@ fn eip155_published_signing_bytes_and_digest_match_exactly() -> TestResult {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_transfer_and_approval_use_exact_raw_units_and_zero_native_value() -> TestResult {
     let contract = Address::from_bytes([1; 20]);
     let target = Address::from_bytes([2; 20]);
@@ -164,7 +173,11 @@ fn token_transfer_and_approval_use_exact_raw_units_and_zero_native_value() -> Te
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn typed_envelopes_preserve_legal_ordered_access_list_duplicates() -> TestResult {
     let entry = AccessListEntry {
         address: Address::from_bytes([3; 20]),
@@ -197,7 +210,11 @@ fn typed_envelopes_preserve_legal_ordered_access_list_duplicates() -> TestResult
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_and_signed_serde_rebuild_checked_snapshots_without_opaque_debug() -> TestResult {
     let prepared = request(native()?, legacy())?.prepare()?;
     let serialized = serde_json::to_value(&prepared)?;
@@ -242,7 +259,11 @@ fn preparation_and_signed_serde_rebuild_checked_snapshots_without_opaque_debug()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn explicit_preparation_rejects_bad_fee_nonce_gas_and_access_bounds() -> TestResult {
     let data = request(native()?, legacy())?.data().clone();
     let mut bad = data.clone();
@@ -289,7 +310,11 @@ fn explicit_preparation_rejects_bad_fee_nonce_gas_and_access_bounds() -> TestRes
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_decoder_rejects_noncanonical_recursive_wrong_width_and_scalar_vectors() -> TestResult {
     let valid = typed_fields(2);
     for (index, replacement) in [
@@ -363,7 +388,8 @@ impl regit_web3::wallets::SignedPayloadVerifier<PreparedTransaction, SignedSubmi
         &self,
         prepared: &PreparedRequest<PreparedTransaction>,
         signed: &SignedSubmission,
-    ) -> impl Future<Output = Result<regit_web3::wallets::VerificationDecision, Error>> + Send {
+    ) -> impl Future<Output = Result<regit_web3::wallets::VerificationDecision, Error>>
+    + regit_web3::future::MaybeSend {
         self.0.fetch_add(1, Ordering::SeqCst);
         let unsigned = prepared.preparation().unsigned();
         let actual = signed.fields();
@@ -383,7 +409,7 @@ impl regit_web3::wallets::SignedPayloadVerifier<PreparedTransaction, SignedSubmi
         })
     }
 }
-fn poll_ready<F: Future + Send>(future: F) -> F::Output {
+fn poll_ready<F: Future + regit_web3::future::MaybeSend>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);
     let mut context = Context::from_waker(Waker::noop());
     match future.as_mut().poll(&mut context) {
@@ -392,7 +418,11 @@ fn poll_ready<F: Future + Send>(future: F) -> F::Output {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn evm_handoff_checks_correlation_before_actual_signed_content_verification() -> TestResult {
     use regit_web3::wallets::{HandoffResponse, verify_handoff};
     let prepared = request(native()?, legacy())?.prepare()?;
@@ -450,7 +480,11 @@ fn evm_handoff_checks_correlation_before_actual_signed_content_verification() ->
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_access_lists_reject_excess_entry_key_and_nested_shape_bounds() -> TestResult {
     let valid = typed_fields(2);
     let key = raw(&[4; 32]);

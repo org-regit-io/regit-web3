@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure LI.FI exact values, identity, review and constructor/serde invariants.
+#![cfg(test)]
 #![cfg(feature = "lifi")]
 
 use regit_web3::{
@@ -15,7 +16,11 @@ use std::fmt::Write;
 #[path = "fixtures/lifi/builders.rs"]
 mod build;
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn catalogue_qualifies_large_numeric_ids_without_guessing_family()
 -> Result<(), Box<dyn std::error::Error>> {
     let sui = Chain::new(9_270_000_000_000_000, Family::Move)?;
@@ -38,7 +43,11 @@ fn catalogue_qualifies_large_numeric_ids_without_guessing_family()
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn family_identities_and_base_units_never_resolve_symbols_or_round() -> Result<(), Error> {
     let evm = build::chain(1)?;
     assert_eq!(
@@ -76,7 +85,11 @@ fn family_identities_and_base_units_never_resolve_symbols_or_round() -> Result<(
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn request_constructor_and_serde_reject_cross_family_accounts_and_zero()
 -> Result<(), Box<dyn std::error::Error>> {
     let request = build::request()?;
@@ -93,7 +106,11 @@ fn request_constructor_and_serde_reject_cross_family_accounts_and_zero()
     assert!(Request::new(fields).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn step_validates_precision_cost_minima_and_duplicates_on_every_entry_path()
 -> Result<(), Box<dyn std::error::Error>> {
     let step = build::step()?;
@@ -132,7 +149,11 @@ fn step_validates_precision_cost_minima_and_duplicates_on_every_entry_path()
     assert!(Limits::new(65, 256, 128).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn encoded_payloads_name_only_the_checks_actually_applied() -> Result<(), Box<dyn std::error::Error>>
 {
     let evm = build::chain(42161)?;
@@ -190,7 +211,11 @@ fn encoded_payloads_name_only_the_checks_actually_applied() -> Result<(), Box<dy
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn prepared_review_preserves_old_snapshot_and_requires_matching_fresh_identity()
 -> Result<(), Box<dyn std::error::Error>> {
     let selected = build::handle()?;
@@ -219,7 +244,11 @@ fn prepared_review_preserves_old_snapshot_and_requires_matching_fresh_identity()
     assert!(serde_json::from_value::<PreparedStep>(value).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn route_serde_rechecks_original_request_limits_and_handle_attribution()
 -> Result<(), Box<dyn std::error::Error>> {
     let h = build::handle()?;
@@ -278,7 +307,11 @@ fn route_serde_rechecks_original_request_limits_and_handle_attribution()
     assert!(Route::new(data, vec![h.clone(), h]).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn status_keeps_missing_facts_and_explicit_refunds_separate_from_success()
 -> Result<(), Box<dyn std::error::Error>> {
     let query = build::query(8453)?;
@@ -321,7 +354,11 @@ fn status_keeps_missing_facts_and_explicit_refunds_separate_from_success()
     assert!(Status::new(query, reported, build::origin("status")?).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn provider_transfer_ids_are_not_step_uuids_and_reported_ids_must_match()
 -> Result<(), Box<dyn std::error::Error>> {
     let id = TransferId::new(&format!("0x{}", "11".repeat(32)))?;
@@ -359,7 +396,11 @@ fn provider_transfer_ids_are_not_step_uuids_and_reported_ids_must_match()
     assert!(serde_json::from_value::<Status>(invalid).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fixed_validation_diagnostics_never_echo_invalid_identifiers() {
     let error = Identifier::new("private-secret\n").err();
     assert_eq!(
@@ -375,7 +416,8 @@ impl LifiReader for Offline {
     fn get_quote(
         &self,
         r: Request,
-    ) -> impl std::future::Future<Output = Result<Self::StepHandle, Error>> + Send {
+    ) -> impl std::future::Future<Output = Result<Self::StepHandle, Error>> + regit_web3::future::MaybeSend
+    {
         std::future::ready((|| {
             let mut h = build::handle()?;
             if !h.value.data().action.matches_request(&r) {
@@ -417,7 +459,8 @@ impl LifiReader for Offline {
     fn prepare_step(
         &self,
         h: &Self::StepHandle,
-    ) -> impl std::future::Future<Output = Result<PreparedStep, Error>> + Send {
+    ) -> impl std::future::Future<Output = Result<PreparedStep, Error>> + regit_web3::future::MaybeSend
+    {
         std::future::ready((|| {
             let mut fresh = h.value.data().clone();
             fresh.payload = Some(build::payload()?);
@@ -427,7 +470,8 @@ impl LifiReader for Offline {
     fn get_status(
         &self,
         q: StatusQuery,
-    ) -> impl std::future::Future<Output = Result<Status, Error>> + Send {
+    ) -> impl std::future::Future<Output = Result<Status, Error>> + regit_web3::future::MaybeSend
+    {
         std::future::ready((|| {
             Status::new(
                 q,
@@ -445,15 +489,60 @@ impl LifiReader for Offline {
         })())
     }
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn independent_pure_backend_handles_and_futures_compose_as_send() -> Result<(), Error> {
-    fn send<T: std::future::Future + Send>(_: T) {}
+    fn send<T: std::future::Future + regit_web3::future::MaybeSend>(future: T) {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+        {
+            fn assert_send<T: Send>(_: &T) {}
+            assert_send(&future);
+        }
+        drop(future);
+    }
+    fn handle_contract<H: StepView>(handle: &H) {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+        {
+            fn assert_send_sync<T: Send + Sync>(_: &T) {}
+            assert_send_sync(handle);
+        }
+        let _ = handle;
+    }
     let backend = Offline;
     let request = build::request()?;
     let handle = build::handle()?;
+    handle_contract(&handle);
     send(backend.get_quote(request.clone()));
     send(backend.get_routes(request));
     send(backend.prepare_step(&handle));
     send(backend.get_status(build::query(8453)?));
+    #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+    {
+        #[derive(Clone)]
+        struct LocalHandle(std::rc::Rc<build::Handle>);
+        impl StepView for LocalHandle {
+            fn step(&self) -> &Step {
+                self.0.step()
+            }
+            fn request(&self) -> &Request {
+                self.0.request()
+            }
+            fn origin(&self) -> &Origin {
+                self.0.origin()
+            }
+        }
+        let local = LocalHandle(std::rc::Rc::new(handle));
+        handle_contract(&local);
+        let mut refreshed = local.step().data().clone();
+        refreshed.payload = Some(build::payload()?);
+        let prepared = PreparedStep::new(&local, Step::new(refreshed)?, build::origin("prepare")?)?;
+        assert_eq!(prepared.original_request(), local.request());
+        assert_eq!(prepared.selected_step(), local.step());
+        assert_eq!(prepared.selected_origin(), local.origin());
+        assert!(prepared.refreshed_step().data().payload.is_some());
+    }
     Ok(())
 }

@@ -31,33 +31,35 @@ pub use http::{MempoolSpaceClient, MempoolSpaceHttpConfig};
 ///
 /// Implementations retain exact units, source retrieval and full expected network
 /// identity. Collections fail wholly at limits; no atomic cross-request snapshot
-/// or continuing membership/finality is implied. Returned futures are `Send`.
+/// or continuing membership/finality is implied. Futures are `Send` on native
+/// targets and host-local on JavaScript WebAssembly.
 pub trait MempoolSpaceReader {
     /// Reads backlog totals and individual source fee-distribution bins.
     fn get_mempool_summary(
         &self,
-    ) -> impl Future<Output = Result<Observation<MempoolSummary>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<MempoolSummary>, Error>> + crate::future::MaybeSend;
     /// Reads at most ten recent source arrivals, never an exhaustive listing.
     fn get_recent_transactions(
         &self,
-    ) -> impl Future<Output = Result<Observation<RecentTransactions>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<RecentTransactions>, Error>> + crate::future::MaybeSend;
     /// Reads every ID from the unpaged endpoint or fails wholly at the explicit cap.
     fn get_mempool_txids(
         &self,
         limit: TransactionLimit,
-    ) -> impl Future<Output = Result<Observation<TransactionIds>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<TransactionIds>, Error>> + crate::future::MaybeSend;
     /// Reads five independent exact sat/vB suggestions with their named classes.
     fn get_recommended_fees(
         &self,
-    ) -> impl Future<Output = Result<Observation<RecommendedFees>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<RecommendedFees>, Error>> + crate::future::MaybeSend;
     /// Reads canonical raw transaction bytes and separately supplied index facts.
     fn get_transaction(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<BitcoinObservation<Transaction>, Error>> + Send;
+    ) -> impl Future<Output = Result<BitcoinObservation<Transaction>, Error>> + crate::future::MaybeSend;
     /// Reads source inclusion; unavailable does not mean unconfirmed or failed.
     fn get_transaction_status(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<BitcoinObservation<TransactionStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<BitcoinObservation<TransactionStatus>, Error>>
+    + crate::future::MaybeSend;
 }

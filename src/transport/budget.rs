@@ -5,7 +5,10 @@
 
 use std::future::Future;
 
-use tokio::time::{Instant, timeout_at};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use tokio::time::timeout_at;
+
+use super::clock::Instant;
 
 use crate::{config::RpcLimits, error::Error};
 
@@ -15,9 +18,12 @@ pub(crate) struct OperationBudget {
 
 impl OperationBudget {
     pub(crate) fn new(limits: RpcLimits) -> Result<Self, Error> {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
         if tokio::runtime::Handle::try_current().is_err() {
             return Err(Error::Configuration);
         }
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+        super::clock::check_host()?;
         Ok(Self {
             deadline: Instant::now() + limits.request_timeout(),
         })
@@ -29,9 +35,12 @@ impl OperationBudget {
     where
         F: Future<Output = Result<T, Error>>,
     {
+        #[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
         let value = timeout_at(self.deadline, operation)
             .await
             .map_err(|_| Error::Timeout)??;
+        #[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+        let value = super::clock::timeout_at(self.deadline, operation).await?;
         if Instant::now() >= self.deadline {
             return Err(Error::Timeout);
         }

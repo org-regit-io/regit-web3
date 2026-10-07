@@ -5,6 +5,7 @@
 //! Inputs belong to this ignored harness. Independent source observations do not
 //! establish a historical hash pin, external inclusion or signed execution.
 //! Current quote input resolution is unreported; exact caller input is retained.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "thorchain-http")]
 #[path = "support/live.rs"]
 mod live;

@@ -4,6 +4,7 @@
 //! Explicit opt-in `DefiLlama` qualification through the typed Rust public API.
 //! Dataset reads are independent observations; no network or time input belongs
 //! to the library. Large pool/protocol responses are bounded, never truncated.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "defillama-http")]
 #[path = "support/live.rs"]
 mod live;

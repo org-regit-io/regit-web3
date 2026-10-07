@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Certificate-verified TLS loopback proof for actual BCH public Rust operations.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "bitcoin-cash-electrum")]
 
 use regit_web3::{

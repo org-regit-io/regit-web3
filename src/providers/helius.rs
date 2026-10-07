@@ -28,20 +28,20 @@ pub trait HeliusReader {
     fn get_asset(
         &self,
         request: AssetRequest,
-    ) -> impl Future<Output = Result<Observation<Asset>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Asset>, Error>> + crate::future::MaybeSend;
     /// Reads one explicitly selected owner page, without automatic pagination.
     fn get_assets_by_owner(
         &self,
         request: OwnerRequest,
-    ) -> impl Future<Output = Result<Observation<OwnerPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<OwnerPage>, Error>> + crate::future::MaybeSend;
     /// Parses an ordered batch, retaining duplicate input positions and parser errors.
     fn parse_transactions(
         &self,
         request: ParseRequest,
-    ) -> impl Future<Output = Result<Observation<ParsedBatch>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<ParsedBatch>, Error>> + crate::future::MaybeSend;
     /// Reads one parsed address-history page with exact source continuation metadata.
     fn get_address_history(
         &self,
         request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + crate::future::MaybeSend;
 }

@@ -12,7 +12,10 @@ mod observation;
 mod records;
 mod transaction;
 
-#[cfg(feature = "bitcoin-cash-electrum")]
+#[cfg(all(
+    feature = "bitcoin-cash-electrum",
+    not(all(target_arch = "wasm32", target_os = "unknown"))
+))]
 pub(crate) use records::{bounded_addresses, bounded_entries};
 
 pub use identity::{

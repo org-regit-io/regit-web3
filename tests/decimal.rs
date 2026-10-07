@@ -3,13 +3,19 @@
 
 //! Exact decimal value, canonical wire, and bounded parsing contracts.
 
+#![cfg(test)]
+
 use regit_web3::{
     domain::{Amount, ExactDecimal},
     error::{Error, ValidationError},
 };
 use serde_json::json;
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_fractional_and_scientific_inputs_preserve_the_exact_value() {
     for (input, canonical) in [
         ("-9007199254740993.12500", "-9007199254740993.125"),
@@ -27,7 +33,11 @@ fn signed_fractional_and_scientific_inputs_preserve_the_exact_value() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn precision_exceeds_ieee754_and_unsigned_256_bit_limits_without_rounding() {
     let first = ExactDecimal::parse("9007199254740992").unwrap();
     let second = ExactDecimal::parse("9007199254740993").unwrap();
@@ -46,7 +56,11 @@ fn precision_exceeds_ieee754_and_unsigned_256_bit_limits_without_rounding() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_issued_amount_exponents_remain_exact() {
     let minimum = ExactDecimal::parse("-1000000000000000e-96").unwrap();
     assert_eq!(minimum.canonical(), format!("-0.{}1", "0".repeat(80)));
@@ -61,7 +75,11 @@ fn signed_issued_amount_exponents_remain_exact() {
     assert!(maximum.is_integer());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn numeric_equality_ordering_and_zero_ignore_redundant_notation() {
     for input in ["0", "-0", "0.0000", "-0.000e+4096", "0e-4096"] {
         let value = ExactDecimal::parse(input).unwrap();
@@ -84,7 +102,11 @@ fn numeric_equality_ordering_and_zero_ignore_redundant_notation() {
     assert!(!fraction.is_integer());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn malformed_and_nonfinite_inputs_have_fixed_validation_errors() {
     for input in [
         "", "-", "+1", "01", "-01", ".5", "1.", "1.2.3", "1e", "e1", "1e+", "1e--2", "1e1e1",
@@ -98,7 +120,11 @@ fn malformed_and_nonfinite_inputs_have_fixed_validation_errors() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn input_exponent_scale_and_expanded_output_limits_are_enforced() {
     let excessive_input = "9".repeat(ExactDecimal::MAX_TEXT_BYTES + 1);
     for input in [
@@ -123,7 +149,11 @@ fn input_exponent_scale_and_expanded_output_limits_are_enforced() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn accepted_boundary_values_serialize_and_reparse_under_the_same_limits() {
     let largest_coefficient = "9".repeat(ExactDecimal::MAX_TEXT_BYTES);
     for input in [
@@ -143,7 +173,11 @@ fn accepted_boundary_values_serialize_and_reparse_under_the_same_limits() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn serde_requires_strings_and_reuses_all_constructor_validation() {
     let value = ExactDecimal::parse("1.2300e-3").unwrap();
     assert_eq!(serde_json::to_value(&value).unwrap(), json!("0.00123"));
@@ -159,7 +193,11 @@ fn serde_requires_strings_and_reuses_all_constructor_validation() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn formatting_precision_never_rounds_or_expands_a_stored_value() {
     let value = ExactDecimal::parse("1.234567890123456789").unwrap();
     assert_eq!(format!("{value:.2}"), "1.234567890123456789");

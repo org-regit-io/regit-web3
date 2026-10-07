@@ -33,7 +33,7 @@ impl EvmClient {
     /// Returns ordinary local/preflight errors before any write. All unresolved
     /// post-dispatch failures are `Error::SubmissionOutcomeUnknown` with fixed causes.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks I/O or time drivers.
     pub async fn submit_signed(
         &self,
         submission: SignedSubmission,

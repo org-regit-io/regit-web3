@@ -32,18 +32,21 @@ pub trait LifiReader {
     fn get_quote(
         &self,
         request: Request,
-    ) -> impl Future<Output = Result<Self::StepHandle, Error>> + Send;
+    ) -> impl Future<Output = Result<Self::StepHandle, Error>> + crate::future::MaybeSend;
     /// Returns bounded alternatives without choosing one or implicitly paging.
     fn get_routes(
         &self,
         request: Request,
-    ) -> impl Future<Output = Result<Routes<Self::StepHandle>, Error>> + Send;
+    ) -> impl Future<Output = Result<Routes<Self::StepHandle>, Error>> + crate::future::MaybeSend;
     /// Returns a fresh source preparation beside the immutable selected snapshot.
     /// The caller reviews the fresh estimate/payload; no transaction is submitted.
     fn prepare_step(
         &self,
         selected: &Self::StepHandle,
-    ) -> impl Future<Output = Result<PreparedStep, Error>> + Send;
+    ) -> impl Future<Output = Result<PreparedStep, Error>> + crate::future::MaybeSend;
     /// Returns attributed progress with actual transaction hashes/units/times.
-    fn get_status(&self, query: StatusQuery) -> impl Future<Output = Result<Status, Error>> + Send;
+    fn get_status(
+        &self,
+        query: StatusQuery,
+    ) -> impl Future<Output = Result<Status, Error>> + crate::future::MaybeSend;
 }

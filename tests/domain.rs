@@ -3,6 +3,7 @@
 
 //! Public contracts for exact values, validated identities, and observations.
 
+#![cfg(test)]
 use regit_web3::domain::{
     Address, Amount, Asset, AssetKind, Balance, BlockContext, BlockHash, BlockSelector, ChainId,
     Finality, MetadataOrigin, NetworkId, Observation, ObservationContext, Operation, Source,
@@ -16,7 +17,11 @@ const UINT256_MAX: &str =
 const UINT256_OVERFLOW: &str =
     "115792089237316195423570985008687907853269984665640564039457584007913129639936";
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn amount_roundtrips_zero_large_integers_and_uint256_max_losslessly() {
     for raw in ["0", "9007199254740993", UINT256_MAX] {
         let amount = Amount::from_decimal(raw, None).unwrap();
@@ -34,7 +39,11 @@ fn amount_roundtrips_zero_large_integers_and_uint256_max_losslessly() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_formatting_preserves_configured_fractional_places() {
     let cases = [
         ("0", 0, "0"),
@@ -62,7 +71,11 @@ fn exact_formatting_preserves_configured_fractional_places() {
     assert_eq!(amount.raw().to_string(), "1");
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn decimal_amount_parser_rejects_noncanonical_or_out_of_range_input() {
     for raw in [
         "",
@@ -84,7 +97,11 @@ fn decimal_amount_parser_rejects_noncanonical_or_out_of_range_input() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn amount_deserialization_cannot_bypass_raw_decimals_or_derived_format() {
     let valid = json!({"raw": "1", "decimals": 18, "formatted": "0.000000000000000001"});
     assert!(serde_json::from_value::<Amount>(valid.clone()).is_ok());
@@ -126,7 +143,11 @@ fn amount_deserialization_cannot_bypass_raw_decimals_or_derived_format() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn chain_identity_is_exact_and_distinguishes_networks() {
     let one = ChainId::from_decimal("1").unwrap();
     let other = ChainId::from_decimal("2").unwrap();
@@ -146,7 +167,11 @@ fn chain_identity_is_exact_and_distinguishes_networks() {
     assert!(serde_json::from_value::<ChainId>(json!("-1")).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn addresses_follow_eip55_checksums_and_normalize_valid_input() {
     // Official mixed-case vectors: https://eips.ethereum.org/EIPS/eip-55.
     for input in [
@@ -173,7 +198,11 @@ fn addresses_follow_eip55_checksums_and_normalize_valid_input() {
     assert!(serde_json::from_value::<Address>(json!(bad_checksum)).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn address_and_block_hash_deserialization_validate_length_hex_and_prefix() {
     let address = "0x0000000000000000000000000000000000000000";
     assert!(Address::parse(address).is_ok());
@@ -236,7 +265,11 @@ fn balance() -> Result<Balance, Error> {
     )
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_identity_excludes_display_metadata_and_includes_chain_identity() -> Result<(), Error> {
     let first = Asset::native(network("1", "mainnet")?, 18, Some("ETH".to_owned())).unwrap();
     let renamed = Asset::native(network("1", "alias")?, 18, Some("NATIVE".to_owned())).unwrap();
@@ -260,7 +293,11 @@ fn native_identity_excludes_display_metadata_and_includes_chain_identity() -> Re
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_asset_deserialization_rejects_invalid_metadata_and_identity() -> Result<(), Error> {
     let valid = serde_json::to_value(
         Asset::native(network("1", "mainnet")?, 18, Some("ETH".to_owned())).unwrap(),
@@ -284,7 +321,11 @@ fn native_asset_deserialization_rejects_invalid_metadata_and_identity() -> Resul
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_balance_requires_decimals_to_match_native_asset_metadata() -> Result<(), Error> {
     for decimals in [None, Some(0), Some(17), Some(19)] {
         assert!(
@@ -313,7 +354,11 @@ fn native_balance_requires_decimals_to_match_native_asset_metadata() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_retains_selector_resolved_block_and_distinct_times() -> Result<(), Error> {
     let observed =
         Observation::native_balance(balance()?, context(BlockSelector::Latest)?).unwrap();
@@ -353,7 +398,11 @@ fn observation_retains_selector_resolved_block_and_distinct_times() -> Result<()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn finality_is_explicit_and_confirmations_do_not_establish_it() -> Result<(), Error> {
     for selector in [BlockSelector::Safe, BlockSelector::Finalized] {
         assert_eq!(context(selector)?.finality(), Finality::Unknown);
@@ -379,7 +428,11 @@ fn finality_is_explicit_and_confirmations_do_not_establish_it() -> Result<(), Er
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn explicit_block_selectors_require_matching_resolved_identity() -> Result<(), Error> {
     for selector in [BlockSelector::Number(42), BlockSelector::Hash(hash()?)] {
         let captured = context(selector)?;
@@ -401,7 +454,11 @@ fn explicit_block_selectors_require_matching_resolved_identity() -> Result<(), E
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn each_state_read_selector_roundtrips_separately_from_the_resolved_block() -> Result<(), Error> {
     for (selector, encoded) in [
         (BlockSelector::Latest, json!({"kind":"latest"})),
@@ -428,7 +485,11 @@ fn each_state_read_selector_roundtrips_separately_from_the_resolved_block() -> R
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn balance_observation_rejects_a_different_chain() -> Result<(), Error> {
     let other = ObservationContext::new(
         network("2", "mainnet")?,
@@ -442,7 +503,11 @@ fn balance_observation_rejects_a_different_chain() -> Result<(), Error> {
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn balance_observation_matches_chain_identity_and_retains_different_aliases() -> Result<(), Error> {
     let captured = ObservationContext::new(
         network("1", "provider-alias")?,
@@ -462,7 +527,11 @@ fn balance_observation_matches_chain_identity_and_retains_different_aliases() ->
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_deserialization_enforces_anchor_schema_and_identity() -> Result<(), Error> {
     let observed =
         Observation::native_balance(balance()?, context(BlockSelector::Latest)?).unwrap();
@@ -510,7 +579,11 @@ fn observation_deserialization_enforces_anchor_schema_and_identity() -> Result<(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_deserialization_rejects_unknown_root_fields() -> Result<(), Error> {
     let observed = Observation::native_balance(balance()?, context(BlockSelector::Latest)?)?;
     let serialized = serde_json::to_string(&observed).unwrap();
@@ -520,7 +593,11 @@ fn observation_deserialization_rejects_unknown_root_fields() -> Result<(), Error
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_deserialization_rejects_duplicate_root_keys_in_raw_json() -> Result<(), Error> {
     let observed = Observation::native_balance(balance()?, context(BlockSelector::Latest)?)?;
     let serialized = serde_json::to_string(&observed).unwrap();
@@ -534,7 +611,11 @@ fn observation_deserialization_rejects_duplicate_root_keys_in_raw_json() -> Resu
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn network_and_source_deserialization_reject_malformed_labels() {
     assert!(NetworkId::new(ChainId::from_decimal("1").unwrap(), "a".repeat(64)).is_ok());
     assert!(NetworkId::new(ChainId::from_decimal("1").unwrap(), "a".repeat(65)).is_err());

@@ -7,6 +7,7 @@
 //! errors. Each operation is a separate current index observation, not a shared
 //! historical snapshot. No signing, preparation or submission occurs.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "bitcoin-esplora")]
 
 use regit_web3::{

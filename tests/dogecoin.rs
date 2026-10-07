@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Family identity, exact native values and immutable indexed constructor/serde contracts.
+#![cfg(test)]
 #![cfg(feature = "dogecoin")]
 use regit_web3::{
     domain::{Source, Timestamp, dogecoin::*},
@@ -82,7 +83,11 @@ fn reference(id: u8, index: u32, height: u64) -> TransactionReference {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn standard_genesis_identity_is_independent_of_display_alias_and_serde_checks_it() -> TestResult {
     assert_eq!(Network::Mainnet.genesis_hash().to_string(), GENESIS);
     assert_ne!(
@@ -100,7 +105,11 @@ fn standard_genesis_identity_is_independent_of_display_alias_and_serde_checks_it
     assert!(NetworkId::new(Network::Mainnet, "bad alias").is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn maintained_address_checksums_network_width_and_constructor_serde_agree() -> TestResult {
     let value = address()?;
     assert_eq!(value.to_string(), ADDRESS);
@@ -122,7 +131,11 @@ fn maintained_address_checksums_network_width_and_constructor_serde_agree() -> T
     assert!(serde_json::from_value::<Address>(wrong).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_native_units_and_signed_deltas_preserve_values_above_javascript_precision() -> TestResult {
     let amount = Koinu::from_decimal("9007199254740993")?;
     assert_eq!(amount.raw(), 9_007_199_254_740_993);
@@ -143,7 +156,11 @@ fn exact_native_units_and_signed_deltas_preserve_values_above_javascript_precisi
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn balance_lifetime_totals_are_distinct_from_transaction_money_limits() -> TestResult {
     let mut data = balance()?;
     data.total_received = Koinu::new(u64::MAX);
@@ -161,7 +178,11 @@ fn balance_lifetime_totals_are_distinct_from_transaction_money_limits() -> TestR
     assert!(AddressBalance::new(address()?, data).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn height_pages_keep_distinct_same_transaction_references_and_complete_boundary_blocks()
 -> TestResult {
     let request = HistoryRequest::new(None, 1, 3)?;
@@ -227,7 +248,11 @@ fn height_pages_keep_distinct_same_transaction_references_and_complete_boundary_
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn immutable_transactions_enforce_family_money_ranges_and_exact_known_prevout_fees() -> TestResult {
     let value = Transaction::new(Network::Mainnet, transaction()?)?;
     assert_eq!(value.derived_fee().map(Koinu::raw), Some(1));
@@ -260,7 +285,11 @@ fn immutable_transactions_enforce_family_money_ranges_and_exact_known_prevout_fe
     assert!(serde_json::from_value::<Transaction>(wire).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn coinbase_missing_fields_and_family_witness_semantics_are_not_synthesized() -> TestResult {
     let mut data = transaction()?;
     data.inputs[0].previous_output = None;
@@ -278,7 +307,11 @@ fn coinbase_missing_fields_and_family_witness_semantics_are_not_synthesized() ->
     assert!(Transaction::new(Network::Mainnet, data).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn source_status_schema_query_and_family_network_correlations_remain_checked() -> TestResult {
     assert!(TransactionStatus::new(txid(1), None, 1, false, None).is_err());
     let context = Context::new(
@@ -316,7 +349,11 @@ fn source_status_schema_query_and_family_network_correlations_remain_checked() -
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn opaque_payloads_are_bounded_and_redacted_without_claiming_canonical_decoding() -> TestResult {
     let bytes = Bytes::from_hex("70726976617465")?;
     assert!(!format!("{bytes:?}").contains("70726976617465"));
@@ -333,7 +370,11 @@ fn opaque_payloads_are_bounded_and_redacted_without_claiming_canonical_decoding(
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn dogecoin_has_distinct_regtest_versions_and_no_segwit_address_form() {
     let mut raw = [7_u8; 21];
     raw[0] = 111;
@@ -350,7 +391,11 @@ fn dogecoin_has_distinct_regtest_versions_and_no_segwit_address_form() {
     assert!(Address::parse("DD4KSSuBJqcjuTcvUg1CgUKeurPUFeEZkE", Network::Mainnet).is_ok());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn null_outpoints_and_nested_resource_bounds_are_enforced_before_constructor_work() -> TestResult {
     fn copy_value<T: Copy>(value: T) -> T {
         value
@@ -379,7 +424,11 @@ fn null_outpoints_and_nested_resource_bounds_are_enforced_before_constructor_wor
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn source_coinbase_classification_is_explicit_correlated_and_checked_through_serde() -> TestResult {
     let mut data = transaction()?;
     data.inputs[0].previous_output = None;

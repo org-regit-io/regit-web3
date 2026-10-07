@@ -3,6 +3,7 @@
 
 //! One-shot explicit signed EVM submission over a real loopback HTTP exchange.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "evm-http")]
 #[path = "support/rpc_server.rs"]
 mod rpc_server;

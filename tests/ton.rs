@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 //! Pure TON identity, maintained BOC, account linkage and wallet review behavior.
+#![cfg(test)]
 #![cfg(feature = "ton")]
 
 use regit_web3::{
@@ -68,7 +69,11 @@ fn external(destination: Address) -> Result<Boc, Box<dyn std::error::Error>> {
     Ok(Boc::from_bytes(Codec::encode(root))?)
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn addresses_preserve_flags_crc_and_identity() -> Result<(), Box<dyn std::error::Error>> {
     let raw = address()?.to_raw();
     let address = Address::parse(&raw)?;
@@ -109,7 +114,11 @@ fn addresses_preserve_flags_crc_and_identity() -> Result<(), Box<dyn std::error:
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn network_categories_check_full_zero_state() -> Result<(), Box<dyn std::error::Error>> {
     let n = network()?;
     roundtrip(&n)?;
@@ -119,7 +128,11 @@ fn network_categories_check_full_zero_state() -> Result<(), Box<dyn std::error::
     assert!(ZeroState::new(0, Hash::from_bytes([1; 32]), Hash::from_bytes([2; 32])).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_nano_and_extra_currency_bounds() -> Result<(), Box<dyn std::error::Error>> {
     let max = Nanotons::new((1u128 << 120) - 1)?;
     roundtrip(&max)?;
@@ -151,7 +164,11 @@ fn exact_nano_and_extra_currency_bounds() -> Result<(), Box<dyn std::error::Erro
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn boc_strict_framing_hash_and_privacy() -> Result<(), Box<dyn std::error::Error>> {
     let b = empty()?;
     roundtrip(&b)?;
@@ -169,7 +186,11 @@ fn boc_strict_framing_hash_and_privacy() -> Result<(), Box<dyn std::error::Error
     assert!(!format!("{b:?}").contains(&b.to_base64()));
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn real_transaction_vectors_decode_hash_time_and_fees() -> Result<(), Box<dyn std::error::Error>> {
     let txs = rows()?;
     assert_eq!(txs.len(), 2);
@@ -189,7 +210,11 @@ fn real_transaction_vectors_decode_hash_time_and_fees() -> Result<(), Box<dyn st
     }
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn transaction_serde_and_account_correlation_reject_forgery()
 -> Result<(), Box<dyn std::error::Error>> {
     let tx = rows()?.remove(0);
@@ -200,7 +225,11 @@ fn transaction_serde_and_account_correlation_reject_forgery()
     assert!(serde_json::from_value::<Transaction>(value).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn linked_history_cursor_does_not_repeat_inclusive_oldest() -> Result<(), Box<dyn std::error::Error>>
 {
     let txs = rows()?;
@@ -214,7 +243,11 @@ fn linked_history_cursor_does_not_repeat_inclusive_oldest() -> Result<(), Box<dy
     assert!(HistoryRequest::new(address()?, None, 101, true).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn message_scan_is_explicitly_page_bounded() -> Result<(), Box<dyn std::error::Error>> {
     let txs = rows()?;
     let hash = txs[0].incoming().ok_or("incoming")?.hash()?;
@@ -225,7 +258,11 @@ fn message_scan_is_explicitly_page_bounded() -> Result<(), Box<dyn std::error::E
     assert!(MessageStatus::scan(Hash::from_bytes([3; 32]), page)?.not_observed_within_page());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_binds_internal_fields_and_outer_policy_for_review()
 -> Result<(), Box<dyn std::error::Error>> {
     let sender = address()?;
@@ -258,7 +295,11 @@ fn preparation_binds_internal_fields_and_outer_policy_for_review()
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn preparation_serde_recomputes_payload() -> Result<(), Box<dyn std::error::Error>> {
     let intent = TransferIntent::new(
         network()?,
@@ -287,7 +328,11 @@ fn preparation_serde_recomputes_payload() -> Result<(), Box<dyn std::error::Erro
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_submission_checks_external_structure_and_hash_only()
 -> Result<(), Box<dyn std::error::Error>> {
     let destination = address()?;
@@ -298,7 +343,11 @@ fn signed_submission_checks_external_structure_and_hash_only()
     assert!(SubmissionResult::new(submit, Hash::from_bytes([1; 32])).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_rejects_wrong_operation_and_schema() -> Result<(), Box<dyn std::error::Error>> {
     let tx = rows()?.remove(0);
     let source = Source::new("fixture", "getTransactions", "0.1.0")?;
@@ -324,7 +373,11 @@ fn observation_rejects_wrong_operation_and_schema() -> Result<(), Box<dyn std::e
     assert!(serde_json::from_value::<Observation<Transaction>>(value).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn boc_crc_multiroot_and_depth_limits_are_enforced() -> Result<(), Box<dyn std::error::Error>> {
     let tx = rows()?.remove(0);
     let mut bytes = tx.boc().as_bytes().to_vec();
@@ -341,7 +394,11 @@ fn boc_crc_multiroot_and_depth_limits_are_enforced() -> Result<(), Box<dyn std::
     assert!(Boc::from_bytes(Codec::encode(cell)).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn unsupported_execution_retains_description_and_known_malformed_execution_fails()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture = rows()?.remove(0);
@@ -368,7 +425,11 @@ fn unsupported_execution_retains_description_and_known_malformed_execution_fails
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn next_cursor_and_fee_collection_serde_enforce_constructor_parity()
 -> Result<(), Box<dyn std::error::Error>> {
     let txs = rows()?;
@@ -391,7 +452,11 @@ fn next_cursor_and_fee_collection_serde_enforce_constructor_parity()
     assert!(Cursor::new(LogicalTime::new(1)?, Hash::ZERO).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn external_message_with_referenced_body_rejects_trailing_structure()
 -> Result<(), Box<dyn std::error::Error>> {
     use tycho_types::cell::Store as _;
@@ -421,7 +486,11 @@ fn external_message_with_referenced_body_rejects_trailing_structure()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn outgoing_provider_fees_remain_separate_and_constructor_serde_bound()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture: Value = serde_json::from_str(include_str!("fixtures/ton/outgoing.json"))?;
@@ -514,7 +583,11 @@ fn outgoing_provider_fees_remain_separate_and_constructor_serde_bound()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn uninterpreted_forwarding_header_keeps_source_fees_without_decoding_ihr()
 -> Result<(), Box<dyn std::error::Error>> {
     let fixture: Value = serde_json::from_str(include_str!("fixtures/ton/outgoing.json"))?;

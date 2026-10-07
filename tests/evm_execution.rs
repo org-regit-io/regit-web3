@@ -3,6 +3,7 @@
 
 //! Canonical-state execution/nonce reads and independently sourced fee suggestions.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "evm-http")]
 #[path = "support/rpc_server.rs"]
 mod rpc_server;

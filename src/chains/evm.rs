@@ -4,8 +4,9 @@
 //! EVM capabilities over typed inputs and observations.
 //!
 //! [`NativeBalanceReader`] supports generic, static dispatch to a
-//! caller-provided implementation. Its future is `Send` and uses the standard
-//! library's [`Future`]; this capability feature requires no HTTP client or
+//! caller-provided implementation. Its future uses the standard library's
+//! [`Future`] with native `Send` and JavaScript host-local bounds; this
+//! capability feature requires no HTTP client or
 //! runtime. The optional `evm-http` feature provides the bounded HTTP client
 //! implementation.
 //!
@@ -20,7 +21,7 @@
 //! fn read<R: NativeBalanceReader>(
 //!     reader: &R,
 //!     address: Address,
-//! ) -> impl Future<Output = Result<Observation<Balance>, Error>> + Send {
+//! ) -> impl Future<Output = Result<Observation<Balance>, Error>> + regit_web3::future::MaybeSend {
 //!     reader.get_native_balance(address, Some(BlockSelector::Safe))
 //! }
 //! ```
@@ -69,7 +70,7 @@ pub trait NativeBalanceReader {
         &self,
         address: Address,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<Observation<Balance>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Balance>, Error>> + crate::future::MaybeSend;
 }
 
 /// Independent pure capability for exact ERC-20 reads at one canonical state.
@@ -87,7 +88,7 @@ pub trait Erc20Reader {
         contract: Address,
         owner: Address,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Balance>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Balance>, Error>> + crate::future::MaybeSend;
     /// Reads `allowance(owner, spender)` at an explicit or configured selector.
     ///
     /// # Errors
@@ -98,7 +99,8 @@ pub trait Erc20Reader {
         owner: Address,
         spender: Address,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Allowance>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Allowance>, Error>>
+    + crate::future::MaybeSend;
     /// Reads independent optional name/symbol/decimals outcomes at one state.
     ///
     /// # Errors
@@ -107,7 +109,8 @@ pub trait Erc20Reader {
         &self,
         contract: Address,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<Erc20Metadata>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<Erc20Metadata>, Error>>
+    + crate::future::MaybeSend;
 }
 
 /// Independent pure capability for transaction, receipt and observed status reads.
@@ -122,7 +125,8 @@ pub trait TransactionReader {
     fn get_transaction(
         &self,
         hash: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<TransactionLookup>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<TransactionLookup>, Error>>
+    + crate::future::MaybeSend;
     /// Retrieves source receipt fields with actual execution uncertainty.
     ///
     /// # Errors
@@ -130,7 +134,8 @@ pub trait TransactionReader {
     fn get_receipt(
         &self,
         hash: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<ReceiptLookup>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<ReceiptLookup>, Error>>
+    + crate::future::MaybeSend;
     /// Matches sequential transaction/receipt reads into an observed lifecycle.
     ///
     /// # Errors
@@ -138,7 +143,8 @@ pub trait TransactionReader {
     fn get_transaction_status(
         &self,
         hash: TransactionId,
-    ) -> impl Future<Output = Result<OperationObservation<TransactionStatus>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<TransactionStatus>, Error>>
+    + crate::future::MaybeSend;
 }
 
 /// Independent pure capability for separately attributed node fee suggestions.
@@ -149,7 +155,8 @@ pub trait FeeReader {
     /// Reports malformed, unavailable or mismatched source facts and backend failures.
     fn get_fee_suggestions(
         &self,
-    ) -> impl Future<Output = Result<OperationObservation<FeeSuggestions>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<FeeSuggestions>, Error>>
+    + crate::future::MaybeSend;
 }
 
 /// Independent pure capability for canonical-state nonce, call and gas-estimate reads.
@@ -163,7 +170,7 @@ pub trait ExecutionReader {
         &self,
         address: Address,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<AccountNonce>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<AccountNonce>, Error>> + crate::future::MaybeSend;
     /// Executes the exact local call at one captured canonical state.
     /// # Errors
     /// Reports source revert, unavailable state, identity and backend failures.
@@ -171,7 +178,7 @@ pub trait ExecutionReader {
         &self,
         call: TransactionCall,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<CallResult>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<CallResult>, Error>> + crate::future::MaybeSend;
     /// Estimates gas with an explicit cap at one captured canonical state.
     /// # Errors
     /// Reports source revert, unsupported selector, unavailable state and backend failures.
@@ -179,7 +186,7 @@ pub trait ExecutionReader {
         &self,
         call: TransactionCall,
         selector: Option<BlockSelector>,
-    ) -> impl Future<Output = Result<OperationObservation<GasEstimate>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<GasEstimate>, Error>> + crate::future::MaybeSend;
 }
 
 /// Explicit capability for one-shot submission of caller-supplied signed bytes.
@@ -199,5 +206,6 @@ pub trait EvmSubmitter {
     fn submit_signed(
         &self,
         submission: SignedSubmission,
-    ) -> impl Future<Output = Result<OperationObservation<SubmissionAcknowledgment>, Error>> + Send;
+    ) -> impl Future<Output = Result<OperationObservation<SubmissionAcknowledgment>, Error>>
+    + crate::future::MaybeSend;
 }

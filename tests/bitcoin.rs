@@ -3,6 +3,7 @@
 
 //! Offline Bitcoin identities, exact records and backend-independent capabilities.
 
+#![cfg(test)]
 #![cfg(feature = "bitcoin")]
 
 use std::{
@@ -48,7 +49,11 @@ fn block() -> BlockReference {
     )
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn standard_genesis_identities_are_full_distinct_and_validated() {
     let networks = [
         Network::Mainnet,
@@ -92,7 +97,11 @@ fn standard_genesis_identities_are_full_distinct_and_validated() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn address_checksum_and_declared_network_are_distinct_from_endpoint_identity() {
     let main = address().unwrap();
     assert_eq!(main.to_string(), ADDRESS);
@@ -130,7 +139,11 @@ fn address_checksum_and_declared_network_are_distinct_from_endpoint_identity() {
     assert!(serde_json::from_value::<Address>(value).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn hashes_use_full_width_and_canonical_lowercase_hex() {
     for value in ["00".repeat(32), "AB".repeat(32)] {
         assert_eq!(
@@ -148,7 +161,11 @@ fn hashes_use_full_width_and_canonical_lowercase_hex() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn satoshis_and_signed_mempool_delta_are_exact_without_rounding() {
     for raw in [0, 9_007_199_254_740_993, u64::MAX] {
         let value = Satoshis::from_decimal(&raw.to_string()).unwrap();
@@ -187,7 +204,11 @@ fn satoshis_and_signed_mempool_delta_are_exact_without_rounding() {
     assert!(serde_json::from_value::<Satoshis>(json!(1)).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn confirmed_balance_rejects_underrun_and_keeps_negative_mempool_delta() {
     let balance =
         AddressBalance::from_stats(address().unwrap(), u64::MAX, 1, 0, u64::MAX, 7, 8).unwrap();
@@ -204,7 +225,11 @@ fn confirmed_balance_rejects_underrun_and_keeps_negative_mempool_delta() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_limits_and_next_cursor_do_not_claim_exhaustive_mempool_history() {
     let mut entries = (1..=50)
         .map(|index| {
@@ -275,7 +300,11 @@ fn history_limits_and_next_cursor_do_not_claim_exhaustive_mempool_history() {
     assert_eq!(empty.next_cursor(), None);
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn fee_estimates_have_exact_rates_positive_unique_horizons_and_validated_serde() {
     let fees = FeeEstimates::new([
         (
@@ -301,7 +330,11 @@ fn fee_estimates_have_exact_rates_positive_unique_horizons_and_validated_serde()
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_serde_checks_schema_query_network_and_value_identity() {
     let requested = address().unwrap();
     let balance = AddressBalance::from_stats(requested.clone(), 3, 2, 0, 0, 1, 0).unwrap();
@@ -336,7 +369,8 @@ impl BitcoinReader for LocalReader {
     fn get_address_balance(
         &self,
         address: Address,
-    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<AddressBalance>, Error>> + regit_web3::future::MaybeSend
+    {
         let result =
             AddressBalance::from_stats(address.clone(), 7, 2, 0, 1, 2, 1).and_then(|balance| {
                 Observation::address_balance(
@@ -350,7 +384,8 @@ impl BitcoinReader for LocalReader {
         &self,
         address: Address,
         cursor: HistoryCursor,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(
             HistoryPage::new(address.clone(), cursor, vec![]).and_then(|page| {
                 Observation::address_history(
@@ -362,7 +397,8 @@ impl BitcoinReader for LocalReader {
     }
     fn get_fee_estimates(
         &self,
-    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<FeeEstimates>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(
             FeeEstimates::new([]).and_then(|fees| {
                 Observation::fee_estimates(fees, context(Operation::FeeEstimates)?)
@@ -372,7 +408,8 @@ impl BitcoinReader for LocalReader {
     fn get_transaction_status(
         &self,
         txid: Txid,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(
             context(Operation::TransactionStatus { txid }).and_then(|context| {
                 Observation::transaction_status(TransactionStatus::Unconfirmed, context)
@@ -380,7 +417,11 @@ impl BitcoinReader for LocalReader {
         )
     }
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_backend_returns_send_future_without_http_or_runtime() {
     fn assert_send<T: Send>(_: &T) {}
     let reader = LocalReader;

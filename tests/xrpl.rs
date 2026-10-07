@@ -3,6 +3,7 @@
 
 //! Pure XRPL identity, exact amount, pagination and unsigned Payment contracts.
 
+#![cfg(test)]
 #![cfg(feature = "xrpl")]
 
 use std::{
@@ -76,7 +77,11 @@ fn payment(number: u32, tag: Option<u32>, amount: PaymentAmount) -> Result<Payme
     )
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn classic_address_matches_official_account_id_and_checksum_vectors()
 -> Result<(), Box<dyn std::error::Error>> {
     let address = Address::parse(ACCOUNT)?;
@@ -108,7 +113,11 @@ fn classic_address_matches_official_account_id_and_checksum_vectors()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn xaddress_retains_maximum_tag_zero_and_network_category() -> Result<(), Box<dyn std::error::Error>>
 {
     let maximum = XAddress::parse("XVLhHMPHU98es4dbozjVtdWzVrDjtV18pX8yuPT7y4xaEHi")?;
@@ -149,7 +158,11 @@ fn xaddress_retains_maximum_tag_zero_and_network_category() -> Result<(), Box<dy
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn xaddress_rejects_invalid_flags_and_reserved_bytes_even_with_valid_checksum()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut bytes =
@@ -176,7 +189,11 @@ fn xaddress_rejects_invalid_flags_and_reserved_bytes_even_with_valid_checksum()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn currency_preserves_case_punctuation_and_equivalent_protocol_identity()
 -> Result<(), Box<dyn std::error::Error>> {
     let usd = Currency::parse("USD")?;
@@ -203,7 +220,11 @@ fn currency_preserves_case_punctuation_and_equivalent_protocol_identity()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn drops_and_issued_values_preserve_protocol_precision_without_rounding()
 -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(Drops::parse("100000000000000000")?.raw(), Drops::MAX);
@@ -252,7 +273,11 @@ fn drops_and_issued_values_preserve_protocol_precision_without_rounding()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn signed_trustlines_and_page_invariants_survive_serialization()
 -> Result<(), Box<dyn std::error::Error>> {
     let hash = Hash::from_bytes([1; 32]);
@@ -283,7 +308,11 @@ fn signed_trustlines_and_page_invariants_survive_serialization()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observations_reject_schema_operation_hash_and_validation_mismatch()
 -> Result<(), Box<dyn std::error::Error>> {
     let hash = Hash::from_bytes([1; 32]);
@@ -345,7 +374,11 @@ fn observations_reject_schema_operation_hash_and_validation_mismatch()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn unsigned_payment_preserves_exact_amount_tag_and_replay_rules()
 -> Result<(), Box<dyn std::error::Error>> {
     let intent = payment(
@@ -399,7 +432,11 @@ fn unsigned_payment_preserves_exact_amount_tag_and_replay_rules()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn payment_rejects_invalid_intent_and_unknown_issued_fields()
 -> Result<(), Box<dyn std::error::Error>> {
     assert!(payment(0, None, PaymentAmount::Xrp(Drops::new(0)?)).is_err());
@@ -444,7 +481,8 @@ impl XrplReader for LocalReader {
         &self,
         _account: Address,
         _ledger_hash: Option<Hash>,
-    ) -> impl Future<Output = Result<Observation<AccountBalance>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<AccountBalance>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(
             Ledger::new(1, Some(Hash::from_bytes([1; 32])), true).and_then(|ledger| {
                 Observation::account_balance(
@@ -458,36 +496,45 @@ impl XrplReader for LocalReader {
         &self,
         _account: Address,
         _request: PageRequest,
-    ) -> impl Future<Output = Result<Observation<TrustLinePage>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<TrustLinePage>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_fee_estimate(
         &self,
-    ) -> impl Future<Output = Result<Observation<FeeEstimate>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<FeeEstimate>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_transaction(
         &self,
         _hash: Hash,
-    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_transaction_status(
         &self,
         _hash: Hash,
-    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>>
+    + regit_web3::future::MaybeSend {
         ready(Err(Error::UnsupportedCapability))
     }
     fn get_account_history(
         &self,
         _account: Address,
         _request: HistoryRequest,
-    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(Err(Error::UnsupportedCapability))
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn actual_binary_history_blob_hash_matches_real_transaction_id_without_signature_claim()
 -> Result<(), Box<dyn std::error::Error>> {
     let captured: Value = serde_json::from_str(include_str!("fixtures/xrpl_binary_history.json"))?;
@@ -526,7 +573,11 @@ fn actual_binary_history_blob_hash_matches_real_transaction_id_without_signature
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn transaction_execution_is_separate_from_validation_and_missing_inclusion()
 -> Result<(), Box<dyn std::error::Error>> {
     let hash = Hash::from_bytes([1; 32]);
@@ -570,7 +621,11 @@ fn transaction_execution_is_separate_from_validation_and_missing_inclusion()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_retains_actual_range_and_structural_marker_without_invented_hash_or_order()
 -> Result<(), Box<dyn std::error::Error>> {
     let captured: Value = serde_json::from_str(include_str!("fixtures/xrpl_binary_history.json"))?;
@@ -640,7 +695,11 @@ fn history_retains_actual_range_and_structural_marker_without_invented_hash_or_o
     assert!(serde_json::from_str::<HistoryMarker>("{\"ledger\":100,\"seq\":0,\"seq\":1}").is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn pure_capability_accepts_non_send_reader_and_send_ready_future_without_runtime()
 -> Result<(), Box<dyn std::error::Error>> {
     let account = Address::parse(ACCOUNT)?;
@@ -661,7 +720,11 @@ fn pure_capability_accepts_non_send_reader_and_send_ready_future_without_runtime
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn untrusted_values_retain_fixed_diagnostics_without_input() {
     let secret = "PRIVATE_SECRET_ENDPOINT";
     let error = Address::parse(secret).unwrap_err();

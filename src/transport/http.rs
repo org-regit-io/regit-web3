@@ -5,8 +5,7 @@
 
 use std::time::Duration;
 
-use reqwest::{Client, Response, StatusCode, header::CONTENT_TYPE};
-use tokio::time::sleep;
+use reqwest::StatusCode;
 use url::Url;
 
 #[cfg(any(feature = "evm-http", feature = "solana-http"))]
@@ -17,7 +16,17 @@ use crate::{
     error::{Error, ProviderError},
 };
 
-use super::OperationBudget;
+use super::{OperationBudget, clock::sleep};
+
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+mod browser;
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+mod native;
+
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use browser::Backend;
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use native::Backend;
 
 #[cfg(any(
     feature = "xrpl-http",
@@ -32,7 +41,7 @@ const RETRY_DELAY: Duration = Duration::from_millis(25);
 
 pub(crate) struct HttpClient {
     config: HttpConfig,
-    client: Client,
+    backend: Backend,
 }
 
 impl HttpClient {
@@ -60,23 +69,9 @@ impl HttpClient {
     }
 
     pub(crate) fn new(config: &HttpConfig) -> Result<Self, Error> {
-        let client = Client::builder()
-            .tls_backend_rustls()
-            .tls_sslkeylogfile(false)
-            .connect_timeout(config.limits().connect_timeout())
-            .redirect(reqwest::redirect::Policy::none())
-            .retry(reqwest::retry::never())
-            .no_proxy()
-            .referer(false)
-            .no_gzip()
-            .no_brotli()
-            .no_zstd()
-            .no_deflate()
-            .build()
-            .map_err(|_| Error::Configuration)?;
         Ok(Self {
             config: config.clone(),
-            client,
+            backend: Backend::new(config)?,
         })
     }
 
@@ -146,30 +141,15 @@ impl HttpClient {
         budget: &OperationBudget,
     ) -> Result<HttpResponse, Error> {
         let url = self.request_url(path, query)?;
-        let request = self
-            .client
-            .post(url)
-            .header(CONTENT_TYPE, content_type)
-            .headers(self.config.endpoint().headers.clone())
-            .body(body.to_owned())
-            .build()
-            .map_err(|_| Error::Configuration)?;
+        let exchange = self
+            .backend
+            .exchange(&self.config, &url, Some(body), content_type)?;
         budget.check_remaining()?;
-        let execution = self.client.execute(request);
         budget
             .run(async {
-                let response = execution
+                Box::pin(exchange.execute())
                     .await
-                    .map_err(|error| AttemptFailure::transport(&error).error)?;
-                let status = response.status();
-                let body = if status.is_success() {
-                    bounded_body(response, self.config.limits().max_response_bytes())
-                        .await
-                        .map_err(|failure| failure.error)?
-                } else {
-                    Vec::new()
-                };
-                Ok(HttpResponse { status, body })
+                    .map_err(|failure| failure.error)
             })
             .await
             .map_err(submission_unknown)
@@ -207,11 +187,11 @@ impl HttpClient {
                     if retry_status(response.status)
                         && attempt < self.config.limits().max_retries() =>
                 {
-                    sleep(RETRY_DELAY).await;
+                    sleep(RETRY_DELAY).await?;
                 }
                 Ok(response) => return Ok(response),
                 Err(failure) if failure.retry && attempt < self.config.limits().max_retries() => {
-                    sleep(RETRY_DELAY).await;
+                    sleep(RETRY_DELAY).await?;
                 }
                 Err(failure) => return Err(failure.error),
             }
@@ -225,28 +205,13 @@ impl HttpClient {
         url: &Url,
         json_body: Option<&[u8]>,
     ) -> Result<HttpResponse, AttemptFailure> {
-        let request = match json_body {
-            Some(body) => self
-                .client
-                .post(url.clone())
-                .header(CONTENT_TYPE, "application/json")
-                .body(body.to_owned()),
-            None => self.client.get(url.clone()),
-        };
-        let response = request
-            .headers(self.config.endpoint().headers.clone())
-            .send()
-            .await
-            .map_err(|error| AttemptFailure::transport(&error))?;
-        let status = response.status();
-        // Error bodies and remote messages are never retained. The status is
-        // available privately for an integration's documented resource mapping.
-        let body = if status.is_success() {
-            bounded_body(response, self.config.limits().max_response_bytes()).await?
-        } else {
-            Vec::new()
-        };
-        Ok(HttpResponse { status, body })
+        let exchange = self
+            .backend
+            .exchange(&self.config, url, json_body, "application/json")
+            .map_err(AttemptFailure::terminal)?;
+        // Keep transport state from multiplying the stack size of composed
+        // protocol and provider operation futures.
+        Box::pin(exchange.execute()).await
     }
 }
 
@@ -310,50 +275,15 @@ impl AttemptFailure {
             retry: false,
         }
     }
-
-    fn transport(error: &reqwest::Error) -> Self {
-        Self {
-            error: if error.is_timeout() {
-                Error::Timeout
-            } else {
-                Error::Provider(ProviderError::Transport)
-            },
-            retry: true,
-        }
-    }
 }
 
-async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>, AttemptFailure> {
-    if response
-        .content_length()
-        .is_some_and(|length| length > maximum as u64)
-    {
-        return Err(AttemptFailure::terminal(Error::Provider(
-            ProviderError::ResponseTooLarge,
-        )));
-    }
-    let mut body = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|error| AttemptFailure::transport(&error))?
-    {
-        if chunk.len() > maximum - body.len() {
-            return Err(AttemptFailure::terminal(Error::Provider(
-                ProviderError::ResponseTooLarge,
-            )));
-        }
-        body.extend_from_slice(&chunk);
-    }
-    Ok(body)
-}
-
-#[cfg(test)]
+#[cfg(all(test, not(all(target_arch = "wasm32", target_os = "unknown"))))]
 #[path = "tests.rs"]
 mod tests;
 
 #[cfg(all(
     test,
+    not(all(target_arch = "wasm32", target_os = "unknown")),
     any(
         feature = "xrpl-http",
         feature = "evm-http",

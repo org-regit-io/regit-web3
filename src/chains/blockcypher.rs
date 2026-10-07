@@ -3,6 +3,11 @@
 
 //! Compatible indexed read orchestration; family addresses, units and genesis stay explicit.
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 mod wire;
 
 use crate::{
@@ -17,10 +22,7 @@ use crate::{
     error::{Error, ProviderError, ValidationError},
     transport::{HttpClient, OperationBudget},
 };
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 /// Explicit expected family/genesis identity and replaceable bounded `BlockCypher` HTTP base.
 /// The caller supplies the full chain base, such as a documented `/v1/ltc/main`.
@@ -57,7 +59,7 @@ impl<A: AddressPolicy> BlockCypherConfig<A> {
 /// Each operation shares one budget across verification, GET retries, bounded
 /// bodies, decoding and construction. Separately queried facts are not atomic,
 /// hash-pinned history or independent consensus/inclusion proof.
-/// The caller supplies Tokio I/O/time drivers; the client reads no environment,
+/// On native targets, the caller supplies Tokio I/O/time drivers; the client reads no environment,
 /// creates no runtime and chooses no credentials, proxies or fallback hosts.
 pub struct BlockCypherClient<A: AddressPolicy> {
     config: BlockCypherConfig<A>,
@@ -75,7 +77,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// # Errors
     /// Returns fixed configuration, deadline, provider, malformed-source or chain-mismatch failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn connect(config: BlockCypherConfig<A>) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http.limits())?;
         let http = HttpClient::new(&config.http)?;
@@ -139,7 +141,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// # Errors
     /// Rejects qualified-address/source mismatch, inconsistent sums, malformed data or bounded transport failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn get_address_balance(
         &self,
         address: A,
@@ -171,7 +173,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// # Errors
     /// Rejects invalid identity/order/cursors, duplicate references, resource excess or transport failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn get_address_history(
         &self,
         address: A,
@@ -215,7 +217,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// # Errors
     /// Rejects changed chain name/genesis, unavailable fields, malformed quantities or bounded transport failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn get_fee_estimates(&self) -> Result<Observation<FeeEstimates<A>, A>, Error> {
         let budget = OperationBudget::new(self.config.http.limits())?;
         budget
@@ -238,7 +240,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// # Errors
     /// Rejects response identity mismatch, inconsistent inclusion or bounded transport failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn get_transaction_status(
         &self,
         txid: Txid,
@@ -272,7 +274,7 @@ impl<A: AddressPolicy> BlockCypherClient<A> {
     /// Rejects invalid capacity before dispatch, wrong identity, impossible fields,
     /// unsupported/incomplete source records, resource excess or bounded transport failures.
     /// # Panics
-    /// Tokio may panic if the caller runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if the caller runtime lacks I/O or time drivers.
     pub async fn get_transaction(
         &self,
         txid: Txid,

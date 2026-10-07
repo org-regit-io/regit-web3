@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Actual loopback `QuoterV2` calls, captured-hash route comparison and total bounds.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "uniswap-http")]
 #[path = "support/rpc_server.rs"]
 mod rpc_server;

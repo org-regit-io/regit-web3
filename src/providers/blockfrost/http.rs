@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 mod indexed;
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 
 use super::wire;
 
@@ -59,7 +61,7 @@ impl BlockfrostHttpConfig {
 /// Responses cannot exceed 2 MiB; original transaction CBOR has its own 64 KiB bound.
 /// Submission uses one raw-CBOR dispatch, independent of safe-read retry settings.
 /// These operations do not establish an exact evaluation block or finality.
-/// The caller supplies a Tokio runtime with networking and time enabled.
+/// On native targets, the caller supplies a Tokio runtime with networking and time enabled.
 pub struct BlockfrostClient {
     config: BlockfrostHttpConfig,
     http: HttpClient,
@@ -81,7 +83,7 @@ impl BlockfrostClient {
     /// Returns fixed configuration, deadline, network and provider failures.
     ///
     /// # Panics
-    /// A current Tokio runtime with disabled networking or time drivers may panic.
+    /// On native targets, a current Tokio runtime with disabled networking or time drivers may panic.
     pub async fn connect(config: BlockfrostHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         if config.http_config().limits().max_response_bytes() > 2 * 1024 * 1024 {
@@ -122,7 +124,7 @@ impl BlockfrostClient {
     /// identities/amounts, duplicate assets, provider failures and deadline expiry.
     ///
     /// # Panics
-    /// A current Tokio runtime with disabled networking or time drivers may panic.
+    /// On native targets, a current Tokio runtime with disabled networking or time drivers may panic.
     pub async fn get_balance(
         &self,
         address: PaymentAddress,
@@ -159,7 +161,7 @@ impl BlockfrostClient {
     /// invalid output widths/data, excessive pages, provider failures and deadlines.
     ///
     /// # Panics
-    /// A current Tokio runtime with disabled networking or time drivers may panic.
+    /// On native targets, a current Tokio runtime with disabled networking or time drivers may panic.
     pub async fn get_utxos(
         &self,
         address: PaymentAddress,

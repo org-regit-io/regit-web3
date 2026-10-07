@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Pure exact Helius identities, metadata, requests and observation invariants.
+#![cfg(test)]
 #![cfg(feature = "helius")]
 use regit_web3::{
     domain::{
@@ -122,7 +123,11 @@ fn history() -> Result<HistoryRequest, Error> {
         None,
     )
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn exact_supply_lamports_tokens_and_cached_prices_roundtrip_without_floats() -> TestResult {
     let a = Asset::new(asset_data(Pubkey::from_bytes([1; 32]))?)?;
     let v = serde_json::to_string(&a)?;
@@ -136,7 +141,11 @@ fn exact_supply_lamports_tokens_and_cached_prices_roundtrip_without_floats() -> 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn royalty_print_supply_and_creator_bounds_have_constructor_serde_parity() -> TestResult {
     let mut a = asset_data(Pubkey::from_bytes([1; 32]))?;
     a.royalty = Some(Royalty {
@@ -171,7 +180,11 @@ fn royalty_print_supply_and_creator_bounds_have_constructor_serde_parity() -> Te
     assert!(Asset::new(a).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn opaque_utf8_text_and_cursor_never_leak_through_debug_or_fixed_errors() -> TestResult {
     let secret = "secret-api-key\nopaque\0source";
     let t = text(secret)?;
@@ -187,7 +200,11 @@ fn opaque_utf8_text_and_cursor_never_leak_through_debug_or_fixed_errors() -> Tes
     assert!(text(&"x".repeat(SourceText::MAX_BYTES + 1)).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn structured_metadata_retains_types_and_rejects_duplicates_depth_and_size() -> TestResult {
     let mut m = BTreeMap::new();
     m.insert(
@@ -228,7 +245,11 @@ fn structured_metadata_retains_types_and_rejects_duplicates_depth_and_size() -> 
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn page_keyset_modes_and_binary_ranges_reject_incoherent_queries() -> TestResult {
     assert!(owner(AssetPosition::Page { page: 0 }, AssetSort::Created).is_err());
     assert!(owner(AssetPosition::Cursor { cursor: None }, AssetSort::Created).is_err());
@@ -252,7 +273,11 @@ fn page_keyset_modes_and_binary_ranges_reject_incoherent_queries() -> TestResult
     assert!(serde_json::from_value::<OwnerRequest>(v).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn owner_pages_reject_duplicates_wrong_single_owner_capacity_and_range() -> TestResult {
     let q = owner(AssetPosition::Page { page: 1 }, AssetSort::Id)?;
     let a = Asset::new(asset_data(Pubkey::from_bytes([1; 32]))?)?;
@@ -311,7 +336,11 @@ fn owner_pages_reject_duplicates_wrong_single_owner_capacity_and_range() -> Test
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn batches_preserve_duplicates_and_error_positions_but_reject_missing_reordered_items() -> TestResult
 {
     let a = Signature::from_bytes([1; 64]);
@@ -340,7 +369,11 @@ fn batches_preserve_duplicates_and_error_positions_but_reject_missing_reordered_
     assert!(ParseRequest::new(vec![a; 101], Commitment::Confirmed).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn parser_and_execution_failures_do_not_become_success_or_pending() -> TestResult {
     let mut data = parsed()?.data().clone();
     data.error = Some(MetadataValue::new(MetadataNode::Text(text(
@@ -362,7 +395,11 @@ fn parser_and_execution_failures_do_not_become_success_or_pending() -> TestResul
     ));
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_integer_bounds_order_and_cursor_are_not_fabricated_snapshots() -> TestResult {
     assert!(Bounds::new(Some(u64::MAX), None, None, None).is_err());
     assert!(Bounds::new(None, None, Some(0), None).is_err());
@@ -386,7 +423,11 @@ fn history_integer_bounds_order_and_cursor_are_not_fabricated_snapshots() -> Tes
     assert!(HistoryPage::new(q, vec![out], None).is_err());
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observations_correlate_exact_query_and_keep_das_index_separate_from_inclusion() -> TestResult {
     let a = Asset::new(asset_data(Pubkey::from_bytes([1; 32]))?)?;
     let network = Network::new(Hash::from_bytes([8; 32]), "fixture")?;
@@ -429,7 +470,11 @@ fn observations_correlate_exact_query_and_keep_das_index_separate_from_inclusion
     );
     Ok(())
 }
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn history_token_preserves_all_original_predicates_and_constructor_serde_agree() -> TestResult {
     let base = history()?;
     let before = Signature::from_bytes([1; 64]);

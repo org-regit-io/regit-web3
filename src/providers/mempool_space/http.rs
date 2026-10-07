@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
+use std::fmt;
 
 use serde::de::DeserializeOwned;
 
@@ -56,7 +58,7 @@ impl MempoolSpaceHttpConfig {
 /// Bounded outgoing mempool.space-compatible reads over an explicit API base.
 ///
 /// Establishment and every read verify the full expected genesis. The caller
-/// supplies a Tokio runtime with networking/time; no endpoint, key or proxy is
+/// supplies a Tokio runtime with networking/time on native targets; no endpoint, key or proxy is
 /// discovered. One operation budget covers genesis, safe-read retries, bodies
 /// and decoding. Full transactions reuse the qualified Bitcoin Esplora backend
 /// and preserve this configuration's provider label. No request mutates state.
@@ -79,7 +81,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Returns fixed configuration, budget, transport, identity or provider errors.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn connect(config: MempoolSpaceHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         budget
@@ -107,7 +109,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Rejects changed genesis, malformed/inconsistent records and transport limits.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_mempool_summary(&self) -> Result<Observation<MempoolSummary>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget
@@ -126,7 +128,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Rejects malformed/duplicate/excess entries, changed genesis or provider failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_recent_transactions(&self) -> Result<Observation<RecentTransactions>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget
@@ -149,7 +151,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Rejects exceeded bounds, duplicates, malformed IDs, changed genesis or failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_mempool_txids(
         &self,
         limit: TransactionLimit,
@@ -171,7 +173,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Rejects missing/negative/non-numeric suggestions, changed genesis or failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_recommended_fees(&self) -> Result<Observation<RecommendedFees>, Error> {
         let budget = OperationBudget::new(self.config.http_config().limits())?;
         budget
@@ -190,7 +192,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Rejects genesis, raw identity/structure or indexed inconsistencies; 404 is unavailable.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_transaction(
         &self,
         txid: Txid,
@@ -201,7 +203,7 @@ impl MempoolSpaceClient {
     /// # Errors
     /// Returns fixed genesis, malformed status, transport or provider failures.
     /// # Panics
-    /// Tokio may panic if the caller's runtime lacks networking or time drivers.
+    /// On native targets, Tokio may panic if the caller's runtime lacks networking or time drivers.
     pub async fn get_transaction_status(
         &self,
         txid: Txid,

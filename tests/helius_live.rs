@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Explicit authenticated read-only Helius data qualification; ordinary tests stay offline.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "helius-http")]
 use regit_web3::{
     config::{HttpConfig, RpcEndpoint, RpcLimits},

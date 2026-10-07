@@ -3,6 +3,7 @@
 
 //! Actual XRPL Payment intent derives field-based preparation without signing.
 
+#![cfg(test)]
 #![cfg(feature = "xrpl")]
 
 use regit_web3::{
@@ -31,7 +32,11 @@ fn payment() -> Result<PaymentRequest, regit_web3::error::Error> {
     )
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn xrpl_review_and_handoff_retain_validated_intent_and_exact_unsigned_fields()
 -> Result<(), TestError> {
     let intent = payment()?;
@@ -63,7 +68,11 @@ fn xrpl_review_and_handoff_retain_validated_intent_and_exact_unsigned_fields()
     Ok(())
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn xrpl_adapter_deserialization_rebuilds_payload_from_validated_intent() -> Result<(), TestError> {
     let intent = payment()?;
     let mut invalid = serde_json::to_value(&intent)?;

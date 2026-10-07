@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{TonReader, TonSubmitter, wire};
 use crate::{
     config::{HttpConfig, RpcLimits},
@@ -14,15 +19,10 @@ use crate::{
         },
     },
     error::{Error, ProviderError, ValidationError},
-    transport::{HttpClient, OperationBudget, submission_unknown},
+    transport::{HttpClient, Instant, OperationBudget, sleep, sleep_until, submission_unknown},
 };
 use serde::{Serialize, de::DeserializeOwned};
-use std::{
-    fmt,
-    sync::Mutex,
-    time::{Duration, SystemTime, UNIX_EPOCH},
-};
-use tokio::time::{Instant, sleep, sleep_until};
+use std::{fmt, sync::Mutex, time::Duration};
 
 /// Caller-supplied expected TON zero-state and optional outgoing API-v2 configuration.
 /// The endpoint includes `/api/v2`; optional API keys are explicit sensitive
@@ -80,7 +80,7 @@ impl TonHttpConfig {
     }
 }
 /// Optional TON Center-compatible API-v2 backend with full zero-state verification.
-/// The caller supplies Tokio with I/O/time. Each operation has one total budget;
+/// On native targets, the caller supplies Tokio with I/O/time. Each operation has one total budget;
 /// safe reads/estimates retry identical requests. Account reads freeze the selected
 /// masterchain sequence across retries and verify the full returned block ID.
 /// This is source correlation, not an independently checked consensus proof.
@@ -96,7 +96,7 @@ impl TonClient {
     /// Returns fixed runtime/configuration, network, provider or response failures.
     ///
     /// # Panics
-    /// Tokio may panic if its caller-supplied runtime lacks I/O or time drivers.
+    /// On native targets, Tokio may panic if its caller-supplied runtime lacks I/O or time drivers.
     pub async fn connect(config: TonHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
         // This backend spaces each attempt, so retries belong to its own read
@@ -148,12 +148,7 @@ impl TonClient {
                 Ok(response) => return wire::decode(&response.into_success()?),
                 Err(error) => return Err(error),
             }
-            budget
-                .run(async {
-                    sleep(Duration::from_millis(25)).await;
-                    Ok(())
-                })
-                .await?;
+            budget.run(sleep(Duration::from_millis(25))).await?;
         }
         Err(Error::Provider(ProviderError::Transport))
     }
@@ -173,12 +168,7 @@ impl TonClient {
             );
             target
         };
-        budget
-            .run(async {
-                sleep_until(target).await;
-                Ok(())
-            })
-            .await
+        budget.run(sleep_until(target)).await
     }
     async fn network(&self, budget: &OperationBudget) -> Result<NetworkData, Error> {
         let result: wire::Master = self.read(budget, "getMasterchainInfo", &[], None).await?;

@@ -7,16 +7,21 @@
 //! Balance reads use EIP-1898 with a captured hash and `requireCanonical: true`.
 //! These checks describe the source's responses; they do not prove atomic
 //! behavior across a routed provider or establish lasting block finality.
-//! The caller owns a Tokio runtime with I/O and time drivers enabled. HTTPS
-//! uses verified standard platform trust. Proxy discovery, redirects,
-//! automatic transport retries, cookies, and decompression are disabled.
+//! Native callers supply a Tokio runtime with I/O and time drivers enabled.
+//! Native HTTPS uses verified standard platform trust; proxy discovery and
+//! decompression are disabled. Browser targets use host Fetch, TLS, proxy and
+//! decompression policies, and bound the actual streamed response bytes.
+//! Both transports reject redirects and omit ambient cookies; only explicit
+//! safe-read retries run within the shared operation deadline.
 //! Signed submission is a separate explicit one-shot operation; preparation and
 //! simulation never invoke it and unresolved outcomes after dispatch remain unknown.
 
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
+use std::fmt;
 
 use crate::{
     config::EvmConfig,
@@ -38,8 +43,8 @@ mod submission;
 
 /// An EVM client with explicit configuration and verified chain identity.
 ///
-/// Construct with [`Self::connect`] inside an existing Tokio runtime with its
-/// I/O and time drivers enabled. The library creates no runtime, loads no RPC
+/// On native targets, construct with [`Self::connect`] inside an existing Tokio
+/// runtime with I/O and time drivers enabled. Browser targets use host Fetch and timers. The library creates no runtime, loads no RPC
 /// configuration or credentials, and discovers no proxy configuration.
 /// Native balances are read only at a captured canonical block hash.
 /// Signed submission is separate, explicit and never retried.
@@ -69,7 +74,7 @@ impl EvmClient {
     ///
     /// # Panics
     ///
-    /// Tokio and its networking stack may panic when an existing runtime lacks
+    /// On native targets, Tokio and its networking stack may panic when an existing runtime lacks
     /// enabled time or I/O drivers. Both drivers must be enabled by the caller.
     pub async fn connect(config: EvmConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.limits())?;
@@ -119,7 +124,7 @@ impl EvmClient {
     ///
     /// # Panics
     ///
-    /// Tokio and its networking stack may panic if the caller's existing
+    /// On native targets, Tokio and its networking stack may panic if the caller's existing
     /// runtime lacks enabled time or I/O drivers.
     pub async fn get_native_balance(
         &self,
@@ -245,7 +250,8 @@ impl super::NativeBalanceReader for EvmClient {
         &self,
         address: Address,
         selector: Option<BlockSelector>,
-    ) -> impl std::future::Future<Output = Result<Observation<Balance>, Error>> + Send {
+    ) -> impl std::future::Future<Output = Result<Observation<Balance>, Error>> + crate::future::MaybeSend
+    {
         Self::get_native_balance(self, address, selector)
     }
 }

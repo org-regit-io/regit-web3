@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! All eight public `THORNode` operations and bounded failures over offline loopback.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "thorchain-http")]
 #[path = "support/market_server.rs"]
 mod market_server;

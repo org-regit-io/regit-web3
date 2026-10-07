@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Real-loopback LI.FI quotes, unchanged continuation replay and progress mapping.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "lifi-http")]
 
 use regit_web3::{

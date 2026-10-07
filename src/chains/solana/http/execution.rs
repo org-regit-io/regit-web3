@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::super::wire::{
     RequestOptions, SlotValue, error_policy,
     execution::{
@@ -24,7 +29,6 @@ use crate::{
     transport::{OperationBudget, decode_response, encode_request, submission_unknown},
 };
 use base64::{Engine as _, engine::general_purpose::STANDARD};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 impl SolanaClient {
     /// Retrieves canonical legacy/v0/v1 source bytes and exact execution metadata.
@@ -33,7 +37,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns bounded source, identity, structural, deadline or unsupported failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn get_transaction(
         &self,
         signature: Signature,
@@ -74,7 +78,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed bounded-provider, correlation or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn get_transaction_status(
         &self,
         signature: Signature,
@@ -115,7 +119,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed provider, network, lower-bound or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn get_latest_blockhash(
         &self,
         options: ReadOptions,
@@ -152,7 +156,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed provider, network, lower-bound or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn is_blockhash_valid(
         &self,
         blockhash: Hash,
@@ -191,7 +195,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed provider, identity, width or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn get_block_height(
         &self,
         commitment: Commitment,
@@ -227,7 +231,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed provider, identity, lower-bound or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn get_fee_for_message(
         &self,
         message: UnsignedMessage,
@@ -270,7 +274,7 @@ impl SolanaClient {
     /// # Errors
     /// Returns fixed provider, identity, malformed/bounded-source or deadline failures.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn simulate_transaction(
         &self,
         transaction: UnsignedTransaction,
@@ -323,7 +327,7 @@ impl SolanaClient {
     /// failures, including RPC errors and mismatched acknowledgements, retain possible
     /// submission as `SubmissionOutcomeUnknown` without exposing source diagnostics.
     /// # Panics
-    /// Tokio may panic without caller-provided I/O and time drivers.
+    /// On native targets, Tokio may panic without caller-provided I/O and time drivers.
     pub async fn submit_signed(
         &self,
         transaction: SignedTransaction,

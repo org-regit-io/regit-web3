@@ -3,6 +3,7 @@
 
 //! Actual public XRPL HTTP contracts through bounded loopback exchanges.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "xrpl-http")]
 
 use std::{

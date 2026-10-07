@@ -29,33 +29,33 @@ pub trait RubicReader {
     fn chains(
         &self,
         include_testnets: bool,
-    ) -> impl Future<Output = Result<Observation<Chains>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Chains>, Error>> + crate::future::MaybeSend;
     /// Reads all source-selected direct routes within caller capacities.
     /// # Errors
     /// Returns source, correlation or bounded-data failures.
     fn quote_all(
         &self,
         request: QuoteRequest,
-    ) -> impl Future<Output = Result<Observation<Routes>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Routes>, Error>> + crate::future::MaybeSend;
     /// Reads the source's selected best direct route; global optimality is unverified.
     /// # Errors
     /// Returns source, correlation or bounded-data failures.
     fn quote_best(
         &self,
         request: QuoteRequest,
-    ) -> impl Future<Output = Result<Observation<Quote>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Quote>, Error>> + crate::future::MaybeSend;
     /// Requests unsigned data for a selected direct route, retaining fresh estimates.
     /// # Errors
     /// Returns correlation, source or unsupported-payload failures.
     fn prepare(
         &self,
         request: PreparationRequest,
-    ) -> impl Future<Output = Result<Observation<PreparedSwap>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<PreparedSwap>, Error>> + crate::future::MaybeSend;
     /// Reads current `statusExtended` provider facts for an explicit ID and source hash.
     /// # Errors
     /// Returns source, destination-identity or bounded-data failures.
     fn status(
         &self,
         query: StatusQuery,
-    ) -> impl Future<Output = Result<Observation<Status>, Error>> + Send;
+    ) -> impl Future<Output = Result<Observation<Status>, Error>> + crate::future::MaybeSend;
 }

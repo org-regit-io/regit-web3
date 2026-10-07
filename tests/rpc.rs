@@ -3,6 +3,7 @@
 
 //! Public EVM client contracts against deterministic loopback HTTP fixtures.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "evm-http")]
 
 #[path = "support/rpc_server.rs"]

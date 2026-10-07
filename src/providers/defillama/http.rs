@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+#[cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
+use std::time::{SystemTime, UNIX_EPOCH};
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+use web_time::{SystemTime, UNIX_EPOCH};
+
 use super::{DefiLlamaReader, wire};
 use crate::{
     config::HttpConfig,
@@ -16,10 +21,7 @@ use crate::{
     error::Error,
     transport::{HttpClient, OperationBudget},
 };
-use std::{
-    fmt,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::fmt;
 /// Explicit independent TVL/analytics, yields and stablecoin HTTP configurations.
 /// Caller bases may target dedicated public hosts or corresponding authenticated
 /// proxies; credentials and any path prefixes are supplied explicitly per base.
@@ -72,7 +74,7 @@ impl DefiLlamaHttpConfig {
 }
 /// Bounded outgoing reader of exact attributed provider observations.
 /// Each read uses its selected source's explicit limits and one total deadline.
-/// The caller supplies a Tokio runtime with networking and time enabled.
+/// On native targets, the caller supplies a Tokio runtime with networking and time enabled.
 pub struct DefiLlamaClient {
     config: DefiLlamaHttpConfig,
     tvl: HttpClient,
@@ -132,7 +134,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn protocol_tvl(
         &self,
         protocol: ProviderId,
@@ -155,7 +157,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn protocol_history(
         &self,
         protocol: ProviderId,
@@ -184,7 +186,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn tvl_history(&self, scope: TvlScope) -> Result<Observation<TvlHistory>, Error> {
         let budget = OperationBudget::new(self.config.tvl.limits())?;
         budget
@@ -208,7 +210,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed bounded provider, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn yield_pools(&self) -> Result<Observation<YieldPools>, Error> {
         let budget = OperationBudget::new(self.config.yields.limits())?;
         budget
@@ -226,7 +228,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn yield_history(
         &self,
         pool: ProviderId,
@@ -249,7 +251,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed bounded provider, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn stablecoins(&self) -> Result<Observation<Stablecoins>, Error> {
         let budget = OperationBudget::new(self.config.stablecoins.limits())?;
         budget
@@ -275,7 +277,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn stablecoin_history(
         &self,
         scope: StablecoinScope,
@@ -313,7 +315,7 @@ impl DefiLlamaClient {
     /// # Errors
     /// Returns fixed provider, unavailable-data, configuration and deadline failures.
     /// # Panics
-    /// A Tokio runtime with disabled networking/time drivers may panic.
+    /// On native targets, a Tokio runtime with disabled networking/time drivers may panic.
     pub async fn analytics(
         &self,
         request: AnalyticsRequest,

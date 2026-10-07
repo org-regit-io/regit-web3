@@ -4,6 +4,7 @@
 //! Opt-in authenticated Classic Swap v6.1 Rust quote/catalogue/spender/preparation.
 //! Caller-owned harness credentials and public inputs never enter library defaults.
 //! All operations are GET; no approval, signed transaction or execution is performed.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "oneinch-http")]
 
 #[path = "support/live.rs"]

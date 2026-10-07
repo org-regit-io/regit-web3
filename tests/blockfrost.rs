@@ -3,6 +3,7 @@
 
 //! Deterministic public Blockfrost read contracts over loopback HTTP fixtures.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "blockfrost-http")]
 
 use std::{

@@ -8,7 +8,7 @@
 //! Jupiter, Uniswap, 1inch, LI.FI, and Rubic; and five providers: `CoinGecko`,
 //! `DefiLlama`, Helius, Blockfrost, and mempool.space. All twenty modules provide
 //! functional operations within their documented supported profiles. Authenticated
-//! live data and final platform qualification remain separate pending checks.
+//! 1inch live data and final platform qualification remain separate pending checks.
 //!
 //! The [`domain`] module provides exact integer amounts and signed decimals,
 //! validated family identities, account values, and attributable observations.
@@ -18,8 +18,10 @@
 //! and inclusion status; Cardano records include ADA/native assets and bounded
 //! `UTxO` pages. The [`error`] module provides typed failures with fixed diagnostics.
 //!
-//! Default features are empty. Pure family capabilities use standard `Send`
-//! futures and allow independently supplied implementations. Optional concrete
+//! Default features are empty. Pure family capabilities use standard futures
+//! and allow independently supplied implementations. Their [`future::MaybeSend`]
+//! bound preserves `Send` on native targets and permits host-local JavaScript
+//! futures on `wasm32-unknown-unknown`. Optional concrete
 //! backends supply the necessary RPC/provider access and select their own
 //! runtime and transport dependencies. The `http` feature exposes explicit,
 //! redacted HTTP(S) configuration. Concrete backends use private bounded transport.
@@ -87,8 +89,9 @@
 //! explicit RPC/REST base. Parser outcomes, execution, inclusion slots and DAS
 //! index progress stay distinct; cached prices remain source valuations. Owner
 //! and history continuations retain every original query control, and concrete
-//! handles reject a different client before dispatch. Authenticated live data
-//! qualification remains pending; no signing or submission is provided.
+//! handles reject a different client before dispatch. All four methods have
+//! representative authenticated mainnet qualification, including duplicate parsed
+//! batches and successful history records; no signing or submission is provided.
 //! `mempool-space-http` supplies genesis-checked mempool summaries, bounded recent
 //! and full-ID lists, exact sat/vB recommendations and compatible canonical
 //! Bitcoin transaction/status retrieval. Moving observations are independent;
@@ -125,7 +128,9 @@
 //! backends have representative read-live
 //! qualification; `THORChain` has representative read/quote qualification.
 //! Deterministic fixtures cover each implemented backend. This is point-in-time
-//! source evidence; Cardano's live proof remains pending.
+//! source evidence. Cardano/Blockfrost all seventeen indexed reads/estimate and
+//! explicit unsigned review have representative authenticated mainnet proof;
+//! preparation supports protocol majors 9–11. No funded submission was performed.
 //! XRPL provides classic/X-address identities, exact drops and issued values,
 //! source-attributed ledger observations, and ordinary unsigned Payment JSON
 //! preparation. Its `xrpl-http` backend supplies ledger-anchored account/trustline
@@ -181,8 +186,8 @@
 //! preparation with generic review/handoff; `oneinch` retains an unsigned source
 //! envelope and explicit original swap review. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
-//! Preparation and handoff do not submit. Authenticated Helius, Blockfrost and
-//! 1inch data and final platform qualification remain pending. Representative
+//! Preparation and handoff do not submit. Authenticated 1inch data and final
+//! platform qualification remain pending. Representative
 //! proofs apply to their recorded operations, networks and query variants.
 //!
 //! Read a native balance through an established EVM client:
@@ -212,12 +217,16 @@ pub mod chains;
 pub mod config;
 pub mod domain;
 pub mod error;
+pub mod future;
 pub mod protocols;
 pub mod providers;
 // Compile the private transport when a concrete backend or its tests use it.
 // Extend this predicate as additional integrations are implemented.
 #[cfg(any(
-    feature = "bitcoin-cash-electrum",
+    all(
+        feature = "bitcoin-cash-electrum",
+        not(all(target_arch = "wasm32", target_os = "unknown"))
+    ),
     all(
         feature = "http",
         any(

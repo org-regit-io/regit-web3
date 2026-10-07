@@ -2,6 +2,7 @@
 // Copyright (c) 2026 Regit
 
 //! Deterministic Helius DAS and current Parsed Events HTTP contracts.
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "helius-http")]
 use regit_web3::{
     config::{HttpConfig, RpcEndpoint, RpcLimits},

@@ -9,6 +9,7 @@
 //! `REGIT_WEB3_XRPL_PROVIDER_ID` and `REGIT_WEB3_XRPL_HISTORY_MIN_LEDGER`.
 //! No signing, funding or submission is performed.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "xrpl-http")]
 
 use std::{

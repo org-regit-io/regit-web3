@@ -3,6 +3,7 @@
 
 //! Offline public contracts for Solana identities, values, and capability traits.
 
+#![cfg(test)]
 #![cfg(feature = "solana")]
 
 use std::{
@@ -58,7 +59,11 @@ fn native_observation() -> Result<Observation<NativeBalance>, Error> {
     )
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn official_base58_vectors_retain_case_and_full_width() {
     let address = Pubkey::parse(SYSTEM).unwrap();
     assert_eq!(address.bytes(), [0; 32]);
@@ -94,7 +99,11 @@ fn official_base58_vectors_retain_case_and_full_width() {
     assert_eq!(Signature::from_bytes([0; 64]).bytes(), [0; 64]);
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn invalid_base58_is_rejected_without_input_in_domain_errors() {
     for invalid in [
         "",
@@ -135,7 +144,11 @@ fn invalid_base58_is_rejected_without_input_in_domain_errors() {
     assert!(serde_json::from_value::<Signature>(json!(null)).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn network_aliases_are_validated_but_do_not_replace_genesis_identity() {
     let first = network("mainnet").unwrap();
     let second = network("caller-alias").unwrap();
@@ -158,7 +171,11 @@ fn network_aliases_are_validated_but_do_not_replace_genesis_identity() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_balances_keep_exact_u64_lamports_and_nine_decimals() {
     for (raw, formatted) in [
         (0, "0.000000000"),
@@ -181,7 +198,11 @@ fn native_balances_keep_exact_u64_lamports_and_nine_decimals() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_balance_deserialization_cannot_bypass_width_or_precision() {
     let balance = NativeBalance::new(network("mainnet").unwrap(), Pubkey::from_bytes([9; 32]), 1);
     for amount in [
@@ -195,7 +216,11 @@ fn native_balance_deserialization_cannot_bypass_width_or_precision() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_identity_uses_genesis_mint_and_program_independent_of_metadata() {
     let mint = Pubkey::from_bytes([1; 32]);
     let program = Pubkey::parse(TOKEN).unwrap();
@@ -240,7 +265,11 @@ fn token_identity_uses_genesis_mint_and_program_independent_of_metadata() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_precision_is_explicitly_optional_and_amount_is_exact() {
     for decimals in [None, Some(0), Some(6), Some(255)] {
         let asset = TokenAsset::new(
@@ -271,7 +300,11 @@ fn token_precision_is_explicitly_optional_and_amount_is_exact() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_balance_deserialization_requires_precision_agreement_and_u64_width() {
     let asset = TokenAsset::new(
         network("mainnet").unwrap(),
@@ -299,7 +332,11 @@ fn token_balance_deserialization_requires_precision_agreement_and_u64_width() {
     assert!(serde_json::from_value::<TokenAsset>(wire).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn present_empty_account_is_distinct_from_explicit_absence() {
     let address = Pubkey::from_bytes([4; 32]);
     let account = Account::new(
@@ -335,7 +372,11 @@ fn present_empty_account_is_distinct_from_explicit_absence() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn account_lookup_identity_is_checked_by_constructor_and_deserializer() {
     let address = Pubkey::from_bytes([4; 32]);
     let account = Account::new(
@@ -371,7 +412,11 @@ fn account_lookup_identity_is_checked_by_constructor_and_deserializer() {
     assert!(serde_json::from_value::<AccountLookup>(wire).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn account_data_limit_is_enforced_in_construction_and_streaming_deserialization() {
     let address = Pubkey::from_bytes([4; 32]);
     let account = Account::new(
@@ -421,7 +466,11 @@ fn account_data_limit_is_enforced_in_construction_and_streaming_deserialization(
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn actual_slot_is_distinct_from_requested_minimum_and_retrieval_time() {
     let options = ReadOptions::new(Commitment::Finalized, Some(100));
     for actual in [100, 101, u64::MAX] {
@@ -455,7 +504,11 @@ fn actual_slot_is_distinct_from_requested_minimum_and_retrieval_time() {
     assert!(serde_json::from_value::<ReadOptions>(missing).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn native_observation_wire_retains_family_context_and_aliases() {
     let observation = native_observation().unwrap();
     let wire = serde_json::to_value(&observation).unwrap();
@@ -476,7 +529,11 @@ fn native_observation_wire_retains_family_context_and_aliases() {
     assert_eq!(observation.context().source().method(), "getBalance");
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn observation_constructor_and_serde_validate_operation_genesis_schema_and_slot() {
     let value = native_observation().unwrap().value().clone();
     assert_eq!(
@@ -519,7 +576,11 @@ fn observation_constructor_and_serde_validate_operation_genesis_schema_and_slot(
     assert!(serde_json::from_value::<Observation<NativeBalance>>(wire).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn strict_observation_deserializer_rejects_unknown_and_raw_duplicate_keys() {
     let wire = serde_json::to_string(&native_observation().unwrap()).unwrap();
     for prefix in [
@@ -537,7 +598,11 @@ fn strict_observation_deserializer_rejects_unknown_and_raw_duplicate_keys() {
     assert!(serde_json::from_str::<Network>(&network_wire).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn token_and_absent_account_observations_roundtrip_without_native_inference() {
     let asset = TokenAsset::new(
         network("display").unwrap(),
@@ -607,7 +672,8 @@ impl NativeBalanceReader for CallerReader {
         &self,
         address: Pubkey,
         options: ReadOptions,
-    ) -> impl Future<Output = Result<Observation<NativeBalance>, Error>> + Send {
+    ) -> impl Future<Output = Result<Observation<NativeBalance>, Error>> + regit_web3::future::MaybeSend
+    {
         ready(
             Source::new("caller", "native", "0.1.0")
                 .and_then(|source| {
@@ -630,7 +696,11 @@ impl NativeBalanceReader for CallerReader {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn caller_implemented_reader_is_send_and_needs_no_async_runtime()
 -> Result<(), Box<dyn std::error::Error>> {
     fn require_send<T: Send>(_: &T) {}

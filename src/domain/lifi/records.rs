@@ -610,7 +610,9 @@ pub struct Origin {
 }
 /// Pure extension contract for an immutable backend-specific continuation handle.
 /// Implementations expose typed source facts, not arbitrary provider JSON.
-pub trait StepView: Clone + Send + Sync {
+/// Handles are `Send` and `Sync` on native targets and host-local on JavaScript
+/// WebAssembly, matching the capability's target-aware future contract.
+pub trait StepView: Clone + crate::future::MaybeSend + crate::future::MaybeSync {
     /// Returns the immutable selected typed step.
     fn step(&self) -> &Step;
     /// Returns immutable original whole-transfer caller inputs.

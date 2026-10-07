@@ -21,8 +21,8 @@ use std::fmt;
 /// Direct Uniswap V3 `QuoterV2` reader with declared Universal Router 2.1.2 preparation identities.
 ///
 /// Composes the existing bounded EVM backend; no Uniswap API key or distinct
-/// transport is required. Callers own RPC access and a Tokio runtime with I/O
-/// and time enabled. A declared deployment is not contract-code attestation.
+/// transport is required. Callers own RPC access; native callers also supply a
+/// Tokio runtime with I/O and time enabled. A declared deployment is not contract-code attestation.
 /// Reads never sign, approve or submit transactions.
 pub struct UniswapV3Client {
     evm: EvmClient,
@@ -33,7 +33,7 @@ impl UniswapV3Client {
     /// # Errors
     /// Reports configuration/deployment mismatch or EVM establishment failures.
     /// # Panics
-    /// The caller's Tokio runtime must have I/O and time drivers enabled.
+    /// On native targets, the caller's Tokio runtime must have I/O and time drivers enabled.
     pub async fn connect(config: EvmConfig, deployment: V3Deployment) -> Result<Self, Error> {
         if config.network().chain_id() != deployment.chain_id() {
             return Err(invalid());
@@ -69,7 +69,7 @@ impl UniswapV3Client {
     /// # Errors
     /// Reports deployment mismatch, source revert, bad ABI, identity/state or backend failures.
     /// # Panics
-    /// The caller's Tokio runtime must have I/O and time drivers enabled.
+    /// On native targets, the caller's Tokio runtime must have I/O and time drivers enabled.
     pub async fn quote_exact_input(
         &self,
         request: V3QuoteRequest,
@@ -96,7 +96,7 @@ impl UniswapV3Client {
     /// # Errors
     /// Reports deployment mismatch, malformed/mismatched responses or backend failures.
     /// # Panics
-    /// The caller's Tokio runtime must have I/O and time drivers enabled.
+    /// On native targets, the caller's Tokio runtime must have I/O and time drivers enabled.
     pub async fn compare_routes(
         &self,
         request: V3RouteRequest,

@@ -3,6 +3,7 @@
 
 //! Blockfrost indexed operations and separate exact CBOR one-shot submission.
 
+#![cfg(not(all(target_arch = "wasm32", target_os = "unknown")))]
 #![cfg(feature = "blockfrost-http")]
 
 #[path = "support/cardano.rs"]

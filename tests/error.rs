@@ -3,13 +3,18 @@
 
 //! Typed failure categories and secret-safe domain diagnostics.
 
+#![cfg(test)]
 use regit_web3::domain::{
     Address, Amount, Asset, BlockHash, ChainId, ExactDecimal, NetworkId, Source,
 };
 use regit_web3::error::{Error, ProviderError, ValidationError};
 use serde_json::json;
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn error_categories_and_reasons_roundtrip_as_fixed_structured_values() {
     for (error, expected) in [
         (Error::Configuration, json!({"category": "configuration"})),
@@ -54,7 +59,11 @@ fn error_categories_and_reasons_roundtrip_as_fixed_structured_values() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn validation_errors_never_retain_credential_bearing_bad_input() {
     let bad_input = "https://fixture-user:fixture-password@example.invalid/?token=fixture-token";
     let chain = ChainId::from_decimal("1").unwrap();
@@ -94,7 +103,11 @@ fn validation_errors_never_retain_credential_bearing_bad_input() {
     }
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn structured_errors_cannot_import_arbitrary_provider_or_validation_messages() {
     let untrusted = "Authorization: Bearer fixture-token";
     for category in ["provider", "validation"] {
@@ -106,7 +119,11 @@ fn structured_errors_cannot_import_arbitrary_provider_or_validation_messages() {
     assert!(serde_json::from_value::<Error>(json!({"category": untrusted})).is_err());
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn overflow_and_malformed_amounts_have_distinct_typed_failures() {
     assert_eq!(
         Amount::from_decimal("-1", None).unwrap_err(),
@@ -122,7 +139,11 @@ fn overflow_and_malformed_amounts_have_distinct_typed_failures() {
     );
 }
 
-#[test]
+#[cfg_attr(
+    all(target_arch = "wasm32", target_os = "unknown"),
+    wasm_bindgen_test::wasm_bindgen_test
+)]
+#[cfg_attr(not(all(target_arch = "wasm32", target_os = "unknown")), test)]
 fn solana_validation_reasons_have_fixed_distinct_serialized_diagnostics() {
     for (reason, expected) in [
         (
