@@ -1,0 +1,52 @@
+{
+  "api_url": "https://api.jup.ag/swap/v2",
+  "api_provider_id": "jupiter-v2-public",
+  "rpc_url": "https://api.mainnet.solana.com",
+  "rpc_provider_id": "solana-mainnet-public",
+  "quote": {
+    "network": {
+      "genesis_hash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+      "alias": "mainnet"
+    },
+    "input_mint": "So11111111111111111111111111111111111111112",
+    "output_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "amount": 1000000,
+    "slippage": 100,
+    "excluded_routers": [
+      "jupiterz"
+    ],
+    "excluded_dexes": [],
+    "max_route_steps": 128
+  },
+  "build": {
+    "network": {
+      "genesis_hash": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d",
+      "alias": "mainnet"
+    },
+    "input_mint": "So11111111111111111111111111111111111111112",
+    "output_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "amount": 1000000,
+    "slippage": 100,
+    "max_route_steps": 128,
+    "taker": "GkwFnmMDvn3HGMpJpWBg8tgJxr3NxNvg3AXxvXVPbRGJ",
+    "payer": "GkwFnmMDvn3HGMpJpWBg8tgJxr3NxNvg3AXxvXVPbRGJ",
+    "minimum_output": 1,
+    "wrap_and_unwrap_sol": true,
+    "destination": {
+      "kind": "taker"
+    },
+    "dex_filter": {
+      "kind": "all"
+    },
+    "max_accounts": 64,
+    "blockhash_slots_to_expiry": 150,
+    "compute_unit_price_percentile": 5000
+  },
+  "settings": {
+    "compute_unit_limit": 400000,
+    "maximum_compute_unit_price": 1000000,
+    "additional_signers": [],
+    "other_instruction_placement": "after_cleanup"
+  },
+  "handoff_id": "jupiter-read-only-qualification"
+}

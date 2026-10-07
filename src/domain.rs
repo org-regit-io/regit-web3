@@ -32,6 +32,8 @@ pub mod evm;
 mod identity;
 #[cfg(any(feature = "litecoin", feature = "dogecoin"))]
 pub(crate) mod indexed_utxo;
+#[cfg(feature = "jupiter")]
+pub mod jupiter;
 #[cfg(feature = "lifi")]
 pub mod lifi;
 #[cfg(feature = "litecoin")]

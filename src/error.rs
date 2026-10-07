@@ -104,275 +104,210 @@ impl fmt::Display for SubmissionFailure {
     }
 }
 
-/// The contract violated by an input value.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ValidationError {
-    /// An integer is not in canonical unsigned decimal notation.
-    InvalidAmount,
-    /// An integer exceeds the 256-bit unsigned range.
-    AmountOverflow,
-    /// A signed decimal is not in supported finite decimal notation.
-    InvalidDecimal,
-    /// A signed decimal exceeds bounded input, exponent, scale, or output size.
-    DecimalOutOfBounds,
-    /// An EVM address has an invalid length, encoding, or mixed-case checksum.
-    InvalidAddress,
-    /// An EVM transaction identifier has invalid hexadecimal encoding or width.
-    InvalidEvmTransactionId,
-    /// EVM bytes violate their bounded hexadecimal or binary encoding contract.
-    InvalidEvmBytes,
-    /// An EVM transaction, receipt or operation record violates its structural contract.
-    InvalidEvmRecord,
-    /// EVM token metadata violates its typed availability or value contract.
-    InvalidEvmMetadata,
-    /// An unsigned EVM preparation violates its explicit transaction intent.
-    InvalidEvmPreparation,
-    /// A signed EVM transaction violates its supported envelope contract.
-    InvalidEvmSignedTransaction,
-    /// A Solana public key has an invalid base58 encoding or byte length.
-    InvalidSolanaPubkey,
-    /// A Solana hash has an invalid base58 encoding or byte length.
-    InvalidSolanaHash,
-    /// A Solana signature has an invalid base58 encoding or byte length.
-    InvalidSolanaSignature,
-    /// A Solana transaction violates its bounded supported encoding contract.
-    InvalidSolanaTransaction,
-    /// A Solana preparation violates its explicit unsigned transfer contract.
-    InvalidSolanaPreparation,
-    /// A Solana execution record violates its method-specific source contract.
-    InvalidSolanaExecution,
-    /// A Solana native or token base-unit amount exceeds the unsigned 64-bit range.
-    SolanaAmountOverflow,
-    /// An observation context declares an operation differing from its value.
-    ObservationOperationMismatch,
-    /// A Solana observation slot is below the explicitly requested minimum.
-    ContextSlotBelowMinimum,
-    /// A Solana account record differs from the requested account identity.
-    InvalidSolanaAccount,
-    /// Solana account data exceeds the protocol's maximum byte length.
-    SolanaAccountDataTooLarge,
-    /// A Bitcoin address has invalid encoding or checksum.
-    InvalidBitcoinAddress,
-    /// A Litecoin address violates its family encoding, checksum or network contract.
-    InvalidLitecoinAddress,
-    /// A Dogecoin address violates its family encoding, checksum or network contract.
-    InvalidDogecoinAddress,
-    /// A Bitcoin Cash address violates its qualified encoding contract.
-    InvalidBitcoinCashAddress,
-    /// A Bitcoin Cash source record violates its typed contract.
-    InvalidBitcoinCashRecord,
-    /// Bitcoin Cash bytes violate their bounded encoding contract.
-    InvalidBitcoinCashBytes,
-    /// A TON address violates its encoding, flags or checksum contract.
-    InvalidTonAddress,
-    /// A TON network identity violates its zero-state or alias contract.
-    InvalidTonNetwork,
-    /// A TON hash violates its exact-width encoding contract.
-    InvalidTonHash,
-    /// A TON bag of cells violates its bounded container contract.
-    InvalidTonBoc,
-    /// A TON source record violates its typed structural contract.
-    InvalidTonRecord,
-    /// A TON transfer violates its explicit unsigned intent contract.
-    InvalidTonTransfer,
-    /// A Uniswap deployment violates its explicit supported-version contract.
-    InvalidUniswapDeployment,
-    /// A Uniswap V3 path violates its bounded token/fee contract.
-    InvalidUniswapPath,
-    /// A Uniswap V3 quote violates its exact request/source contract.
-    InvalidUniswapQuote,
-    /// A Uniswap preparation violates its exact reviewed swap intent.
-    InvalidUniswapPreparation,
-    /// An indexed UTxO-family source record violates its structural contract.
-    InvalidUtxoRecord,
-    /// Indexed UTxO-family bytes violate their bounded encoding contract.
-    InvalidUtxoBytes,
-    /// A Bitcoin address is incompatible with the explicitly declared network.
-    BitcoinAddressNetworkMismatch,
-    /// A Bitcoin block hash has an invalid hexadecimal encoding or length.
-    InvalidBitcoinHash,
-    /// A Bitcoin transaction identifier has invalid hexadecimal encoding or length.
-    InvalidBitcoinTxid,
-    /// A Bitcoin satoshi value exceeds the supported exact unsigned 64-bit range.
-    BitcoinAmountOverflow,
-    /// Bitcoin balance statistics imply a negative confirmed balance.
-    BitcoinBalanceInconsistent,
-    /// Bitcoin history entries violate pagination limits or identity uniqueness.
-    InvalidBitcoinHistory,
-    /// Bitcoin transaction confirmation and inclusion fields are inconsistent.
-    InvalidBitcoinStatus,
-    /// A fee estimate has an invalid horizon or negative exact rate.
-    InvalidBitcoinFeeEstimate,
-    /// A Bitcoin transaction has invalid or inconsistent indexed facts.
-    InvalidBitcoinTransaction,
-    /// Bitcoin bytes violate bounded canonical hexadecimal or script encoding.
-    InvalidBitcoinBytes,
-    /// A mempool summary, collection, fee rate or recent record is inconsistent.
-    InvalidMempoolRecord,
-    /// A `THORChain` network identity is invalid.
-    InvalidThorchainNetwork,
-    /// A `THORChain` account address is invalid.
-    InvalidThorchainAddress,
-    /// A `THORChain` asset identity is invalid.
-    InvalidThorchainAsset,
-    /// A `THORChain` record violates its typed structural contract.
-    InvalidThorchainRecord,
-    /// A caller-supplied wallet handoff identifier violates its lexical or length contract.
-    InvalidWalletHandoffId,
-    /// Returned handoff identity, network, intent or unsigned bytes differ from reviewed preparation.
-    WalletBindingMismatch,
-    /// A trusted verifier rejected the binding of actual signed contents to reviewed preparation.
-    SignedPayloadRejected,
-    /// A Bitcoin observation uses an unsupported schema version.
-    UnsupportedBitcoinSchema,
-    /// A Cardano address has invalid encoding or checksum.
-    InvalidCardanoAddress,
-    /// A Cardano network identity is invalid.
-    InvalidCardanoNetwork,
-    /// A Cardano hash has invalid encoding or length.
-    InvalidCardanoHash,
-    /// A Cardano native asset identity is invalid.
-    InvalidCardanoAsset,
-    /// A Cardano record violates its structural contract.
-    InvalidCardanoRecord,
-    /// A bounded page request is invalid.
-    InvalidPageRequest,
-    /// A Cardano output amount exceeds its supported width.
-    CardanoAmountOverflow,
-    /// A block hash is not a 32-byte hexadecimal value.
-    InvalidBlockHash,
-    /// A network alias is not a bounded label.
-    InvalidNetworkAlias,
-    /// An asset symbol is not a bounded display label.
-    InvalidAssetSymbol,
-    /// A source identifier, method, or version is not a bounded label.
-    InvalidSourceLabel,
-    /// A balance's amount and native asset declare different decimals.
-    DecimalMismatch,
-    /// An explicit selector does not match the resolved block.
-    BlockMismatch,
-    /// A balance's chain identity does not match its observation context.
-    NetworkMismatch,
-    /// An observation uses an unsupported schema version.
-    UnsupportedSchemaVersion,
-    /// A serialized formatted amount does not match its exact raw value.
-    InvalidFormattedAmount,
-    /// An XRPL address has invalid encoding, length or checksum.
-    InvalidXrplAddress,
-    /// An XRPL hash has invalid hexadecimal encoding or width.
-    InvalidXrplHash,
-    /// An XRPL currency identifier violates its family contract.
-    InvalidXrplCurrency,
-    /// An XRPL native or issued amount violates its exact numeric contract.
-    InvalidXrplAmount,
-    /// An XRPL record violates its structural contract.
-    InvalidXrplRecord,
-    /// An XRPL network identity violates its explicit network contract.
-    InvalidXrplNetwork,
-    /// A market identifier or label violates its lexical or length contract.
-    InvalidMarketIdentity,
-    /// A market request or record violates its structural contract.
-    InvalidMarketRecord,
-    /// A LI.FI identity violates its qualified encoding contract.
-    InvalidLifiIdentity,
-    /// A LI.FI request or source record violates its typed contract.
-    InvalidLifiRecord,
-    /// A LI.FI prepared payload violates its bounded encoding contract.
-    InvalidLifiPayload,
+// Keep each public variant and its fixed diagnostic together, so additions
+// cannot silently omit their Display mapping or expose arbitrary source text.
+macro_rules! validation_errors {
+    ($( $(#[$documentation:meta])* $variant:ident => $message:literal, )*) => {
+        /// The contract violated by an input value.
+        #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "snake_case")]
+        pub enum ValidationError {
+            $( $(#[$documentation])* $variant, )*
+        }
+
+        impl fmt::Display for ValidationError {
+            fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str(match self {
+                    $( Self::$variant => $message, )*
+                })
+            }
+        }
+    };
 }
 
-impl fmt::Display for ValidationError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter.write_str(match self {
-            Self::InvalidAmount => "invalid unsigned decimal integer",
-            Self::AmountOverflow => "unsigned integer exceeds 256 bits",
-            Self::InvalidDecimal => "invalid finite decimal value",
-            Self::DecimalOutOfBounds => "decimal value exceeds resource bounds",
-            Self::InvalidAddress => "invalid EVM address",
-            Self::InvalidEvmTransactionId => "invalid EVM transaction identifier",
-            Self::InvalidEvmBytes => "invalid EVM byte encoding",
-            Self::InvalidEvmRecord => "invalid EVM record",
-            Self::InvalidEvmMetadata => "invalid EVM token metadata",
-            Self::InvalidEvmPreparation => "invalid EVM transaction preparation",
-            Self::InvalidEvmSignedTransaction => "invalid EVM signed transaction envelope",
-            Self::InvalidSolanaPubkey => "invalid Solana public key",
-            Self::InvalidSolanaHash => "invalid Solana hash",
-            Self::InvalidSolanaSignature => "invalid Solana signature",
-            Self::InvalidSolanaTransaction => "invalid Solana transaction",
-            Self::InvalidSolanaPreparation => "invalid Solana transaction preparation",
-            Self::InvalidSolanaExecution => "invalid Solana execution record",
-            Self::SolanaAmountOverflow => "Solana amount exceeds 64 bits",
-            Self::ObservationOperationMismatch => "observation operation and value differ",
-            Self::ContextSlotBelowMinimum => "observation slot is below requested minimum",
-            Self::InvalidSolanaAccount => "Solana account and requested identity differ",
-            Self::SolanaAccountDataTooLarge => "Solana account data exceeds byte limit",
-            Self::InvalidBitcoinAddress => "invalid Bitcoin address",
-            Self::InvalidLitecoinAddress => "invalid Litecoin address",
-            Self::InvalidDogecoinAddress => "invalid Dogecoin address",
-            Self::InvalidBitcoinCashAddress => "invalid Bitcoin Cash address",
-            Self::InvalidBitcoinCashRecord => "invalid Bitcoin Cash record",
-            Self::InvalidBitcoinCashBytes => "invalid Bitcoin Cash byte encoding",
-            Self::InvalidTonAddress => "invalid TON address",
-            Self::InvalidTonNetwork => "invalid TON network",
-            Self::InvalidTonHash => "invalid TON hash",
-            Self::InvalidTonBoc => "invalid TON bag of cells",
-            Self::InvalidTonRecord => "invalid TON record",
-            Self::InvalidTonTransfer => "invalid TON transfer preparation",
-            Self::InvalidUniswapDeployment => "invalid Uniswap deployment",
-            Self::InvalidUniswapPath => "invalid Uniswap V3 path",
-            Self::InvalidUniswapQuote => "invalid Uniswap V3 quote",
-            Self::InvalidUniswapPreparation => "invalid Uniswap swap preparation",
-            Self::InvalidUtxoRecord => "invalid indexed UTxO record",
-            Self::InvalidUtxoBytes => "invalid indexed UTxO byte encoding",
-            Self::BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",
-            Self::InvalidBitcoinHash => "invalid Bitcoin block hash",
-            Self::InvalidBitcoinTxid => "invalid Bitcoin transaction identifier",
-            Self::BitcoinAmountOverflow => "Bitcoin amount exceeds 64 bits",
-            Self::BitcoinBalanceInconsistent => "inconsistent Bitcoin balance statistics",
-            Self::InvalidBitcoinHistory => "invalid Bitcoin history page",
-            Self::InvalidBitcoinStatus => "inconsistent Bitcoin transaction status",
-            Self::InvalidBitcoinFeeEstimate => "invalid Bitcoin fee estimate",
-            Self::InvalidBitcoinTransaction => "invalid Bitcoin transaction",
-            Self::InvalidBitcoinBytes => "invalid Bitcoin byte encoding",
-            Self::InvalidMempoolRecord => "invalid mempool record",
-            Self::InvalidThorchainNetwork => "invalid THORChain network identity",
-            Self::InvalidThorchainAddress => "invalid THORChain account address",
-            Self::InvalidThorchainAsset => "invalid THORChain asset identity",
-            Self::InvalidThorchainRecord => "invalid THORChain record",
-            Self::InvalidWalletHandoffId => "invalid wallet handoff identifier",
-            Self::WalletBindingMismatch => "wallet handoff does not match reviewed preparation",
-            Self::SignedPayloadRejected => "signed payload rejected by verifier",
-            Self::UnsupportedBitcoinSchema => "unsupported Bitcoin observation schema",
-            Self::InvalidCardanoAddress => "invalid Cardano address",
-            Self::InvalidCardanoNetwork => "invalid Cardano network identity",
-            Self::InvalidCardanoHash => "invalid Cardano hash",
-            Self::InvalidCardanoAsset => "invalid Cardano asset identity",
-            Self::InvalidCardanoRecord => "invalid Cardano record",
-            Self::InvalidPageRequest => "invalid page request",
-            Self::CardanoAmountOverflow => "amount exceeds Cardano output width",
-            Self::InvalidBlockHash => "invalid block hash",
-            Self::InvalidNetworkAlias => "invalid network alias",
-            Self::InvalidAssetSymbol => "invalid asset symbol",
-            Self::InvalidSourceLabel => "invalid source label",
-            Self::DecimalMismatch => "amount and asset decimals differ",
-            Self::BlockMismatch => "selector and resolved block differ",
-            Self::NetworkMismatch => "balance and observation chains differ",
-            Self::UnsupportedSchemaVersion => "unsupported observation schema version",
-            Self::InvalidFormattedAmount => "formatted amount differs from exact value",
-            Self::InvalidXrplAddress => "invalid XRPL address",
-            Self::InvalidXrplHash => "invalid XRPL hash",
-            Self::InvalidXrplCurrency => "invalid XRPL currency",
-            Self::InvalidXrplAmount => "invalid XRPL amount",
-            Self::InvalidXrplRecord => "invalid XRPL record",
-            Self::InvalidXrplNetwork => "invalid XRPL network identity",
-            Self::InvalidMarketIdentity => "invalid market identity or label",
-            Self::InvalidMarketRecord => "invalid market request or record",
-            Self::InvalidLifiIdentity => "invalid LI.FI identity",
-            Self::InvalidLifiRecord => "invalid LI.FI record",
-            Self::InvalidLifiPayload => "invalid LI.FI prepared payload",
-        })
-    }
+validation_errors! {
+    /// An integer is not in canonical unsigned decimal notation.
+    InvalidAmount => "invalid unsigned decimal integer",
+    /// An integer exceeds the 256-bit unsigned range.
+    AmountOverflow => "unsigned integer exceeds 256 bits",
+    /// A signed decimal is not in supported finite decimal notation.
+    InvalidDecimal => "invalid finite decimal value",
+    /// A signed decimal exceeds bounded input, exponent, scale, or output size.
+    DecimalOutOfBounds => "decimal value exceeds resource bounds",
+    /// An EVM address has an invalid length, encoding, or mixed-case checksum.
+    InvalidAddress => "invalid EVM address",
+    /// An EVM transaction identifier has invalid hexadecimal encoding or width.
+    InvalidEvmTransactionId => "invalid EVM transaction identifier",
+    /// EVM bytes violate their bounded hexadecimal or binary encoding contract.
+    InvalidEvmBytes => "invalid EVM byte encoding",
+    /// An EVM transaction, receipt or operation record violates its structural contract.
+    InvalidEvmRecord => "invalid EVM record",
+    /// EVM token metadata violates its typed availability or value contract.
+    InvalidEvmMetadata => "invalid EVM token metadata",
+    /// An unsigned EVM preparation violates its explicit transaction intent.
+    InvalidEvmPreparation => "invalid EVM transaction preparation",
+    /// A signed EVM transaction violates its supported envelope contract.
+    InvalidEvmSignedTransaction => "invalid EVM signed transaction envelope",
+    /// A Solana public key has an invalid base58 encoding or byte length.
+    InvalidSolanaPubkey => "invalid Solana public key",
+    /// A Solana hash has an invalid base58 encoding or byte length.
+    InvalidSolanaHash => "invalid Solana hash",
+    /// A Solana signature has an invalid base58 encoding or byte length.
+    InvalidSolanaSignature => "invalid Solana signature",
+    /// A Solana transaction violates its bounded supported encoding contract.
+    InvalidSolanaTransaction => "invalid Solana transaction",
+    /// A Solana preparation violates its explicit unsigned transfer contract.
+    InvalidSolanaPreparation => "invalid Solana transaction preparation",
+    /// A Solana execution record violates its method-specific source contract.
+    InvalidSolanaExecution => "invalid Solana execution record",
+    /// A Solana native or token base-unit amount exceeds the unsigned 64-bit range.
+    SolanaAmountOverflow => "Solana amount exceeds 64 bits",
+    /// An observation context declares an operation differing from its value.
+    ObservationOperationMismatch => "observation operation and value differ",
+    /// A Solana observation slot is below the explicitly requested minimum.
+    ContextSlotBelowMinimum => "observation slot is below requested minimum",
+    /// A Solana account record differs from the requested account identity.
+    InvalidSolanaAccount => "Solana account and requested identity differ",
+    /// Solana account data exceeds the protocol's maximum byte length.
+    SolanaAccountDataTooLarge => "Solana account data exceeds byte limit",
+    /// A Bitcoin address has invalid encoding or checksum.
+    InvalidBitcoinAddress => "invalid Bitcoin address",
+    /// A Litecoin address violates its family encoding, checksum or network contract.
+    InvalidLitecoinAddress => "invalid Litecoin address",
+    /// A Dogecoin address violates its family encoding, checksum or network contract.
+    InvalidDogecoinAddress => "invalid Dogecoin address",
+    /// A Bitcoin Cash address violates its qualified encoding contract.
+    InvalidBitcoinCashAddress => "invalid Bitcoin Cash address",
+    /// A Bitcoin Cash source record violates its typed contract.
+    InvalidBitcoinCashRecord => "invalid Bitcoin Cash record",
+    /// Bitcoin Cash bytes violate their bounded encoding contract.
+    InvalidBitcoinCashBytes => "invalid Bitcoin Cash byte encoding",
+    /// A TON address violates its encoding, flags or checksum contract.
+    InvalidTonAddress => "invalid TON address",
+    /// A TON network identity violates its zero-state or alias contract.
+    InvalidTonNetwork => "invalid TON network",
+    /// A TON hash violates its exact-width encoding contract.
+    InvalidTonHash => "invalid TON hash",
+    /// A TON bag of cells violates its bounded container contract.
+    InvalidTonBoc => "invalid TON bag of cells",
+    /// A TON source record violates its typed structural contract.
+    InvalidTonRecord => "invalid TON record",
+    /// A TON transfer violates its explicit unsigned intent contract.
+    InvalidTonTransfer => "invalid TON transfer preparation",
+    /// A Jupiter request violates its bounded typed contract.
+    InvalidJupiterRequest => "invalid Jupiter request",
+    /// A Jupiter quote violates its bounded typed contract.
+    InvalidJupiterQuote => "invalid Jupiter quote",
+    /// A Jupiter build violates its bounded typed contract.
+    InvalidJupiterBuild => "invalid Jupiter build",
+    /// A Jupiter preparation violates its bounded typed contract.
+    InvalidJupiterPreparation => "invalid Jupiter swap preparation",
+    /// A Jupiter estimate violates its bounded typed contract.
+    InvalidJupiterEstimate => "invalid Jupiter estimate",
+    /// A Uniswap deployment violates its explicit supported-version contract.
+    InvalidUniswapDeployment => "invalid Uniswap deployment",
+    /// A Uniswap V3 path violates its bounded token/fee contract.
+    InvalidUniswapPath => "invalid Uniswap V3 path",
+    /// A Uniswap V3 quote violates its exact request/source contract.
+    InvalidUniswapQuote => "invalid Uniswap V3 quote",
+    /// A Uniswap preparation violates its exact reviewed swap intent.
+    InvalidUniswapPreparation => "invalid Uniswap swap preparation",
+    /// An indexed UTxO-family source record violates its structural contract.
+    InvalidUtxoRecord => "invalid indexed UTxO record",
+    /// Indexed UTxO-family bytes violate their bounded encoding contract.
+    InvalidUtxoBytes => "invalid indexed UTxO byte encoding",
+    /// A Bitcoin address is incompatible with the explicitly declared network.
+    BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",
+    /// A Bitcoin block hash has an invalid hexadecimal encoding or length.
+    InvalidBitcoinHash => "invalid Bitcoin block hash",
+    /// A Bitcoin transaction identifier has invalid hexadecimal encoding or length.
+    InvalidBitcoinTxid => "invalid Bitcoin transaction identifier",
+    /// A Bitcoin satoshi value exceeds the supported exact unsigned 64-bit range.
+    BitcoinAmountOverflow => "Bitcoin amount exceeds 64 bits",
+    /// Bitcoin balance statistics imply a negative confirmed balance.
+    BitcoinBalanceInconsistent => "inconsistent Bitcoin balance statistics",
+    /// Bitcoin history entries violate pagination limits or identity uniqueness.
+    InvalidBitcoinHistory => "invalid Bitcoin history page",
+    /// Bitcoin transaction confirmation and inclusion fields are inconsistent.
+    InvalidBitcoinStatus => "inconsistent Bitcoin transaction status",
+    /// A fee estimate has an invalid horizon or negative exact rate.
+    InvalidBitcoinFeeEstimate => "invalid Bitcoin fee estimate",
+    /// A Bitcoin transaction has invalid or inconsistent indexed facts.
+    InvalidBitcoinTransaction => "invalid Bitcoin transaction",
+    /// Bitcoin bytes violate bounded canonical hexadecimal or script encoding.
+    InvalidBitcoinBytes => "invalid Bitcoin byte encoding",
+    /// A mempool summary, collection, fee rate or recent record is inconsistent.
+    InvalidMempoolRecord => "invalid mempool record",
+    /// A `THORChain` network identity is invalid.
+    InvalidThorchainNetwork => "invalid THORChain network identity",
+    /// A `THORChain` account address is invalid.
+    InvalidThorchainAddress => "invalid THORChain account address",
+    /// A `THORChain` asset identity is invalid.
+    InvalidThorchainAsset => "invalid THORChain asset identity",
+    /// A `THORChain` record violates its typed structural contract.
+    InvalidThorchainRecord => "invalid THORChain record",
+    /// A caller-supplied wallet handoff identifier violates its lexical or length contract.
+    InvalidWalletHandoffId => "invalid wallet handoff identifier",
+    /// Returned handoff identity, network, intent or unsigned bytes differ from reviewed preparation.
+    WalletBindingMismatch => "wallet handoff does not match reviewed preparation",
+    /// A trusted verifier rejected the binding of actual signed contents to reviewed preparation.
+    SignedPayloadRejected => "signed payload rejected by verifier",
+    /// A Bitcoin observation uses an unsupported schema version.
+    UnsupportedBitcoinSchema => "unsupported Bitcoin observation schema",
+    /// A Cardano address has invalid encoding or checksum.
+    InvalidCardanoAddress => "invalid Cardano address",
+    /// A Cardano network identity is invalid.
+    InvalidCardanoNetwork => "invalid Cardano network identity",
+    /// A Cardano hash has invalid encoding or length.
+    InvalidCardanoHash => "invalid Cardano hash",
+    /// A Cardano native asset identity is invalid.
+    InvalidCardanoAsset => "invalid Cardano asset identity",
+    /// A Cardano record violates its structural contract.
+    InvalidCardanoRecord => "invalid Cardano record",
+    /// A bounded page request is invalid.
+    InvalidPageRequest => "invalid page request",
+    /// A Cardano output amount exceeds its supported width.
+    CardanoAmountOverflow => "amount exceeds Cardano output width",
+    /// A block hash is not a 32-byte hexadecimal value.
+    InvalidBlockHash => "invalid block hash",
+    /// A network alias is not a bounded label.
+    InvalidNetworkAlias => "invalid network alias",
+    /// An asset symbol is not a bounded display label.
+    InvalidAssetSymbol => "invalid asset symbol",
+    /// A source identifier, method, or version is not a bounded label.
+    InvalidSourceLabel => "invalid source label",
+    /// A balance's amount and native asset declare different decimals.
+    DecimalMismatch => "amount and asset decimals differ",
+    /// An explicit selector does not match the resolved block.
+    BlockMismatch => "selector and resolved block differ",
+    /// A balance's chain identity does not match its observation context.
+    NetworkMismatch => "balance and observation chains differ",
+    /// An observation uses an unsupported schema version.
+    UnsupportedSchemaVersion => "unsupported observation schema version",
+    /// A serialized formatted amount does not match its exact raw value.
+    InvalidFormattedAmount => "formatted amount differs from exact value",
+    /// An XRPL address has invalid encoding, length or checksum.
+    InvalidXrplAddress => "invalid XRPL address",
+    /// An XRPL hash has invalid hexadecimal encoding or width.
+    InvalidXrplHash => "invalid XRPL hash",
+    /// An XRPL currency identifier violates its family contract.
+    InvalidXrplCurrency => "invalid XRPL currency",
+    /// An XRPL native or issued amount violates its exact numeric contract.
+    InvalidXrplAmount => "invalid XRPL amount",
+    /// An XRPL record violates its structural contract.
+    InvalidXrplRecord => "invalid XRPL record",
+    /// An XRPL network identity violates its explicit network contract.
+    InvalidXrplNetwork => "invalid XRPL network identity",
+    /// A market identifier or label violates its lexical or length contract.
+    InvalidMarketIdentity => "invalid market identity or label",
+    /// A market request or record violates its structural contract.
+    InvalidMarketRecord => "invalid market request or record",
+    /// A LI.FI identity violates its qualified encoding contract.
+    InvalidLifiIdentity => "invalid LI.FI identity",
+    /// A LI.FI request or source record violates its typed contract.
+    InvalidLifiRecord => "invalid LI.FI record",
+    /// A LI.FI prepared payload violates its bounded encoding contract.
+    InvalidLifiPayload => "invalid LI.FI prepared payload",
 }
 
 impl From<ValidationError> for Error {

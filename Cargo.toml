@@ -196,7 +196,8 @@ ton-http = ["ton", "http"]
 thorchain = ["dep:bech32", "dep:bs58"]
 thorchain-http = ["thorchain", "http"]
 
-jupiter = ["solana"]
+jupiter = ["solana", "dep:base64"]
+jupiter-http = ["jupiter", "http", "solana-http"]
 uniswap = ["evm"]
 uniswap-http = ["uniswap", "evm-http"]
 oneinch = ["evm"]
@@ -235,6 +236,7 @@ all = [
   "thorchain",
   "thorchain-http",
   "jupiter",
+  "jupiter-http",
   "uniswap",
   "uniswap-http",
   "oneinch",

@@ -92,6 +92,13 @@
 //! submission retains acknowledgment or ambiguous post-dispatch outcome without
 //! retry. Seven reads/estimates and an outgoing-fee transaction have live proof;
 //! submission is fixture-qualified without funded writes or signature verification.
+//! Jupiter V2 supplies quote-only source selection, fresh Metis V0 instructions,
+//! immutable unsigned compilation and external-wallet handoff. Caller CU ceilings,
+//! signer allow-lists and source-other-instruction placement are explicit. Source
+//! instruction/lookup facts do not prove swap semantics. Composed exact-message
+//! Solana fee and unsigned simulation share one deadline and retain separate slots.
+//! Current mainnet quote/build/handoff/estimate have representative live proof;
+//! the public taker returned `AccountNotFound`, without swap-success or submission.
 //! `THORChain` supplies pure Cosmos/asset identities and exact protocol records;
 //! `thorchain-http` supplies RUNE balances, individual/complete layer-one pool
 //! reads, network values, swap quotes, inbound vaults, chain heights and

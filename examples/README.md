@@ -16,6 +16,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`mempool_space_live`](../tests/mempool_space_live.rs) | `mempool-space-http` | Backlog, recent arrivals, full bounded IDs, recommended fees, canonical transaction and status; explicit API base/source/network/alias/confirmed transaction/full-list capacity |
 | [`ton_live`](../tests/ton_live.rs) | `ton-http` | Seven read/estimate methods, additional outgoing-fee transaction and local unsigned review; explicit URL/source/zero-state/account/cursors/message/fee-body/transfer/pacing inputs |
 | [`thorchain_live`](../tests/thorchain_live.rs) | `thorchain-http` | RUNE balance, individual/complete layer-one pool reads, network values, swap quote, inbound vaults, chain heights and transaction progress; explicit API base/source/Cosmos chain ID/account prefix/alias/account/assets/amount/destination/transaction/item bound |
+| [`jupiter_live`](../tests/jupiter_live.rs) | `jupiter-http` | V2 quote-only selection, fresh Metis build, local canonical V0 preparation/handoff and exact-message Solana fee/simulation; explicit API/RPC/config/request/settings inputs |
 | [`uniswap_live`](../tests/uniswap_live.rs) | `uniswap-http` | V3 exact-input quotes, supplied-path comparison and local unsigned Universal Router 2.1.2 preparation; explicit EVM/deployment/path/input/call/recipient/slippage/deadline/handoff inputs |
 | [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
 
@@ -362,3 +363,32 @@ classic SPL TransferChecked preparation and one-shot submission have substantive
 fixture proof. No signed submission, signing or funded transfer was performed.
 [Fixture provenance](../tests/fixtures/solana_execution/README.md) retains the
 source vector and primary contracts.
+
+## Jupiter V2 quotes, fresh builds and unsigned estimates
+
+[Live inputs](../tests/fixtures/jupiter/live_inputs.json) retain the explicit
+public request/configuration/settings objects. Export `api_url` and
+`api_provider_id` as `REGIT_WEB3_JUPITER_URL` and
+`REGIT_WEB3_JUPITER_PROVIDER_ID`; export `rpc_url`, `rpc_provider_id` and
+`handoff_id` as their `REGIT_WEB3_JUPITER_RPC_URL`,
+`REGIT_WEB3_JUPITER_RPC_PROVIDER_ID` and `REGIT_WEB3_JUPITER_HANDOFF_ID` values.
+Serialize the `quote`, `build` and `settings` objects into
+`REGIT_WEB3_JUPITER_QUOTE_JSON`, `REGIT_WEB3_JUPITER_BUILD_JSON` and
+`REGIT_WEB3_JUPITER_SETTINGS_JSON`. Then select the qualifier:
+
+```sh
+cargo test --locked --no-default-features --features jupiter-http \
+  --test jupiter_live v2_quote_build_unsigned_handoff_fee_and_simulation_live \
+  -- --ignored --exact --nocapture
+```
+
+The harness uses explicit keyless mode and spaces the two API requests by
+2100 ms; quotas remain provider-dependent. On 2026-10-07 the public Rust API
+qualified quote/build, local unsigned review/handoff and source fee/simulation.
+The source-selected quote and fresh build had different routes/outputs. The
+public example taker returned `AccountNotFound` in simulation, without proof of
+swap success. Source instructions/ALT state require trusted external semantic
+review; the explicit `otherInstructions` placement is caller policy. API mainnet
+identity is declared; the composed Solana RPC separately verifies full genesis.
+No signing, provider-managed execution or submission was performed.
+[Fixture provenance](../tests/fixtures/jupiter/README.md) records primary contracts.
