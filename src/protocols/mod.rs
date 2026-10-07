@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Feature-gated protocols module layout.
+//! Typed protocol quotes, routes and transaction-preparation integrations.
 
 #[cfg(feature = "jupiter")]
 pub mod jupiter;

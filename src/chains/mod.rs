@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Feature-gated chains module layout.
+//! Family-specific chain capabilities and replaceable implementations.
 
 #[cfg(feature = "evm")]
 pub mod evm;

@@ -1,0 +1,122 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 Regit
+
+//! Generic EVM reads using a caller-owned, runtime-independent implementation.
+
+#![cfg(feature = "evm")]
+
+use std::{
+    future::{Future, ready},
+    task::{Context, Poll, Waker},
+};
+
+use regit_web3::{
+    chains::evm::NativeBalanceReader,
+    domain::{
+        Address, Amount, Asset, Balance, BlockContext, BlockHash, BlockSelector, ChainId, Finality,
+        NetworkId, Observation, ObservationContext, Source, Timestamp,
+    },
+    error::{Error, ValidationError},
+};
+
+struct CallerReader {
+    network: NetworkId,
+    default_selector: BlockSelector,
+}
+
+impl NativeBalanceReader for CallerReader {
+    fn get_native_balance(
+        &self,
+        address: Address,
+        selector: Option<BlockSelector>,
+    ) -> impl Future<Output = Result<Observation<Balance>, Error>> + Send {
+        let observation = (|| {
+            let value = Balance::new(
+                address,
+                Asset::native(self.network.clone(), 6, Some("NATIVE".to_owned()))?,
+                Amount::from_decimal("9007199254740993", Some(6))?,
+            )?;
+            let context = ObservationContext::new(
+                self.network.clone(),
+                selector.unwrap_or(self.default_selector),
+                BlockContext::new(
+                    42,
+                    BlockHash::from_bytes([7; 32]),
+                    Timestamp::from_unix_seconds(100),
+                ),
+                Source::new("caller-fixture", "native_balance", "1")?,
+                Timestamp::from_unix_seconds(105),
+            )?;
+            Observation::native_balance(value, context)
+        })();
+        ready(observation)
+    }
+}
+
+fn generic_read<R: NativeBalanceReader>(
+    reader: &R,
+    address: Address,
+    selector: Option<BlockSelector>,
+) -> impl Future<Output = Result<Observation<Balance>, Error>> + Send {
+    reader.get_native_balance(address, selector)
+}
+
+fn poll_ready<F: Future + Send>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let mut context = Context::from_waker(Waker::noop());
+    match future.as_mut().poll(&mut context) {
+        Poll::Ready(value) => value,
+        Poll::Pending => unreachable!("caller fixture must be immediately ready"),
+    }
+}
+
+#[test]
+fn generic_callers_use_custom_readers_with_exact_values_and_explicit_defaults() -> Result<(), Error>
+{
+    let reader = CallerReader {
+        network: NetworkId::new(ChainId::from(1), "caller-network")?,
+        default_selector: BlockSelector::Safe,
+    };
+    let address = Address::from_bytes([3; 20]);
+    let observed = poll_ready(generic_read(&reader, address, None))?;
+    assert_eq!(observed.value().address(), &address);
+    assert_eq!(
+        observed.value().amount().raw().to_string(),
+        "9007199254740993"
+    );
+    assert_eq!(
+        observed.value().amount().formatted(),
+        Some("9007199254.740993".to_owned())
+    );
+    assert_eq!(
+        observed.context().requested_selector(),
+        &BlockSelector::Safe
+    );
+    assert_eq!(observed.context().block().number(), 42);
+    assert_eq!(observed.context().source().provider_id(), "caller-fixture");
+    assert_eq!(observed.context().retrieved_at().unix_seconds(), 105);
+    assert_eq!(observed.context().finality(), Finality::Unknown);
+    assert_eq!(observed.context().confirmations(), None);
+    Ok(())
+}
+
+#[test]
+fn generic_capability_preserves_explicit_selector_and_typed_failures() -> Result<(), Error> {
+    let reader = CallerReader {
+        network: NetworkId::new(ChainId::from(1), "caller-network")?,
+        default_selector: BlockSelector::Latest,
+    };
+    let address = Address::from_bytes([3; 20]);
+    let selector = BlockSelector::Hash(BlockHash::from_bytes([7; 32]));
+    let observed = poll_ready(generic_read(&reader, address, Some(selector)))?;
+    assert_eq!(observed.context().requested_selector(), &selector);
+    assert!(matches!(
+        poll_ready(generic_read(
+            &reader,
+            address,
+            Some(BlockSelector::Number(41))
+        )),
+        Err(Error::Validation(ValidationError::BlockMismatch))
+    ));
+    Ok(())
+}

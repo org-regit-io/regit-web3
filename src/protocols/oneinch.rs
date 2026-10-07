@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! 1inch integration boundary; ledger or API behavior will live here.
+//! 1inch aggregated EVM quotes, routes and unsigned swap preparation.
+//!
+//! Required catalogue module; operations are not implemented yet.

@@ -49,5 +49,5 @@ gate: fmt-check toml-fmt-check lint test doctest docs shear deny
 
 sbom:
     mkdir -p sbom
-    cargo cyclonedx --all --format json --spec-version 1.5 --license-strict
+    cargo cyclonedx --all --all-features --format json --spec-version 1.5 --license-strict
     mv regit-web3.cdx.json sbom/regit-web3.cdx.json

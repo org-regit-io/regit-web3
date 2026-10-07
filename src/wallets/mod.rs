@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Interface-neutral wallet and signing boundary.
+//! Wallet transaction preparation, review and external signing-handoff contracts.
 //!
-//! Generic signing requests, external-wallet handoff, and verification that a
-//! signed payload matches the requested transaction belong here.
-//! Consumers select wallet backends, provision secrets, and own approval policy.
-//! Read operations must never construct a signer or load keys.
-//! No signer or wallet connector is implemented yet.
+//! The module scope includes typed unsigned payloads, reviewed-payload binding,
+//! and verification extensions for returned signed payloads. Preparation and
+//! submission are separate operations; reads never construct a signer or load
+//! keys. Signing backends, secrets and approval policy are caller-owned.
+//! Preparation/handoff contracts and concrete wallet backends are not implemented
+//! yet; backends remain modular extensions.

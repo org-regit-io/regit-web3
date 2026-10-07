@@ -3,7 +3,7 @@
 
 //! Public validation of caller-supplied EVM transport configuration.
 
-#![cfg(feature = "evm")]
+#![cfg(feature = "evm-http")]
 
 use std::time::Duration;
 

@@ -3,7 +3,7 @@
 
 //! Opt-in read-only provider qualification through the public Rust API.
 
-#![cfg(feature = "evm")]
+#![cfg(feature = "evm-http")]
 
 #[path = "../examples/support/inputs.rs"]
 mod inputs;

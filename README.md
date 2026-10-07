@@ -1,67 +1,71 @@
 # Regit Web3
 
-An open-source Rust library for reusable Web3 primitives, developed by [Regit](https://www.regit.io).
+An open-source Rust library for reusable Web3 primitives and typed operations, developed by [Regit](https://www.regit.io).
 
-The library is organized around chain primitives and integrations, protocols, data providers, and wallet contracts. EVM is the first implemented chain path.
+The full library scope comprises ten chain families, five protocols and five data providers. Local exact values, family-specific identities, encoding and transaction preparation are separated from typed operation contracts and replaceable RPC/provider backends. Concrete backends are selected through Cargo features.
 
-| Module | Scope | Current status |
+## Catalogue and implementation status
+
+All modules below are part of the required library scope. Current implementation is partial; pending operations remain required.
+
+| Chain family | Scope | Current implementation |
 | --- | --- | --- |
-| `domain` | Exact values, identities, assets and observations | Exact amounts and EVM native-balance records implemented |
-| `config` | Caller-supplied network and transport configuration | Validated typed EVM configuration implemented |
-| `chains` | Chain-specific operations | EVM client and hash-pinned native balance reads implemented; other chains scaffolded |
-| `protocols` | Protocol integrations | Scaffold |
-| `providers` | Data-provider integrations | Scaffold |
-| `wallets` | Wallet contracts and connectors | Scaffold |
+| EVM | Native/ERC-20 balances, transactions/receipts, gas/fees, transfers and approvals | Hash-pinned native-balance reader and optional HTTP backend implemented; wider operations pending |
+| Solana | SOL/SPL balances, accounts, transactions and transfers | Pure identities, account/balance/observation types and native/token/account reader contracts implemented; RPC backend and wider operations pending |
+| Cardano | Balances, UTxOs, assets, transactions, epoch/staking and preparation | Pending |
+| Bitcoin | Validation, balance/history, fees and transaction status | Pending |
+| Litecoin | Validation, balance/history and fees | Pending |
+| Dogecoin | Validation, balance/history and fees | Pending |
+| Bitcoin Cash | Validation, balance/history and fees | Pending |
+| XRPL | XRP/issued balances, history, trustlines and transfers | Pending |
+| TON | Validation, balance/history, network data and transfers | Pending |
+| THORChain | RUNE balances, pools, network data, quotes and cross-chain state | Pending |
 
-## Status
+| Protocol | Scope | Current implementation |
+| --- | --- | --- |
+| Jupiter | Solana aggregation quotes/routes and swap preparation | Pending |
+| Uniswap | Direct EVM DEX quotes and swap preparation | Pending |
+| 1inch | Aggregated EVM quotes/routes and swap preparation | Pending |
+| LI.FI | Cross-chain quotes/routes, execution preparation and status | Pending |
+| Rubic | Cross-chain quotes/routes and supported execution preparation | Pending |
 
-The library implements exact unsigned 256-bit amounts, validated EVM identities, native asset metadata, block selectors, and native-balance observation records. Observations retain explicit source labels, separate block and retrieval timestamps, finality context, and schema version. Typed errors use fixed diagnostics.
+| Provider | Scope | Current implementation |
+| --- | --- | --- |
+| CoinGecko | Asset search, prices, markets and historical market data | Pending |
+| DefiLlama | Protocol TVL, yields, stablecoins and DeFi analytics | Pending |
+| Helius | Solana assets, parsed transactions and address history | Pending |
+| Blockfrost | Indexed Cardano network, asset and supporting account data | Pending |
+| mempool.space | Bitcoin mempool, fees and transaction data | Pending |
 
-Constructors and deserialization enforce the same domain invariants. Amounts and chain identifiers serialize as decimal strings; addresses and hashes use canonical lowercase hexadecimal.
+Wallet preparation, review and external signing-handoff contracts remain pending. Concrete signing/custody/connector backends are modular extensions; signing keys and approval policy are caller-owned. Preparation and submission are separate operations.
 
-The EVM client verifies `eth_chainId` at establishment and before each native balance read. `get_native_balance` resolves the requested block, pins the balance call to its hash with EIP-1898 `requireCanonical: true`, and returns an observation. RPC requests enforce a total deadline, response-size bounds and limited retries.
+## Implemented contracts
 
-Native balances retain configured decimal precision and explicit source/block context. Reads leave finality `unknown` and confirmations `null`; requested block tags do not infer either.
-
-The default feature is `evm`. Feature names identify integration boundaries; they do not imply implemented integration support.
-
-## Native balance example
-
-The [Rust example](examples/native_balance.rs) constructs typed configuration and reads through the public API. Set these example-owned environment inputs before running it:
-
-| Variable | Value |
+| Area | Contract |
 | --- | --- |
-| `REGIT_WEB3_RPC_URL` | HTTP(S) endpoint supporting chain/block lookup and EIP-1898 canonical hash reads |
-| `REGIT_WEB3_CHAIN_ID` | Expected chain ID as a canonical decimal integer |
-| `REGIT_WEB3_NETWORK_ALIAS` | Non-secret network label |
-| `REGIT_WEB3_ADDRESS` | `0x`-prefixed EVM address |
-| `REGIT_WEB3_NATIVE_DECIMALS` | Explicit native precision, `0`–`255` |
-| `REGIT_WEB3_NATIVE_SYMBOL` | Optional display symbol; omit when unavailable |
-| `REGIT_WEB3_PROVIDER_ID` | Non-secret source label |
-| `REGIT_WEB3_BLOCK_SELECTOR` | `latest`, `safe`, `finalized`, `number:<decimal height>` or `hash:<0x-prefixed hash>` |
+| Exact values | `Amount` retains unsigned 256-bit base units and explicit optional decimals; `ExactDecimal` retains bounded signed decimals. Exact numeric values serialize as strings; no floating-point transaction amounts |
+| Validation | Constructors and deserialization enforce matching identity, precision, schema and observation invariants. Typed errors use fixed diagnostics |
+| EVM identity/context | EVM addresses/hashes use canonical lowercase hexadecimal; network identity uses the exact chain ID; native observations retain block number/hash/time, retrieval time and source |
+| Solana identity/context | Addresses, hashes and signatures use canonical base58; network identity uses the full genesis hash. Typed results retain commitment/minimum context slot separately from the actual slot, without inventing block hashes/timestamps or independently verified finality |
+| EVM HTTP native read | Verify `eth_chainId` at establishment and before each read; resolve the selector; use EIP-1898 `blockHash` with `requireCanonical: true`; retries retain the captured hash/address without a new head or height fallback |
+| Optional transport | Explicit configuration, verified TLS, bounded bodies/retries and one total operation deadline; endpoint credentials and raw provider messages excluded from diagnostics |
 
-```sh
-export REGIT_WEB3_RPC_URL='https://ethereum-sepolia-rpc.publicnode.com'
-export REGIT_WEB3_CHAIN_ID='11155111'
-export REGIT_WEB3_NETWORK_ALIAS='sepolia'
-export REGIT_WEB3_ADDRESS='0x0000000000000000000000000000000000000000'
-export REGIT_WEB3_NATIVE_DECIMALS='18'
-export REGIT_WEB3_NATIVE_SYMBOL='ETH'
-export REGIT_WEB3_PROVIDER_ID='publicnode-sepolia'
-export REGIT_WEB3_BLOCK_SELECTOR='finalized'
-cargo run --locked --example native_balance --features evm
-```
+EVM HTTP native reads retain configured precision, finality `unknown` and confirmations `null`; requested tags do not establish either. Each family retains its own ledger and source semantics. Pure observation construction validates supplied records and does not independently verify a remote source.
 
-This setup reads [Sepolia](https://ethereum.org/en/developers/docs/networks/#sepolia) through [PublicNode's published Ethereum endpoint](https://ethereum.publicnode.com/). Both the example and the opt-in public API test completed a finalized read on chain `11155111`, source `publicnode-sepolia`:
+## Features
 
-| Read | Retrieval time (UTC) | Block | Hash |
-| --- | --- | --- | --- |
-| Rust example | 2026-10-06 23:48:31 | `11859104` | `0x96b8afc93add4ed3384e308547815f94af90a61c7dba6b55992ffadc08ece77a` |
-| Opt-in public API test | 2026-10-06 23:51:31 | `11859136` | `0xdb58040708c22f79e11f1e7d86f2043f352b1c1414238b7d7e5f1217a3e0b6f9` |
+Default features are empty. Pure capabilities use standard Rust futures and do not select an HTTP client or asynchronous runtime. Concrete implementations enable their own dependencies explicitly. Feature names alone do not imply implemented operations.
 
-This verifies those recorded recent reads; archive support and other selectors have not been qualified. Both observations retained finality `unknown` and confirmations `null`.
+| Feature | API / composition |
+| --- | --- |
+| No features | Shared exact values, validated EVM domain records and typed errors; no networking dependencies |
+| `evm` | Runtime-independent `NativeBalanceReader` capability |
+| `solana` | Pure family types and native/token/account reader capabilities |
+| `http` | Shared `HttpConfig`, `RpcEndpoint` and `RpcLimits` configuration |
+| `evm-http` | Bounded `EvmClient` implementing the EVM reader; Reqwest/rustls and caller-owned Tokio runtime |
+| `all` | All catalogue features and currently implemented backends |
 
-Success writes one observation JSON line to stdout. Failure writes a fixed typed error to stderr and exits with status 1. Endpoint credentials and provider diagnostic text are excluded. The example sets a 5-second connection timeout, a 15-second total operation budget, a 1 MiB response limit and two additional attempts per RPC stage. Environment parsing belongs to the example; the library accepts typed configuration.
+The [EVM Rust example and recorded read qualification](examples/README.md) document explicit inputs and the `evm-http` feature. Its point-in-time evidence applies only to the recorded provider/network/operation.
 
 ## Development
 
@@ -74,22 +78,12 @@ just tools
 
 | Command | Verifies |
 | --- | --- |
-| `just test` | Deterministic domain, configuration and loopback RPC behavior, including the executable example |
+| `just test` | Meaningful domain/capability and deterministic HTTP/RPC fixture behavior, including the executable example |
 | `just doctest` | Compiled public Rust examples |
-| `just gate` | Required precommit checks: formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
+| `just gate` | Formatting, strict Clippy, tests, documentation, unused dependencies and dependency policy |
 
-Default tests run without external providers or credentials. The ignored live test uses the same explicit inputs and calls the public API directly:
-
-```sh
-cargo test --locked --test live --features evm -- --ignored --nocapture
-```
-
-Explicitly running it with missing inputs fails. Live execution remains opt-in; default tests use deterministic fixtures. Nextest retains `--no-tests fail`.
-
-`just sbom` generates a CycloneDX bill of materials in `sbom/`. GitHub workflows run only when manually dispatched.
+Ordinary tests require no external provider credentials. Live read qualification is explicit and opt-in. Nextest retains `--no-tests fail`. `just sbom` generates an all-feature CycloneDX bill of materials in `sbom/`. GitHub workflows run only when manually dispatched.
 
 ## License and attribution
 
-Licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution and [AUTHORS.md](AUTHORS.md) for authorship.
-
-Citation metadata is available in [CITATION.cff](CITATION.cff).
+Licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution and [AUTHORS.md](AUTHORS.md) for authorship. Citation metadata is available in [CITATION.cff](CITATION.cff).

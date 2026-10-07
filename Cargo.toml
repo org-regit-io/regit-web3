@@ -45,9 +45,12 @@ workspace = true
 
 [[example]]
 name = "native_balance"
-required-features = ["evm"]
+required-features = ["evm-http"]
 
 [dependencies]
+bigdecimal = { version = "=0.4.11", default-features = false, features = [
+  "std",
+] }
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
 ] }
@@ -57,7 +60,21 @@ reqwest = { version = "=0.13.5", default-features = false, features = [
   "rustls",
 ], optional = true }
 serde = { version = "=1.0.229", features = ["derive"] }
-serde_json = { version = "=1.0.151", optional = true }
+serde_json = { version = "=1.0.151", features = [
+  "arbitrary_precision",
+], optional = true }
+solana-address = { version = "=2.9.0", default-features = false, features = [
+  "std",
+  "copy",
+], optional = true }
+solana-hash = { version = "=4.7.0", default-features = false, features = [
+  "std",
+  "decode",
+  "copy",
+], optional = true }
+solana-signature = { version = "=3.6.0", default-features = false, features = [
+  "std",
+], optional = true }
 tokio = { version = "=1.53.2", default-features = false, features = [
   "rt",
   "time",
@@ -77,10 +94,12 @@ tokio = { version = "=1.53.2", default-features = false, features = [
 ] }
 
 [features]
-default = ["evm"]
+default = []
 
-evm = ["dep:reqwest", "dep:serde_json", "dep:tokio", "dep:url"]
-solana = []
+http = ["dep:reqwest", "dep:serde_json", "dep:tokio", "dep:url"]
+evm = []
+evm-http = ["evm", "http"]
+solana = ["dep:solana-address", "dep:solana-hash", "dep:solana-signature"]
 cardano = []
 bitcoin = []
 litecoin = []
@@ -104,6 +123,7 @@ mempool-space = ["bitcoin"]
 
 all = [
   "evm",
+  "evm-http",
   "solana",
   "cardano",
   "bitcoin",

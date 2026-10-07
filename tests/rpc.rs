@@ -3,7 +3,7 @@
 
 //! Public EVM client contracts against deterministic loopback HTTP fixtures.
 
-#![cfg(feature = "evm")]
+#![cfg(feature = "evm-http")]
 
 #[path = "support/rpc_server.rs"]
 mod rpc_server;

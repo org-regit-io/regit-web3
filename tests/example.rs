@@ -3,7 +3,7 @@
 
 //! Actual native-balance example processes against deterministic HTTP fixtures.
 
-#![cfg(feature = "evm")]
+#![cfg(feature = "evm-http")]
 
 #[path = "support/rpc_server.rs"]
 mod rpc_server;
@@ -73,7 +73,7 @@ async fn run_example(inputs: Inputs) -> io::Result<Output> {
                 "--frozen",
                 "--no-default-features",
                 "--features",
-                "evm",
+                "evm-http",
                 "--example",
                 "native_balance",
             ])

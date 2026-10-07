@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! `DefiLlama` integration boundary; ledger or API behavior will live here.
+//! `DefiLlama` protocol TVL, yields, stablecoin data and `DeFi` analytics.
+//!
+//! Required catalogue module; operations are not implemented yet.

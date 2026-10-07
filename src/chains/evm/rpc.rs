@@ -3,23 +3,18 @@
 
 //! Private read-only RPC transport and strict response decoding.
 
-use std::time::Duration;
-
-use reqwest::{Client, Response, StatusCode, header::CONTENT_TYPE};
 use serde::{Deserialize, Deserializer, Serialize, de::DeserializeOwned};
 use serde_json::Value;
-use tokio::time::sleep;
 
 use crate::{
-    config::EvmConfig,
     domain::U256,
     error::{Error, ProviderError},
+    transport::{HttpClient, OperationBudget},
 };
 
 // Every HTTP exchange owns its response. There is no shared RPC dispatcher or
 // multiplexed response stream; matching this ID is local to that exchange.
 const REQUEST_ID: u64 = 1;
-const RETRY_DELAY: Duration = Duration::from_millis(25);
 
 pub(super) enum ErrorPolicy {
     ChainIdentity,
@@ -27,8 +22,8 @@ pub(super) enum ErrorPolicy {
 }
 
 pub(super) async fn read<T, P>(
-    http: &Client,
-    config: &EvmConfig,
+    http: &HttpClient,
+    budget: &OperationBudget,
     method: &'static str,
     params: &P,
     policy: ErrorPolicy,
@@ -44,44 +39,11 @@ where
         params,
     })
     .map_err(|_| Error::Configuration)?;
-    // Retain the exact serialized request across retries, including a captured
-    // EIP-1898 hash when this is a balance request. Never re-resolve its anchor.
-    for attempt in 0..=config.limits().max_retries() {
-        match request(http, config, &body).await {
-            Ok(bytes) => return decode_response(&bytes, &policy),
-            Err(failure) if failure.retry && attempt < config.limits().max_retries() => {
-                sleep(RETRY_DELAY).await;
-            }
-            Err(failure) => return Err(failure.error),
-        }
-    }
-    // The inclusive range always makes at least one attempt.
-    Err(Error::Provider(ProviderError::Transport))
-}
-
-struct AttemptFailure {
-    error: Error,
-    retry: bool,
-}
-
-impl AttemptFailure {
-    fn terminal(error: Error) -> Self {
-        Self {
-            error,
-            retry: false,
-        }
-    }
-
-    fn transport(error: &reqwest::Error) -> Self {
-        Self {
-            error: if error.is_timeout() {
-                Error::Timeout
-            } else {
-                Error::Provider(ProviderError::Transport)
-            },
-            retry: true,
-        }
-    }
+    let bytes = http
+        .read(&[], &[], Some(&body), budget)
+        .await?
+        .into_success()?;
+    decode_response(&bytes, &policy)
 }
 
 #[derive(Serialize)]
@@ -90,59 +52,6 @@ struct RpcRequest<'a, P: ?Sized> {
     id: u64,
     method: &'static str,
     params: &'a P,
-}
-
-async fn request(
-    http: &Client,
-    config: &EvmConfig,
-    body: &[u8],
-) -> Result<Vec<u8>, AttemptFailure> {
-    let response = http
-        .post(config.endpoint().url.clone())
-        .headers(config.endpoint().headers.clone())
-        .header(CONTENT_TYPE, "application/json")
-        .body(body.to_owned())
-        .send()
-        .await
-        .map_err(|error| AttemptFailure::transport(&error))?;
-    let status = response.status();
-    if !status.is_success() {
-        let error = if status == StatusCode::TOO_MANY_REQUESTS {
-            Error::Provider(ProviderError::RateLimited)
-        } else {
-            Error::Provider(ProviderError::HttpStatus)
-        };
-        return Err(AttemptFailure {
-            error,
-            retry: status == StatusCode::TOO_MANY_REQUESTS || status.is_server_error(),
-        });
-    }
-    bounded_body(response, config.limits().max_response_bytes()).await
-}
-
-async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>, AttemptFailure> {
-    if response
-        .content_length()
-        .is_some_and(|length| length > maximum as u64)
-    {
-        return Err(AttemptFailure::terminal(Error::Provider(
-            ProviderError::ResponseTooLarge,
-        )));
-    }
-    let mut body = Vec::new();
-    while let Some(chunk) = response
-        .chunk()
-        .await
-        .map_err(|error| AttemptFailure::transport(&error))?
-    {
-        if chunk.len() > maximum - body.len() {
-            return Err(AttemptFailure::terminal(Error::Provider(
-                ProviderError::ResponseTooLarge,
-            )));
-        }
-        body.extend_from_slice(&chunk);
-    }
-    Ok(body)
 }
 
 // Direct typed deserialization rejects duplicate envelope and result fields

@@ -1,14 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Explicit, validated EVM endpoint, native metadata, and request configuration.
+//! Explicit, validated HTTP(S) endpoint and request configuration.
 //!
 //! Endpoint URLs and headers are excluded from diagnostics. RPC configuration
 //! and credentials are supplied by the caller. HTTPS uses verified standard
 //! platform trust, including the platform's certificate-store discovery rules.
 //!
 //! ```
-//! # #[cfg(feature = "evm")]
+//! # #[cfg(feature = "http")]
+//! # fn main() -> Result<(), regit_web3::error::Error> {
+//! use std::time::Duration;
+//! use regit_web3::config::{HttpConfig, RpcEndpoint, RpcLimits};
+//!
+//! let endpoint = RpcEndpoint::new("https://api.example.invalid/v1")?;
+//! let limits = RpcLimits::new(
+//!     Duration::from_secs(3), Duration::from_secs(10), 1024 * 1024, 1,
+//! )?;
+//! let config = HttpConfig::new(endpoint, limits, "example-provider")?;
+//! assert_eq!(config.provider_id(), "example-provider");
+//! # Ok(())
+//! # }
+//! # #[cfg(not(feature = "http"))]
+//! # fn main() {}
+//! ```
+//!
+//! ```
+//! # #[cfg(feature = "evm-http")]
 //! # fn main() -> Result<(), regit_web3::error::Error> {
 //! use std::time::Duration;
 //! use regit_web3::{
@@ -28,7 +46,7 @@
 //! assert_eq!(config.native_asset().decimals(), 18);
 //! # Ok(())
 //! # }
-//! # #[cfg(not(feature = "evm"))]
+//! # #[cfg(not(feature = "evm-http"))]
 //! # fn main() {}
 //! ```
 
@@ -37,12 +55,11 @@ use std::{fmt, time::Duration};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use url::Url;
 
-use crate::{
-    domain::{Asset, BlockSelector, NetworkId, Source},
-    error::Error,
-};
+#[cfg(feature = "evm-http")]
+use crate::domain::{Asset, BlockSelector, NetworkId};
+use crate::{domain::Source, error::Error};
 
-/// An HTTP(S) RPC endpoint with caller-supplied authentication headers.
+/// An HTTP(S) endpoint with caller-supplied authentication headers.
 ///
 /// URLs may contain explicitly supplied user information or query parameters.
 /// Both the entire URL and all headers are redacted from `Debug`. The endpoint
@@ -92,7 +109,7 @@ impl RpcEndpoint {
     ///
     /// Rejects malformed names/values and reserved `host`, `content-type`,
     /// `content-length`, and `transfer-encoding` headers. These headers are
-    /// determined by the validated endpoint and JSON request body. Explicit
+    /// determined by the validated endpoint and request body. Explicit
     /// `authorization` cannot be combined with URL user information; this avoids
     /// ambiguous authentication precedence.
     pub fn with_header(mut self, name: &str, value: &str) -> Result<Self, Error> {
@@ -126,8 +143,8 @@ impl fmt::Debug for RpcEndpoint {
 /// The request timeout bounds the entire operation, including retries, their
 /// delays, and response-body consumption. The connect timeout independently
 /// bounds each connection attempt within that total budget. The retry count
-/// applies separately to each RPC stage; a balance operation's chain check,
-/// block lookup, and balance read share one request timeout.
+/// applies separately to each HTTP stage; all stages of one operation share
+/// one request timeout.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RpcLimits {
     connect_timeout: Duration,
@@ -186,7 +203,7 @@ impl RpcLimits {
         self.max_response_bytes
     }
 
-    /// Returns additional safe-read attempts after each RPC stage's initial attempt.
+    /// Returns additional safe-read attempts after each HTTP stage's initial attempt.
     ///
     /// All stages and their retries share the operation's request timeout.
     #[must_use]
@@ -195,20 +212,71 @@ impl RpcLimits {
     }
 }
 
+/// Explicit HTTP(S) endpoint, request limits, and non-secret provider attribution.
+///
+/// Configuration is independent of chain identity and performs no requests.
+/// Integrations validate their own network and protocol contracts.
+#[derive(Clone, Debug)]
+pub struct HttpConfig {
+    endpoint: RpcEndpoint,
+    limits: RpcLimits,
+    provider_id: String,
+}
+
+impl HttpConfig {
+    /// Constructs configuration from explicit validated endpoint and limits.
+    ///
+    /// # Errors
+    ///
+    /// Rejects invalid non-secret provider attribution labels. URLs and headers
+    /// remain excluded from diagnostics.
+    pub fn new(
+        endpoint: RpcEndpoint,
+        limits: RpcLimits,
+        provider_id: impl Into<String>,
+    ) -> Result<Self, Error> {
+        let provider_id = provider_id.into();
+        let _source = Source::new(&provider_id, "http", env!("CARGO_PKG_VERSION"))?;
+        Ok(Self {
+            endpoint,
+            limits,
+            provider_id,
+        })
+    }
+
+    /// Returns the endpoint whose diagnostics are always redacted.
+    #[must_use]
+    pub const fn endpoint(&self) -> &RpcEndpoint {
+        &self.endpoint
+    }
+
+    /// Returns validated explicit transport settings.
+    #[must_use]
+    pub const fn limits(&self) -> RpcLimits {
+        self.limits
+    }
+
+    /// Returns the caller-supplied non-secret provider attribution label.
+    #[must_use]
+    pub fn provider_id(&self) -> &str {
+        &self.provider_id
+    }
+}
+
 /// Explicit EVM network, endpoint, native metadata, selector, and request limits.
 ///
 /// Native decimals and optional symbol are caller-configured metadata. The
 /// provider label is non-secret attribution, not an endpoint or credential.
 #[derive(Clone, Debug)]
+#[cfg(feature = "evm-http")]
 pub struct EvmConfig {
     network: NetworkId,
-    endpoint: RpcEndpoint,
+    http: HttpConfig,
     native_asset: Asset,
     default_selector: BlockSelector,
-    limits: RpcLimits,
-    provider_id: String,
 }
 
+#[cfg(feature = "evm-http")]
 impl EvmConfig {
     /// Constructs an explicit EVM configuration with validated native metadata.
     ///
@@ -225,16 +293,13 @@ impl EvmConfig {
         limits: RpcLimits,
         provider_id: impl Into<String>,
     ) -> Result<Self, Error> {
-        let provider_id = provider_id.into();
-        let _source = Source::new(&provider_id, "eth_chainId", env!("CARGO_PKG_VERSION"))?;
+        let http = HttpConfig::new(endpoint, limits, provider_id)?;
         let native_asset = Asset::native(network.clone(), native_decimals, native_symbol)?;
         Ok(Self {
             network,
-            endpoint,
+            http,
             native_asset,
             default_selector,
-            limits,
-            provider_id,
         })
     }
 
@@ -247,7 +312,7 @@ impl EvmConfig {
     /// Returns the endpoint whose diagnostics are always redacted.
     #[must_use]
     pub const fn endpoint(&self) -> &RpcEndpoint {
-        &self.endpoint
+        self.http.endpoint()
     }
 
     /// Returns native asset identity and caller-configured decimal metadata.
@@ -265,12 +330,16 @@ impl EvmConfig {
     /// Returns validated explicit transport settings.
     #[must_use]
     pub const fn limits(&self) -> RpcLimits {
-        self.limits
+        self.http.limits()
     }
 
     /// Returns the caller-supplied non-secret provider attribution label.
     #[must_use]
     pub fn provider_id(&self) -> &str {
-        &self.provider_id
+        self.http.provider_id()
+    }
+
+    pub(crate) const fn http_config(&self) -> &HttpConfig {
+        &self.http
     }
 }

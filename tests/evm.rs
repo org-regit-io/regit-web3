@@ -3,7 +3,7 @@
 
 //! Native EVM balance reads through deterministic loopback JSON-RPC fixtures.
 
-#![cfg(feature = "evm")]
+#![cfg(feature = "evm-http")]
 
 #[path = "support/rpc_server.rs"]
 mod rpc_server;
@@ -11,7 +11,7 @@ mod rpc_server;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use regit_web3::{
-    chains::evm::EvmClient,
+    chains::evm::{EvmClient, NativeBalanceReader},
     config::{EvmConfig, RpcEndpoint, RpcLimits},
     domain::{
         Address, Balance, BlockHash, BlockSelector, ChainId, Finality, NetworkId, Observation,
@@ -115,9 +115,8 @@ async fn native_read_retains_exact_balance_source_anchor_and_separate_times() ->
     )?)
     .await?;
     let before = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
-    let observed = client
-        .get_native_balance(Address::parse(ADDRESS)?, None)
-        .await?;
+    let observed =
+        NativeBalanceReader::get_native_balance(&client, Address::parse(ADDRESS)?, None).await?;
     let after = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     assert_eq!(observed.value().address().to_string(), ADDRESS);
     assert_eq!(

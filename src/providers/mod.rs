@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Feature-gated providers module layout.
+//! Typed market, analytics and indexed-data provider integrations.
 
 #[cfg(feature = "coingecko")]
 pub mod coingecko;

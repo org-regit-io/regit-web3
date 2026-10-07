@@ -7,7 +7,7 @@ body:
     id: description
     attributes:
       label: What happened?
-      description: Include the command, expected result, and actual result. Redact keys and private transaction data.
+      description: Include a minimal Rust API reproducer, enabled Cargo features, expected result, and actual result. Redact keys and private transaction data.
     validations:
       required: true
   - type: input

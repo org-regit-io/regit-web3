@@ -68,8 +68,28 @@ pub enum ValidationError {
     InvalidAmount,
     /// An integer exceeds the 256-bit unsigned range.
     AmountOverflow,
+    /// A signed decimal is not in supported finite decimal notation.
+    InvalidDecimal,
+    /// A signed decimal exceeds bounded input, exponent, scale, or output size.
+    DecimalOutOfBounds,
     /// An EVM address has an invalid length, encoding, or mixed-case checksum.
     InvalidAddress,
+    /// A Solana public key has an invalid base58 encoding or byte length.
+    InvalidSolanaPubkey,
+    /// A Solana hash has an invalid base58 encoding or byte length.
+    InvalidSolanaHash,
+    /// A Solana signature has an invalid base58 encoding or byte length.
+    InvalidSolanaSignature,
+    /// A Solana native or token base-unit amount exceeds the unsigned 64-bit range.
+    SolanaAmountOverflow,
+    /// An observation context declares an operation differing from its value.
+    ObservationOperationMismatch,
+    /// A Solana observation slot is below the explicitly requested minimum.
+    ContextSlotBelowMinimum,
+    /// A Solana account record differs from the requested account identity.
+    InvalidSolanaAccount,
+    /// Solana account data exceeds the protocol's maximum byte length.
+    SolanaAccountDataTooLarge,
     /// A block hash is not a 32-byte hexadecimal value.
     InvalidBlockHash,
     /// A network alias is not a bounded label.
@@ -95,7 +115,17 @@ impl fmt::Display for ValidationError {
         formatter.write_str(match self {
             Self::InvalidAmount => "invalid unsigned decimal integer",
             Self::AmountOverflow => "unsigned integer exceeds 256 bits",
+            Self::InvalidDecimal => "invalid finite decimal value",
+            Self::DecimalOutOfBounds => "decimal value exceeds resource bounds",
             Self::InvalidAddress => "invalid EVM address",
+            Self::InvalidSolanaPubkey => "invalid Solana public key",
+            Self::InvalidSolanaHash => "invalid Solana hash",
+            Self::InvalidSolanaSignature => "invalid Solana signature",
+            Self::SolanaAmountOverflow => "Solana amount exceeds 64 bits",
+            Self::ObservationOperationMismatch => "observation operation and value differ",
+            Self::ContextSlotBelowMinimum => "observation slot is below requested minimum",
+            Self::InvalidSolanaAccount => "Solana account and requested identity differ",
+            Self::SolanaAccountDataTooLarge => "Solana account data exceeds byte limit",
             Self::InvalidBlockHash => "invalid block hash",
             Self::InvalidNetworkAlias => "invalid network alias",
             Self::InvalidAssetSymbol => "invalid asset symbol",

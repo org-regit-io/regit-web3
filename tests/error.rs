@@ -3,7 +3,9 @@
 
 //! Typed failure categories and secret-safe domain diagnostics.
 
-use regit_web3::domain::{Address, Amount, Asset, BlockHash, ChainId, NetworkId, Source};
+use regit_web3::domain::{
+    Address, Amount, Asset, BlockHash, ChainId, ExactDecimal, NetworkId, Source,
+};
 use regit_web3::error::{Error, ProviderError, ValidationError};
 use serde_json::json;
 
@@ -14,6 +16,14 @@ fn error_categories_and_reasons_roundtrip_as_fixed_structured_values() {
         (
             Error::Validation(ValidationError::InvalidAmount),
             json!({"category": "validation", "reason": "invalid_amount"}),
+        ),
+        (
+            Error::Validation(ValidationError::InvalidDecimal),
+            json!({"category": "validation", "reason": "invalid_decimal"}),
+        ),
+        (
+            Error::Validation(ValidationError::DecimalOutOfBounds),
+            json!({"category": "validation", "reason": "decimal_out_of_bounds"}),
         ),
         (
             Error::UnsupportedCapability,
@@ -51,6 +61,12 @@ fn validation_errors_never_retain_credential_bearing_bad_input() {
     let valid_network = NetworkId::new(chain, "mainnet").unwrap();
     let errors = [
         Amount::from_decimal(bad_input, None).unwrap_err(),
+        ExactDecimal::parse(bad_input).unwrap_err(),
+        ExactDecimal::parse(&format!(
+            "{bad_input}{}",
+            "0".repeat(ExactDecimal::MAX_TEXT_BYTES)
+        ))
+        .unwrap_err(),
         ChainId::from_decimal(bad_input).unwrap_err(),
         Address::parse(bad_input).unwrap_err(),
         BlockHash::parse(bad_input).unwrap_err(),
@@ -104,4 +120,45 @@ fn overflow_and_malformed_amounts_have_distinct_typed_failures() {
         .unwrap_err(),
         Error::Validation(ValidationError::AmountOverflow)
     );
+}
+
+#[test]
+fn solana_validation_reasons_have_fixed_distinct_serialized_diagnostics() {
+    for (reason, expected) in [
+        (
+            ValidationError::InvalidSolanaPubkey,
+            "invalid_solana_pubkey",
+        ),
+        (ValidationError::InvalidSolanaHash, "invalid_solana_hash"),
+        (
+            ValidationError::InvalidSolanaSignature,
+            "invalid_solana_signature",
+        ),
+        (
+            ValidationError::SolanaAmountOverflow,
+            "solana_amount_overflow",
+        ),
+        (
+            ValidationError::ObservationOperationMismatch,
+            "observation_operation_mismatch",
+        ),
+        (
+            ValidationError::ContextSlotBelowMinimum,
+            "context_slot_below_minimum",
+        ),
+        (
+            ValidationError::InvalidSolanaAccount,
+            "invalid_solana_account",
+        ),
+        (
+            ValidationError::SolanaAccountDataTooLarge,
+            "solana_account_data_too_large",
+        ),
+    ] {
+        let error = Error::Validation(reason);
+        let expected = json!({"category":"validation","reason":expected});
+        assert_eq!(serde_json::to_value(error).unwrap(), expected);
+        assert_eq!(serde_json::from_value::<Error>(expected).unwrap(), error);
+        assert!(!error.to_string().is_empty());
+    }
 }

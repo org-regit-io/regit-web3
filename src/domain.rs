@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Exact EVM values and attributable native-balance observations.
+//! Exact values, source attribution, and family-specific Web3 identities.
 //!
 //! All metadata is supplied explicitly. These types do not read configuration,
-//! consult a clock, or contact a network. Addresses and hashes serialize as
-//! lowercase, `0x`-prefixed hexadecimal strings; amounts and chain identifiers
-//! serialize as decimal strings.
+//! consult a clock, or contact a network. [`Amount`] retains nonnegative integer
+//! base units; [`ExactDecimal`] retains signed decimal values without floating
+//! point. Both serialize their exact numeric values as strings.
+//!
+//! Existing address, chain identity, asset, and native-balance types are EVM
+//! specific. Their original exports remain available, together with explicitly
+//! qualified exports in [`evm`]. EVM addresses and hashes serialize as lowercase,
+//! `0x`-prefixed hexadecimal strings; EVM chain identifiers serialize as decimal
+//! strings.
 
 mod amount;
+mod decimal;
+pub mod evm;
 mod identity;
 mod observation;
+#[cfg(feature = "solana")]
+pub mod solana;
 
 pub use amount::Amount;
+pub use decimal::ExactDecimal;
 pub use identity::{Address, Asset, AssetId, AssetKind, ChainId, MetadataOrigin, NetworkId};
 pub use observation::{
     Balance, BlockContext, BlockHash, BlockSelector, Finality, Observation, ObservationContext,
