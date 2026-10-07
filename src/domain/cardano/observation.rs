@@ -8,7 +8,11 @@ use crate::{
     error::{Error, ValidationError},
 };
 
-use super::{AddressBalance, Network, NetworkId, UtxoPage};
+use super::{
+    AddressBalance, AddressDetails, AssetDetails, Epoch, IndexPage, Network, NetworkData,
+    NetworkId, PageItem, PageTarget, PaymentEstimate, ProtocolParameters, StakeAccount,
+    SubmissionResult, Transaction, TransactionStatus, TransactionUtxos, UtxoPage,
+};
 
 /// The typed indexed operation represented by an observation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -18,6 +22,38 @@ pub enum Operation {
     Balance,
     /// One current indexed unspent-output page.
     Utxos,
+    /// Supporting address classification and stake data.
+    AddressDetails,
+    /// One explicit address transaction page.
+    AddressTransactions,
+    /// Current network supply and stake.
+    NetworkData,
+    /// Exact or latest selected epoch.
+    Epoch,
+    /// Exact source protocol parameters.
+    ProtocolParameters,
+    /// Stake account registration/delegation/reward facts.
+    StakeAccount,
+    /// One explicit reward page.
+    Rewards,
+    /// One explicit native-asset catalogue page.
+    Assets,
+    /// Requested native-asset identity/supply/metadata.
+    AssetDetails,
+    /// One explicit token transaction page.
+    AssetTransactions,
+    /// One explicit token holder page.
+    AssetHolders,
+    /// Correlated original transaction CBOR and source inclusion.
+    Transaction,
+    /// Complete bounded transaction input/output facts.
+    TransactionUtxos,
+    /// Current source transaction indexing/validity status.
+    TransactionStatus,
+    /// Local exact ordinary-payment calculation using fresh indexed parameters.
+    PaymentEstimate,
+    /// One-shot source submission acknowledgement, not execution/finality.
+    Submission,
 }
 
 /// Attribution for a current indexed read without a fabricated snapshot anchor.
@@ -134,6 +170,64 @@ impl Observation<UtxoPage> {
         Self::validated(value, context, Operation::Utxos, network)
     }
 }
+/// Trusted extension binding typed results to their actual operation/network.
+/// Custom backends must preserve source semantics and exact family identities.
+pub trait ObservationValue {
+    /// Returns the actual represented operation.
+    fn operation(&self) -> Operation;
+    /// Returns the actual technical network identity.
+    fn network_identity(&self) -> NetworkId;
+}
+macro_rules! observed {
+    ($type:ty,$operation:ident) => {
+        impl ObservationValue for $type {
+            fn operation(&self) -> Operation {
+                Operation::$operation
+            }
+            fn network_identity(&self) -> NetworkId {
+                self.network().identity()
+            }
+        }
+    };
+}
+observed!(AddressBalance, Balance);
+observed!(UtxoPage, Utxos);
+observed!(AddressDetails, AddressDetails);
+observed!(NetworkData, NetworkData);
+observed!(Epoch, Epoch);
+observed!(ProtocolParameters, ProtocolParameters);
+observed!(StakeAccount, StakeAccount);
+observed!(AssetDetails, AssetDetails);
+observed!(Transaction, Transaction);
+observed!(TransactionUtxos, TransactionUtxos);
+observed!(TransactionStatus, TransactionStatus);
+observed!(PaymentEstimate, PaymentEstimate);
+observed!(SubmissionResult, Submission);
+impl<T: PageItem> ObservationValue for IndexPage<T> {
+    fn operation(&self) -> Operation {
+        match self.target() {
+            PageTarget::Assets => Operation::Assets,
+            PageTarget::AddressTransactions { .. } => Operation::AddressTransactions,
+            PageTarget::AssetTransactions { .. } => Operation::AssetTransactions,
+            PageTarget::AssetHolders { .. } => Operation::AssetHolders,
+            PageTarget::Rewards { .. } => Operation::Rewards,
+        }
+    }
+    fn network_identity(&self) -> NetworkId {
+        self.network().identity()
+    }
+}
+impl<T: ObservationValue> Observation<T> {
+    /// Attributes a typed result without inventing indexed snapshot/finality facts.
+    ///
+    /// # Errors
+    /// Rejects operation or technical network mismatch.
+    pub fn new(value: T, context: Context) -> Result<Self, Error> {
+        let operation = value.operation();
+        let network = value.network_identity();
+        Self::validated(value, context, operation, network)
+    }
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Fields<T> {
@@ -141,20 +235,14 @@ struct Fields<T> {
     context: Context,
     value: T,
 }
-macro_rules! observation_deserialize {
-    ($value:ty, $constructor:ident) => {
-        impl<'de> Deserialize<'de> for Observation<$value> {
-            fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-                let fields = Fields::<$value>::deserialize(deserializer)?;
-                if fields.schema_version != 1 {
-                    return Err(serde::de::Error::custom(
-                        ValidationError::UnsupportedSchemaVersion,
-                    ));
-                }
-                Self::$constructor(fields.value, fields.context).map_err(serde::de::Error::custom)
-            }
+impl<'de, T: ObservationValue + Deserialize<'de>> Deserialize<'de> for Observation<T> {
+    fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let v = Fields::<T>::deserialize(d)?;
+        if v.schema_version != 1 {
+            return Err(serde::de::Error::custom(
+                ValidationError::UnsupportedSchemaVersion,
+            ));
         }
-    };
+        Self::new(v.value, v.context).map_err(serde::de::Error::custom)
+    }
 }
-observation_deserialize!(AddressBalance, balance);
-observation_deserialize!(UtxoPage, utxos);

@@ -94,6 +94,8 @@ const-hex = { version = "=1.19.3", default-features = false, features = [
 ] }
 crc = { version = "=3.4.0", default-features = false, optional = true }
 ethaddr = { version = "=0.2.4", default-features = false, features = ["sha3"] }
+pallas-crypto = { version = "=1.4.0", default-features = false, optional = true }
+pallas-primitives = { version = "=1.4.0", default-features = false, optional = true }
 pallas-addresses = { version = "=1.4.0", default-features = false, optional = true }
 pallas-codec = { version = "=1.4.0", default-features = false, optional = true }
 reqwest = { version = "=0.13.5", default-features = false, features = [
@@ -172,7 +174,14 @@ solana = [
   "dep:spl-token-interface",
 ]
 solana-http = ["solana", "http", "dep:base64"]
-cardano = ["dep:pallas-addresses", "dep:pallas-codec", "dep:crc"]
+cardano = [
+  "dep:pallas-addresses",
+  "dep:pallas-codec",
+  "dep:crc",
+  "dep:pallas-primitives",
+  "dep:pallas-crypto",
+  "dep:bech32",
+]
 bitcoin = ["dep:bitcoin"]
 bitcoin-esplora = ["bitcoin", "http"]
 litecoin = ["dep:bech32", "dep:bs58", "bs58/check"]

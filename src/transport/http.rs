@@ -23,7 +23,8 @@ use super::OperationBudget;
     feature = "xrpl-http",
     feature = "evm-http",
     feature = "ton-http",
-    feature = "solana-http"
+    feature = "solana-http",
+    feature = "blockfrost-http"
 ))]
 use crate::error::SubmissionFailure;
 
@@ -102,7 +103,8 @@ impl HttpClient {
         feature = "xrpl-http",
         feature = "evm-http",
         feature = "ton-http",
-        feature = "solana-http"
+        feature = "solana-http",
+        all(test, feature = "blockfrost-http")
     ))]
     pub(crate) async fn write_once(
         &self,
@@ -111,13 +113,45 @@ impl HttpClient {
         json_body: &[u8],
         budget: &OperationBudget,
     ) -> Result<HttpResponse, Error> {
+        self.write_once_with_content_type(path, query, json_body, "application/json", budget)
+            .await
+    }
+
+    // Blockfrost accepts exact serialized transaction bytes, never JSON or safe-read retries.
+    #[cfg(feature = "blockfrost-http")]
+    pub(crate) async fn write_once_cbor(
+        &self,
+        path: &[&str],
+        query: &[(&str, &str)],
+        body: &[u8],
+        budget: &OperationBudget,
+    ) -> Result<HttpResponse, Error> {
+        self.write_once_with_content_type(path, query, body, "application/cbor", budget)
+            .await
+    }
+
+    #[cfg(any(
+        feature = "xrpl-http",
+        feature = "evm-http",
+        feature = "ton-http",
+        feature = "solana-http",
+        feature = "blockfrost-http"
+    ))]
+    async fn write_once_with_content_type(
+        &self,
+        path: &[&str],
+        query: &[(&str, &str)],
+        body: &[u8],
+        content_type: &'static str,
+        budget: &OperationBudget,
+    ) -> Result<HttpResponse, Error> {
         let url = self.request_url(path, query)?;
         let request = self
             .client
             .post(url)
-            .header(CONTENT_TYPE, "application/json")
+            .header(CONTENT_TYPE, content_type)
             .headers(self.config.endpoint().headers.clone())
-            .body(json_body.to_owned())
+            .body(body.to_owned())
             .build()
             .map_err(|_| Error::Configuration)?;
         budget.check_remaining()?;
@@ -220,7 +254,8 @@ impl HttpClient {
     feature = "xrpl-http",
     feature = "evm-http",
     feature = "ton-http",
-    feature = "solana-http"
+    feature = "solana-http",
+    feature = "blockfrost-http"
 ))]
 pub(crate) const fn submission_unknown(error: Error) -> Error {
     let reason = match error {
@@ -323,7 +358,8 @@ mod tests;
         feature = "xrpl-http",
         feature = "evm-http",
         feature = "ton-http",
-        feature = "solana-http"
+        feature = "solana-http",
+        feature = "blockfrost-http"
     )
 ))]
 #[path = "write_tests.rs"]

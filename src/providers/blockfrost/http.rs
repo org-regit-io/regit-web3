@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
+mod indexed;
+
 use std::{
     fmt,
     time::{SystemTime, UNIX_EPOCH},
@@ -50,10 +52,12 @@ impl BlockfrostHttpConfig {
     }
 }
 
-/// A bounded Blockfrost reader of current indexed balances and output pages.
+/// A bounded Blockfrost backend for indexed reads, fee estimates and explicit submission.
 ///
 /// Establishment and every read verify the provider's genesis network magic.
-/// One budget covers verification, request retries, body reads and validation.
+/// One budget covers verification, safe-read retries, body reads and validation.
+/// Responses cannot exceed 2 MiB; original transaction CBOR has its own 64 KiB bound.
+/// Submission uses one raw-CBOR dispatch, independent of safe-read retry settings.
 /// These operations do not establish an exact evaluation block or finality.
 /// The caller supplies a Tokio runtime with networking and time enabled.
 pub struct BlockfrostClient {
@@ -80,6 +84,9 @@ impl BlockfrostClient {
     /// A current Tokio runtime with disabled networking or time drivers may panic.
     pub async fn connect(config: BlockfrostHttpConfig) -> Result<Self, Error> {
         let budget = OperationBudget::new(config.http_config().limits())?;
+        if config.http_config().limits().max_response_bytes() > 2 * 1024 * 1024 {
+            return Err(Error::Configuration);
+        }
         let http = HttpClient::new(config.http_config())?;
         let value = Self { config, http };
         budget.run(value.verify_network(&budget)).await?;
@@ -196,8 +203,23 @@ impl BlockfrostClient {
             .map_err(|_| Error::Configuration)?
             .as_secs();
         let method = match operation {
-            Operation::Balance => "addresses",
+            Operation::Balance | Operation::AddressDetails => "addresses",
             Operation::Utxos => "addresses-utxos",
+            Operation::AddressTransactions => "addresses-transactions",
+            Operation::NetworkData => "network",
+            Operation::Epoch => "epochs",
+            Operation::ProtocolParameters => "epochs-parameters",
+            Operation::StakeAccount => "accounts",
+            Operation::Rewards => "accounts-rewards",
+            Operation::Assets => "assets",
+            Operation::AssetDetails => "assets-asset",
+            Operation::AssetTransactions => "assets-transactions",
+            Operation::AssetHolders => "assets-addresses",
+            Operation::Transaction => "txs-and-cbor",
+            Operation::TransactionUtxos => "txs-utxos",
+            Operation::TransactionStatus => "txs-status-and-cbor",
+            Operation::PaymentEstimate => "epochs-parameters-ordinary-estimate",
+            Operation::Submission => "tx-submit",
         };
         let source = Source::new(
             self.config.http_config().provider_id(),

@@ -64,7 +64,11 @@ impl TryFrom<AssetAmountFields> for AssetAmount {
     }
 }
 
-fn validate_assets(values: &[AssetAmount], network: NetworkId, output: bool) -> Result<(), Error> {
+pub(super) fn validate_assets(
+    values: &[AssetAmount],
+    network: NetworkId,
+    output: bool,
+) -> Result<(), Error> {
     if values.len() > 10_000 {
         return Err(ValidationError::InvalidCardanoRecord.into());
     }
@@ -97,7 +101,9 @@ fn validate_assets(values: &[AssetAmount], network: NetworkId, output: bool) -> 
     Ok(())
 }
 
-fn bounded_values<'de, D, T, const MAX: usize>(deserializer: D) -> Result<Vec<T>, D::Error>
+pub(super) fn bounded_values<'de, D, T, const MAX: usize>(
+    deserializer: D,
+) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: Deserialize<'de>,

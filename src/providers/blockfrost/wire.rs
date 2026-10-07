@@ -3,6 +3,9 @@
 
 //! Private remote DTO decoding and Cardano mapping; no transport or runtime.
 
+pub(super) mod indexed;
+pub(super) mod transaction;
+
 use serde::{Deserialize, Deserializer};
 
 use crate::{

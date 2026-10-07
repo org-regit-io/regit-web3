@@ -52,6 +52,7 @@ pub(crate) use http::HttpClient;
     feature = "xrpl-http",
     feature = "evm-http",
     feature = "ton-http",
+    feature = "blockfrost-http",
     feature = "solana-http"
 ))]
 pub(crate) use http::submission_unknown;

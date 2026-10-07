@@ -9,6 +9,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`bitcoin_cash_live`](../tests/bitcoin_cash_live.rs) | `bitcoin-cash-electrum` | Six Electrum-Cash TLS source reads; explicit host/port/server name/DER trust root/full genesis/fork checkpoint/address/txid/history interval/capacity/fee target |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL/account/SPL reads plus canonical transaction/status, recent hash/validity/height, exact message fee and unsigned simulation; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
+| [`blockfrost_live`](../tests/blockfrost_live.rs) | `blockfrost-http` | Awaiting authenticated live qualification: seventeen indexed read/estimate methods and local unsigned review; explicit project credential/network/address/stake/asset/transaction/epoch/payment inputs in the fixture recipe |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
 | [`coingecko_live`](../tests/coingecko_live.rs) | `coingecko-http` | Search, ID/currency prices, one markets page and history; explicit anonymous API base/source/item bound/listing/currency/search/time range |
@@ -392,3 +393,27 @@ review; the explicit `otherInstructions` placement is caller policy. API mainnet
 identity is declared; the composed Solana RPC separately verifies full genesis.
 No signing, provider-managed execution or submission was performed.
 [Fixture provenance](../tests/fixtures/jupiter/README.md) records primary contracts.
+
+## Cardano indexed operations and payment preparation
+
+`cardano` provides exact family identities, indexed records, original transaction
+CBOR/body hashes and explicit Conway key-spend ADA/native-asset preparation.
+Callers select every input, output/change, fee, absolute validity slot and witness
+count; explicit protocol parameters determine minimum ADA and serialized-size fees.
+Preparation and generic wallet handoff perform no signing or submission.
+
+`blockfrost-http` implements seventeen indexed read/estimate methods with fresh
+network-magic verification, bounded explicit pages and one operation deadline.
+The separate signed submission method sends exact raw CBOR once after preflight.
+It checks body/key/size correlation without verifying cryptographic signatures;
+provider acknowledgment does not establish execution or finality.
+
+The [fixture and input recipe](../tests/fixtures/blockfrost/README.md) documents
+the supported payment profile and every live input. Ordinary pure/loopback tests
+pass; authenticated indexed-data qualification remains pending. The ignored
+harness calls every read/estimate and local review, and never submits:
+
+```sh
+cargo test --locked --no-default-features --features blockfrost-http \
+  --test blockfrost_live -- --ignored --nocapture
+```

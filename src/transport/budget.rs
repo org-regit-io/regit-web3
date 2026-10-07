@@ -42,6 +42,7 @@ impl OperationBudget {
         feature = "xrpl-http",
         feature = "evm-http",
         feature = "ton-http",
+        feature = "blockfrost-http",
         feature = "solana-http"
     ))]
     pub(crate) fn check_remaining(&self) -> Result<(), Error> {

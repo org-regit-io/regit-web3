@@ -1861,6 +1861,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallas-primitives"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd1f296363961ee9e62a0979ee03d425aae8247d54705dc5efe07a4e06c11aa4"
+dependencies = [
+ "hex",
+ "pallas-codec",
+ "pallas-crypto",
+ "serde",
+]
+
+[[package]]
 name = "parity-scale-codec"
 version = "3.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2295,6 +2307,8 @@ dependencies = [
  "ethaddr",
  "pallas-addresses",
  "pallas-codec",
+ "pallas-crypto",
+ "pallas-primitives",
  "reqwest",
  "ruint",
  "rustls",

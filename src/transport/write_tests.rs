@@ -121,3 +121,118 @@ async fn one_shot_limits_every_body_framing_without_retry_or_remote_diagnostics(
     assert_eq!(submission_unknown(safe), safe);
     Ok(())
 }
+
+#[cfg(feature = "blockfrost-http")]
+async fn raw_once(
+    status: u16,
+    response: &'static [u8],
+) -> Result<
+    (
+        String,
+        tokio::task::JoinHandle<std::io::Result<(String, Vec<u8>)>>,
+    ),
+    TestError,
+> {
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::TcpListener,
+    };
+    let listener = TcpListener::bind("127.0.0.1:0").await?;
+    let endpoint = format!("http://{}/api/v0", listener.local_addr()?);
+    let task = tokio::spawn(async move {
+        let (mut stream, _) = listener.accept().await?;
+        let mut bytes = Vec::new();
+        let mut buf = [0u8; 1024];
+        let header_end = loop {
+            if let Some(at) = bytes.windows(4).position(|v| v == b"\r\n\r\n") {
+                break at + 4;
+            }
+            if bytes.len() > 16384 {
+                return Err(std::io::Error::other("header limit"));
+            }
+            let n = stream.read(&mut buf).await?;
+            if n == 0 {
+                return Err(std::io::ErrorKind::UnexpectedEof.into());
+            }
+            bytes.extend_from_slice(&buf[..n]);
+        };
+        let headers =
+            String::from_utf8(bytes[..header_end].to_vec()).map_err(std::io::Error::other)?;
+        let length = headers
+            .lines()
+            .filter_map(|v| v.split_once(':'))
+            .find(|(k, _)| k.eq_ignore_ascii_case("content-length"))
+            .ok_or_else(|| std::io::Error::other("length"))?
+            .1
+            .trim()
+            .parse::<usize>()
+            .map_err(std::io::Error::other)?;
+        if length > 65536 {
+            return Err(std::io::Error::other("body limit"));
+        }
+        while bytes.len() < header_end + length {
+            let n = stream.read(&mut buf).await?;
+            if n == 0 {
+                return Err(std::io::ErrorKind::UnexpectedEof.into());
+            }
+            bytes.extend_from_slice(&buf[..n]);
+        }
+        let body = bytes[header_end..header_end + length].to_vec();
+        let header = format!(
+            "HTTP/1.1 {status} Fixture\r\ncontent-length: {}\r\nconnection: close\r\n\r\n",
+            response.len()
+        );
+        stream.write_all(header.as_bytes()).await?;
+        stream.write_all(response).await?;
+        stream.shutdown().await?;
+        Ok((headers, body))
+    });
+    Ok((endpoint, task))
+}
+
+#[cfg(feature = "blockfrost-http")]
+#[tokio::test]
+async fn cbor_write_is_exact_fixed_mime_and_single_dispatch_under_read_retry_policy()
+-> Result<(), TestError> {
+    const BODY: &[u8] = &[0x84, 0xa1, 0, 0x81, 0x82, 0x58, 0x20, 0, 0xff];
+    for status in [200, 429, 500] {
+        let (endpoint, task) = raw_once(status, b"\"fixture-private-response\"").await?;
+        let endpoint =
+            RpcEndpoint::new(&endpoint)?.with_header("project_id", "fixture-project-secret")?;
+        let config = HttpConfig::new(
+            endpoint,
+            RpcLimits::new(Duration::from_secs(2), Duration::from_secs(5), 4096, 3)?,
+            "fixture",
+        )?;
+        let client = HttpClient::new(&config)?;
+        let budget = OperationBudget::new(config.limits())?;
+        let response = client
+            .write_once_cbor(&["tx", "submit"], &[], BODY, &budget)
+            .await?;
+        if status == 200 {
+            assert_eq!(response.into_success()?, b"\"fixture-private-response\"");
+        } else {
+            let error = response
+                .into_success()
+                .map_err(submission_unknown)
+                .err()
+                .ok_or("expected status failure")?;
+            assert_eq!(
+                error,
+                Error::SubmissionOutcomeUnknown(if status == 429 {
+                    SubmissionFailure::RateLimited
+                } else {
+                    SubmissionFailure::HttpStatus
+                })
+            );
+            assert!(!format!("{error:?} {error}").contains("fixture-private-response"));
+        }
+        let (headers, body) = task.await??;
+        assert!(headers.starts_with("POST /api/v0/tx/submit HTTP/1.1"));
+        assert!(headers.contains("content-type: application/cbor"));
+        assert!(!headers.contains("fixture-wrong-content-type"));
+        assert!(headers.contains("project_id: fixture-project-secret"));
+        assert_eq!(body, BODY);
+    }
+    Ok(())
+}

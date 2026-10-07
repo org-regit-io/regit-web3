@@ -264,6 +264,10 @@ validation_errors! {
     InvalidCardanoAsset => "invalid Cardano asset identity",
     /// A Cardano record violates its structural contract.
     InvalidCardanoRecord => "invalid Cardano record",
+    /// A Cardano transaction violates its bounded era-aware source contract.
+    InvalidCardanoTransaction => "invalid Cardano transaction",
+    /// A Cardano preparation violates its explicit unsigned payment contract.
+    InvalidCardanoPreparation => "invalid Cardano preparation",
     /// A bounded page request is invalid.
     InvalidPageRequest => "invalid page request",
     /// A Cardano output amount exceeds its supported width.

@@ -65,11 +65,15 @@
 //! Read results retain actual slot context. Bitcoin's optional `bitcoin-esplora`
 //! backend verifies the full genesis hash and reads address balances, bounded
 //! history, exact fee estimates, transaction status, and canonical raw/indexed
-//! transaction retrieval. Cardano provides pure
-//! balance/UTxO reader contracts; the optional `blockfrost-http` backend verifies
-//! network magic and reads current indexed ADA/native-asset balances and explicit
-//! `UTxO` pages. Indexed reads do not establish a hash-selected snapshot or lasting
-//! finality. `CoinGecko` provides pure search, ID/currency price, markets-page and
+//! transaction retrieval. Cardano provides exact indexed records, original-CBOR
+//! body hashing, typed readers and explicit Conway key-spend payment preparation.
+//! The optional `blockfrost-http` backend verifies network magic and implements
+//! seventeen indexed read/estimate methods plus separate one-shot raw-CBOR
+//! submission. Declared fees and failed-script collateral stay separate from
+//! indexed paid fees. Structural witness checks do not verify signatures; source
+//! acknowledgement does not establish execution. Indexed reads do not establish
+//! a hash-selected snapshot or lasting finality. `CoinGecko` provides pure search,
+//! ID/currency price, markets-page and
 //! historical-chart contracts; `coingecko-http` supplies explicit anonymous or
 //! Demo/Pro-header reads with exact prices and independently timed series.
 //! `DefiLlama` provides pure TVL, yield, stablecoin and USD analytics contracts;
