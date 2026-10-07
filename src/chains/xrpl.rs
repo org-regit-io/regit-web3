@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! XRP Ledger capabilities with exact balances and optional outgoing HTTP reads.
+//! XRP Ledger capabilities with exact balances and optional outgoing HTTP operations.
 //!
 //! Ledger validation remains source-reported. Unsigned Payment fields are local;
 //! callers own signing, fee selection and approval policy.
@@ -11,7 +11,8 @@ use std::future::Future;
 use crate::{
     domain::xrpl::{
         AccountBalance, Address, FeeEstimate, Hash, HistoryPage, HistoryRequest, Observation,
-        PageRequest, Transaction, TransactionStatus, TrustLinePage,
+        PageRequest, SignedSubmission, SubmissionResult, Transaction, TransactionStatus,
+        TrustLinePage,
     },
     error::Error,
 };
@@ -60,4 +61,18 @@ pub trait XrplReader {
         account: Address,
         request: HistoryRequest,
     ) -> impl Future<Output = Result<Observation<HistoryPage>, Error>> + Send;
+}
+
+/// Explicit statically dispatched submission of caller-supplied signed bytes.
+///
+/// Separate from preparation and reads. Implementations do not sign, fill fields
+/// or automatically retry submissions. Preliminary acceptance is not validated
+/// execution. Dropping or externally timing out the future after dispatch cannot
+/// establish that the transaction was not submitted.
+pub trait XrplSubmitter {
+    /// Sends one explicit payload and retains unknown outcomes after dispatch.
+    fn submit_signed(
+        &self,
+        submission: SignedSubmission,
+    ) -> impl Future<Output = Result<Observation<SubmissionResult>, Error>> + Send;
 }

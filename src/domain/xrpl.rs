@@ -10,12 +10,17 @@
 mod identity;
 mod observation;
 mod payment;
+mod submission;
 mod transaction;
 mod value;
 
 pub use identity::{Address, Currency, Hash, Network, NetworkId, XAddress, XAddressCategory};
 pub use observation::{Context, Ledger, Observation, Operation};
 pub use payment::{Destination, PaymentAmount, PaymentRequest, PreparedPayment};
+pub use submission::{
+    EngineResultClass, EngineResultCode, SignedSubmission, SubmissionHandling,
+    SubmissionLedgerState, SubmissionResult,
+};
 pub use transaction::{
     HexData, HistoryMarker, HistoryPage, HistoryRequest, LedgerRange, ResultCode, Transaction,
     TransactionStatus,

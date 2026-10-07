@@ -16,12 +16,12 @@ use crate::{
         Source, Timestamp,
         xrpl::{
             AccountBalance, Address, Context, FeeEstimate, Hash, HistoryPage, HistoryRequest,
-            Ledger, LedgerRange, Network, Observation, Operation, PageRequest, Transaction,
-            TransactionStatus, TrustLinePage,
+            Ledger, LedgerRange, Network, Observation, Operation, PageRequest, SignedSubmission,
+            SubmissionResult, Transaction, TransactionStatus, TrustLinePage,
         },
     },
-    error::{Error, ProviderError},
-    transport::{HttpClient, OperationBudget},
+    error::{Error, ProviderError, ValidationError},
+    transport::{HttpClient, OperationBudget, submission_unknown},
 };
 
 use super::wire::{
@@ -53,7 +53,7 @@ impl XrplHttpConfig {
     }
 }
 
-/// An optional XRPL HTTP reader verifying server-reported network ID per operation.
+/// An optional XRPL HTTP backend verifying server-reported network ID per operation.
 ///
 /// The caller supplies a Tokio runtime with I/O and time enabled. No runtime,
 /// credentials or endpoints are discovered. API-v2 XRPL `result.status` is
@@ -84,6 +84,61 @@ impl XrplClient {
     #[must_use]
     pub const fn config(&self) -> &XrplHttpConfig {
         &self.config
+    }
+
+    /// Submits exactly one explicit caller-supplied signed payload using API v2.
+    ///
+    /// Byte/hash identity is checked; binary canonicality, embedded network,
+    /// signatures and reviewed intent are not verified. Server acceptance and
+    /// preliminary engine results never establish validated execution. The
+    /// supported submit-only response includes handling flags and echoed bytes;
+    /// API versions or servers omitting these facts cannot establish this result.
+    ///
+    /// Preflight reads may use configured safe-read retries. The write never
+    /// retries, for any `fail_hard` value, HTTP status or connection failure.
+    /// Dropping or externally timing out this future after dispatch leaves a
+    /// potentially submitted transaction; use its known hash for later lookup.
+    ///
+    /// # Errors
+    /// Configuration, network and preflight failures dispatch no write. Once
+    /// execution is attempted, unresolved transport, response or deadline errors
+    /// return `SubmissionOutcomeUnknown`, never evidence of definite rejection.
+    ///
+    /// # Panics
+    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    pub async fn submit_signed(
+        &self,
+        submission: SignedSubmission,
+    ) -> Result<Observation<SubmissionResult>, Error> {
+        if submission.network() != self.config.network().identity() {
+            return Err(ValidationError::NetworkMismatch.into());
+        }
+        let budget = OperationBudget::new(self.config.http_config().limits())?;
+        let body = wire::encode(
+            "submit",
+            &wire::SubmitRequest {
+                api_version: 2,
+                tx_blob: submission.payload(),
+                fail_hard: submission.fail_hard(),
+            },
+        )?;
+        budget.run(self.verify_network(&budget)).await?;
+        let response = self
+            .http
+            .write_once(&[], &[], &body, &budget)
+            .await?
+            .into_success()
+            .map_err(submission_unknown)?;
+        let result: wire::SubmitResult = wire::decode(&response).map_err(submission_unknown)?;
+        let value = result
+            .into_domain(submission.payload(), submission.hash())
+            .map_err(submission_unknown)?;
+        let context = self
+            .context(Operation::Submission, None, "submit")
+            .map_err(submission_unknown)?;
+        let observed = Observation::submission(value, context).map_err(submission_unknown)?;
+        budget.check_remaining().map_err(submission_unknown)?;
+        Ok(observed)
     }
 
     /// Retrieves exact opaque transaction/metadata bytes with a recomputed transaction ID.
@@ -507,5 +562,13 @@ impl super::XrplReader for XrplClient {
         request: HistoryRequest,
     ) -> Result<Observation<HistoryPage>, Error> {
         Self::get_account_history(self, account, request).await
+    }
+}
+impl super::XrplSubmitter for XrplClient {
+    async fn submit_signed(
+        &self,
+        submission: SignedSubmission,
+    ) -> Result<Observation<SubmissionResult>, Error> {
+        Self::submit_signed(self, submission).await
     }
 }

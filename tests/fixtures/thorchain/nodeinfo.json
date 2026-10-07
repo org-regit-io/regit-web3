@@ -1,0 +1,8 @@
+{
+  "default_node_info": {
+    "network": "thorchain-1"
+  },
+  "application_version": {
+    "version": "3.20.3"
+  }
+}

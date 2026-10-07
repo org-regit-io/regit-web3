@@ -10,6 +10,8 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
 | [`coingecko_live`](../tests/coingecko_live.rs) | `coingecko-http` | Search, ID/currency prices, one markets page and history; explicit anonymous API base/source/item bound/listing/currency/search/time range |
 | [`defillama_live`](../tests/defillama_live.rs) | `defillama-http` | TVL/history, yields/history, stablecoins/history and all four analytics metrics; three explicit bases/source labels plus item bound/protocol/pool/chain/stablecoin/analytics IDs |
+| [`mempool_space_live`](../tests/mempool_space_live.rs) | `mempool-space-http` | Backlog, recent arrivals, full bounded IDs, recommended fees, canonical transaction and status; explicit API base/source/network/alias/confirmed transaction/full-list capacity |
+| [`thorchain_live`](../tests/thorchain_live.rs) | `thorchain-http` | RUNE balance, individual/complete layer-one pool reads, network values, swap quote, inbound vaults, chain heights and transaction progress; explicit API base/source/Cosmos chain ID/account prefix/alias/account/assets/amount/destination/transaction/item bound |
 
 After setting the linked test's required inputs, select its feature and target:
 
@@ -19,9 +21,81 @@ cargo test --locked --no-default-features --features bitcoin-esplora --test bitc
 cargo test --locked --no-default-features --features xrpl-http --test xrpl_live -- --ignored --nocapture
 cargo test --locked --no-default-features --features coingecko-http --test coingecko_live -- --ignored --nocapture
 cargo test --locked --no-default-features --features defillama-http --test defillama_live -- --ignored --nocapture
+cargo test --locked --no-default-features --features mempool-space-http --test mempool_space_live -- --ignored --nocapture
+cargo test --locked --no-default-features --features thorchain-http --test thorchain_live -- --ignored --nocapture
 ```
 
 Missing inputs or source errors fail an explicitly selected test. Read qualification applies to the recorded operation/provider/network/query; it does not establish full-library readiness or lasting finality. Bitcoin and provider data are separately retrieved indexed observations. Solana slot minimums are lower bounds; XRPL account/trustline reads retain a resolved validated ledger hash, while range/pending observations retain no invented hash.
+
+## Wallet preparation and handoff
+
+The default library includes typed `Preparation`, `PreparedRequest`, read-only
+`Review`, caller-generated `HandoffId` and request/response records. A response
+remains unverified until `verify_handoff` first correlates its ID and snapshot,
+then invokes a trusted caller-supplied `SignedPayloadVerifier` against the actual
+signed content. `VerifiedSignedPayload` retains the original preparation and
+cannot be restored by deserialization. Custom snapshot and verifier contracts
+are part of this trust boundary.
+
+With `xrpl`, `XrplPaymentPreparation` derives ordinary unsigned Payment JSON fields
+from validated intent. These are reviewable fields, not binary signing bytes.
+The library supplies no concrete cryptographic verifier, signer or connector;
+these wallet operations do not sign or submit. See the [generic contract fixtures](../tests/wallets.rs)
+and [XRPL adapter fixtures](../tests/wallets_xrpl.rs), which require no runtime or
+external wallet:
+
+```sh
+cargo test --locked --no-default-features --test wallets
+cargo test --locked --no-default-features --features xrpl --test wallets_xrpl
+```
+
+## mempool.space reads
+
+This explicit mainnet input selects all six read methods. The harness uses a
+16 MiB body ceiling and a 100000-ID capacity for the full, unpaged mempool list;
+exceeding either bound fails the operation. It never returns a truncated list.
+Recent arrivals are capped at ten by the provider. Summary and list counts can
+change between requests and are not required to agree.
+
+```sh
+env \
+  REGIT_WEB3_MEMPOOL_SPACE_URL='https://mempool.space/api' \
+  REGIT_WEB3_MEMPOOL_SPACE_PROVIDER_ID='mempool-public' \
+  REGIT_WEB3_MEMPOOL_SPACE_NETWORK='mainnet' \
+  REGIT_WEB3_MEMPOOL_SPACE_NETWORK_ALIAS='bitcoin' \
+  REGIT_WEB3_MEMPOOL_SPACE_MAX_TXIDS='100000' \
+  REGIT_WEB3_MEMPOOL_SPACE_TXID='14396c6a212fce4a794501b5840c718a700daa9e462427fed22a7f38d5197b1e' \
+  cargo test --locked --no-default-features --features mempool-space-http \
+    --test mempool_space_live -- --ignored --nocapture --test-threads=1
+```
+
+## THORChain reads and quotes
+
+This explicit mainnet input selects all eight read/quote methods. The harness
+supplies the Cosmos chain ID and account prefix independently, a 2 MiB body
+ceiling and a 1000-item collection capacity. Quotes retain requested input and
+amount in protocol 1e8 units; the source can expand asset identifiers without
+reporting the resolved input. The backend records unreported input resolution
+and checks the full output fee identity and current expiry. Source cross-chain
+progress does not independently establish external inclusion or signed execution.
+
+```sh
+env \
+  REGIT_WEB3_THORCHAIN_URL='https://gateway.liquify.com/chain/thorchain_api' \
+  REGIT_WEB3_THORCHAIN_PROVIDER_ID='liquify-thornode' \
+  REGIT_WEB3_THORCHAIN_CHAIN_ID='thorchain-1' \
+  REGIT_WEB3_THORCHAIN_ACCOUNT_PREFIX='thor' \
+  REGIT_WEB3_THORCHAIN_NETWORK_ALIAS='mainnet' \
+  REGIT_WEB3_THORCHAIN_ACCOUNT='thor1dheycdevq39qlkxs2a6wuuzyn4aqxhve4qxtxt' \
+  REGIT_WEB3_THORCHAIN_FROM_ASSET='BTC.BTC' \
+  REGIT_WEB3_THORCHAIN_TO_ASSET='ETH.ETH' \
+  REGIT_WEB3_THORCHAIN_AMOUNT='100000000' \
+  REGIT_WEB3_THORCHAIN_DESTINATION='0x1c7b17362c84287bd1184447e6dfeaf920c31bbe' \
+  REGIT_WEB3_THORCHAIN_MAX_ITEMS='1000' \
+  REGIT_WEB3_THORCHAIN_TXID='A3F81568387CD3880AED812780799E8F6D3F970E071F7B1861B581B20399F21F' \
+  cargo test --locked --no-default-features --features thorchain-http \
+    --test thorchain_live -- --ignored --nocapture
+```
 
 ## Bitcoin full transaction retrieval
 

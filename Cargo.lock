@@ -2095,6 +2095,7 @@ name = "regit-web3"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "bech32",
  "bigdecimal",
  "bitcoin",
  "bs58",

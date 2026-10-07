@@ -10,3 +10,5 @@ mod rpc;
 
 pub(crate) use budget::OperationBudget;
 pub(crate) use http::HttpClient;
+#[cfg(feature = "xrpl-http")]
+pub(crate) use http::submission_unknown;

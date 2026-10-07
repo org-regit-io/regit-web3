@@ -48,6 +48,9 @@ name = "native_balance"
 required-features = ["evm-http"]
 
 [dependencies]
+bech32 = { version = "=0.11.1", default-features = false, features = [
+  "std",
+], optional = true }
 base64 = { version = "=0.23.1", default-features = false, features = [
   "std",
 ], optional = true }
@@ -59,7 +62,6 @@ bitcoin = { version = "=0.32.102", default-features = false, features = [
 ], optional = true }
 bs58 = { version = "=0.5.1", default-features = false, features = [
   "std",
-  "check",
 ], optional = true }
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
@@ -124,10 +126,11 @@ bitcoin-esplora = ["bitcoin", "http"]
 litecoin = []
 dogecoin = []
 bitcoin-cash = []
-xrpl = ["dep:bs58", "dep:sha2"]
+xrpl = ["dep:bs58", "bs58/check", "dep:sha2"]
 xrpl-http = ["xrpl", "http"]
 ton = []
-thorchain = []
+thorchain = ["dep:bech32", "dep:bs58"]
+thorchain-http = ["thorchain", "http"]
 
 jupiter = ["solana"]
 uniswap = ["evm"]
@@ -143,6 +146,7 @@ helius = ["solana"]
 blockfrost = ["cardano"]
 blockfrost-http = ["blockfrost", "http"]
 mempool-space = ["bitcoin"]
+mempool-space-http = ["mempool-space", "bitcoin-esplora"]
 
 all = [
   "evm",
@@ -159,6 +163,7 @@ all = [
   "xrpl-http",
   "ton",
   "thorchain",
+  "thorchain-http",
   "jupiter",
   "uniswap",
   "oneinch",
@@ -172,4 +177,5 @@ all = [
   "blockfrost",
   "blockfrost-http",
   "mempool-space",
+  "mempool-space-http",
 ]

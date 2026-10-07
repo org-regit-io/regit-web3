@@ -8,8 +8,9 @@ use serde_json::value::RawValue;
 
 use crate::{
     domain::xrpl::{
-        Address, Currency, Drops, Hash, HexData, HistoryMarker, IssuedValue, Ledger, LineFlags,
-        Marker, ResultCode, Setting, Transaction, TransactionStatus, TrustLine,
+        Address, Currency, Drops, EngineResultCode, Hash, HexData, HistoryMarker, IssuedValue,
+        Ledger, LineFlags, Marker, ResultCode, Setting, SubmissionHandling, SubmissionLedgerState,
+        SubmissionResult, Transaction, TransactionStatus, TrustLine,
     },
     error::{Error, ProviderError},
 };
@@ -130,6 +131,107 @@ pub(super) fn decode<T: DeserializeOwned>(body: &[u8]) -> Result<T, Error> {
 #[derive(Serialize)]
 pub(super) struct ApiOptions {
     pub(super) api_version: u8,
+}
+
+#[derive(Serialize)]
+pub(super) struct SubmitRequest<'a> {
+    pub(super) api_version: u8,
+    pub(super) tx_blob: &'a HexData,
+    pub(super) fail_hard: bool,
+}
+
+#[derive(Deserialize)]
+pub(super) struct SubmitResult {
+    engine_result: EngineResultCode,
+    #[serde(rename = "engine_result_code")]
+    _engine_result_code: i32,
+    #[serde(rename = "engine_result_message")]
+    _engine_result_message: IgnoredString,
+    tx_blob: HexData,
+    tx_json: SubmitJson,
+    accepted: Setting,
+    applied: Setting,
+    broadcast: Setting,
+    kept: Setting,
+    queued: Setting,
+    #[serde(default)]
+    account_sequence_available: Field<u32>,
+    #[serde(default)]
+    account_sequence_next: Field<u32>,
+    #[serde(default)]
+    open_ledger_cost: Field<Drops>,
+    #[serde(default)]
+    validated_ledger_index: Field<u32>,
+}
+
+// Enforce the documented diagnostic shape without retaining remote text. The
+// enclosing derived deserializer still rejects a duplicate named field.
+struct IgnoredString;
+impl<'de> Deserialize<'de> for IgnoredString {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        struct StringVisitor;
+        impl serde::de::Visitor<'_> for StringVisitor {
+            type Value = IgnoredString;
+            fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str("a string")
+            }
+            fn visit_str<E: serde::de::Error>(self, _value: &str) -> Result<IgnoredString, E> {
+                Ok(IgnoredString)
+            }
+        }
+        d.deserialize_str(StringVisitor)
+    }
+}
+#[derive(Deserialize)]
+struct SubmitJson {
+    #[serde(default)]
+    hash: Field<Hash>,
+}
+impl SubmitResult {
+    pub(super) fn into_domain(
+        self,
+        payload: &HexData,
+        hash: Hash,
+    ) -> Result<SubmissionResult, Error> {
+        if self.tx_blob != *payload
+            || self.tx_blob.transaction_hash() != hash
+            || matches!(self.tx_json.hash, Field::Present(actual) if actual != hash)
+        {
+            return Err(invalid_response());
+        }
+        let handling = SubmissionHandling::new(
+            self.accepted,
+            self.applied,
+            self.broadcast,
+            self.kept,
+            self.queued,
+        )
+        .map_err(|_| invalid_response())?;
+        let state = match (
+            self.account_sequence_available,
+            self.account_sequence_next,
+            self.open_ledger_cost,
+            self.validated_ledger_index,
+        ) {
+            (Field::Missing, Field::Missing, Field::Missing, Field::Missing) => None,
+            (
+                Field::Present(available),
+                Field::Present(next),
+                Field::Present(cost),
+                Field::Present(index),
+            ) => Some(
+                SubmissionLedgerState::new(available, next, cost, index)
+                    .map_err(|_| invalid_response())?,
+            ),
+            _ => return Err(invalid_response()),
+        };
+        Ok(SubmissionResult::new(
+            hash,
+            self.engine_result,
+            handling,
+            state,
+        ))
+    }
 }
 #[derive(Deserialize)]
 pub(super) struct ServerResult {

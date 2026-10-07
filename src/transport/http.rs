@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Bounded HTTP sending, URL policy, response limits, and safe-read retries.
+//! Bounded HTTP sending, URL policy, safe-read retries and one-shot writes.
 
 use std::time::Duration;
 
@@ -18,6 +18,9 @@ use crate::{
 };
 
 use super::OperationBudget;
+
+#[cfg(feature = "xrpl-http")]
+use crate::error::SubmissionFailure;
 
 const RETRY_DELAY: Duration = Duration::from_millis(25);
 
@@ -84,6 +87,48 @@ impl HttpClient {
     ) -> Result<HttpResponse, Error> {
         let url = self.request_url(path, query)?;
         budget.run(self.read_attempts(&url, json_body)).await
+    }
+
+    // This boundary executes exactly one POST, regardless of safe-read retry
+    // settings. Building and checking the deadline happen before execute. Once
+    // execution is attempted, unresolved failures retain possible dispatch;
+    // dropping the future also cannot establish that no submission occurred.
+    #[cfg(feature = "xrpl-http")]
+    pub(crate) async fn write_once(
+        &self,
+        path: &[&str],
+        query: &[(&str, &str)],
+        json_body: &[u8],
+        budget: &OperationBudget,
+    ) -> Result<HttpResponse, Error> {
+        let url = self.request_url(path, query)?;
+        let request = self
+            .client
+            .post(url)
+            .header(CONTENT_TYPE, "application/json")
+            .headers(self.config.endpoint().headers.clone())
+            .body(json_body.to_owned())
+            .build()
+            .map_err(|_| Error::Configuration)?;
+        budget.check_remaining()?;
+        let execution = self.client.execute(request);
+        budget
+            .run(async {
+                let response = execution
+                    .await
+                    .map_err(|error| AttemptFailure::transport(&error).error)?;
+                let status = response.status();
+                let body = if status.is_success() {
+                    bounded_body(response, self.config.limits().max_response_bytes())
+                        .await
+                        .map_err(|failure| failure.error)?
+                } else {
+                    Vec::new()
+                };
+                Ok(HttpResponse { status, body })
+            })
+            .await
+            .map_err(submission_unknown)
     }
 
     fn request_url(&self, path: &[&str], query: &[(&str, &str)]) -> Result<Url, Error> {
@@ -161,6 +206,27 @@ impl HttpClient {
     }
 }
 
+#[cfg(feature = "xrpl-http")]
+pub(crate) const fn submission_unknown(error: Error) -> Error {
+    let reason = match error {
+        Error::SubmissionOutcomeUnknown(reason) => return Error::SubmissionOutcomeUnknown(reason),
+        Error::Timeout => SubmissionFailure::Timeout,
+        Error::Provider(ProviderError::Transport) => SubmissionFailure::Transport,
+        Error::Provider(ProviderError::RateLimited) => SubmissionFailure::RateLimited,
+        Error::Provider(ProviderError::HttpStatus) => SubmissionFailure::HttpStatus,
+        Error::Provider(ProviderError::ResponseTooLarge) => SubmissionFailure::ResponseTooLarge,
+        Error::Provider(ProviderError::Rpc) => SubmissionFailure::Rpc,
+        Error::Configuration
+        | Error::Validation(_)
+        | Error::UnsupportedCapability
+        | Error::UnavailableData
+        | Error::Provider(ProviderError::InvalidResponse | ProviderError::ChainMismatch) => {
+            SubmissionFailure::InvalidResponse
+        }
+    };
+    Error::SubmissionOutcomeUnknown(reason)
+}
+
 pub(crate) struct HttpResponse {
     pub(crate) status: StatusCode,
     body: Vec<u8>,
@@ -235,3 +301,7 @@ async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>,
 #[cfg(test)]
 #[path = "tests.rs"]
 mod tests;
+
+#[cfg(all(test, feature = "xrpl-http"))]
+#[path = "write_tests.rs"]
+mod write_tests;

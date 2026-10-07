@@ -26,6 +26,9 @@ pub enum Error {
     Timeout,
     /// A provider operation failed.
     Provider(ProviderError),
+    /// An outgoing submission was attempted, but its outcome could not be established.
+    /// The request may have reached the server; this is not evidence of rejection.
+    SubmissionOutcomeUnknown(SubmissionFailure),
     /// The requested data is unavailable at the selected source.
     UnavailableData,
 }
@@ -40,6 +43,7 @@ impl Error {
             Self::UnsupportedCapability => "unsupported_capability",
             Self::Timeout => "timeout",
             Self::Provider(_) => "provider",
+            Self::SubmissionOutcomeUnknown(_) => "submission_outcome_unknown",
             Self::UnavailableData => "unavailable_data",
         }
     }
@@ -53,12 +57,48 @@ impl fmt::Display for Error {
             Self::UnsupportedCapability => formatter.write_str("unsupported capability"),
             Self::Timeout => formatter.write_str("operation timed out"),
             Self::Provider(reason) => reason.fmt(formatter),
+            Self::SubmissionOutcomeUnknown(reason) => {
+                write!(formatter, "submission outcome unknown: {reason}")
+            }
             Self::UnavailableData => formatter.write_str("data unavailable at source"),
         }
     }
 }
 
 impl std::error::Error for Error {}
+
+/// A fixed, input-free cause of an attempted submission's unknown outcome.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SubmissionFailure {
+    /// The attempted submission exceeded its time limit.
+    Timeout,
+    /// Connection or response-body transfer failed after dispatch was attempted.
+    Transport,
+    /// The server returned HTTP 429 after dispatch was attempted.
+    RateLimited,
+    /// The server returned another non-success HTTP status after attempted dispatch.
+    HttpStatus,
+    /// The submission response exceeded its configured body limit.
+    ResponseTooLarge,
+    /// The submission response was malformed or mismatched after attempted dispatch.
+    InvalidResponse,
+    /// An RPC error was returned after dispatch was attempted.
+    Rpc,
+}
+impl fmt::Display for SubmissionFailure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::Timeout => "operation timed out",
+            Self::Transport => "transport failed",
+            Self::RateLimited => "provider rate limited",
+            Self::HttpStatus => "non-success HTTP response",
+            Self::ResponseTooLarge => "response body too large",
+            Self::InvalidResponse => "invalid provider response",
+            Self::Rpc => "provider RPC error",
+        })
+    }
+}
 
 /// The contract violated by an input value.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
@@ -112,6 +152,22 @@ pub enum ValidationError {
     InvalidBitcoinTransaction,
     /// Bitcoin bytes violate bounded canonical hexadecimal or script encoding.
     InvalidBitcoinBytes,
+    /// A mempool summary, collection, fee rate or recent record is inconsistent.
+    InvalidMempoolRecord,
+    /// A `THORChain` network identity is invalid.
+    InvalidThorchainNetwork,
+    /// A `THORChain` account address is invalid.
+    InvalidThorchainAddress,
+    /// A `THORChain` asset identity is invalid.
+    InvalidThorchainAsset,
+    /// A `THORChain` record violates its typed structural contract.
+    InvalidThorchainRecord,
+    /// A caller-supplied wallet handoff identifier violates its lexical or length contract.
+    InvalidWalletHandoffId,
+    /// Returned handoff identity, network, intent or unsigned bytes differ from reviewed preparation.
+    WalletBindingMismatch,
+    /// A trusted verifier rejected the binding of actual signed contents to reviewed preparation.
+    SignedPayloadRejected,
     /// A Bitcoin observation uses an unsupported schema version.
     UnsupportedBitcoinSchema,
     /// A Cardano address has invalid encoding or checksum.
@@ -191,6 +247,14 @@ impl fmt::Display for ValidationError {
             Self::InvalidBitcoinFeeEstimate => "invalid Bitcoin fee estimate",
             Self::InvalidBitcoinTransaction => "invalid Bitcoin transaction",
             Self::InvalidBitcoinBytes => "invalid Bitcoin byte encoding",
+            Self::InvalidMempoolRecord => "invalid mempool record",
+            Self::InvalidThorchainNetwork => "invalid THORChain network identity",
+            Self::InvalidThorchainAddress => "invalid THORChain account address",
+            Self::InvalidThorchainAsset => "invalid THORChain asset identity",
+            Self::InvalidThorchainRecord => "invalid THORChain record",
+            Self::InvalidWalletHandoffId => "invalid wallet handoff identifier",
+            Self::WalletBindingMismatch => "wallet handoff does not match reviewed preparation",
+            Self::SignedPayloadRejected => "signed payload rejected by verifier",
             Self::UnsupportedBitcoinSchema => "unsupported Bitcoin observation schema",
             Self::InvalidCardanoAddress => "invalid Cardano address",
             Self::InvalidCardanoNetwork => "invalid Cardano network identity",

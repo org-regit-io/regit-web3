@@ -3,9 +3,25 @@
 
 //! Wallet transaction preparation, review and external signing-handoff contracts.
 //!
-//! The module scope includes typed unsigned payloads, reviewed-payload binding,
-//! and verification extensions for returned signed payloads. Preparation and
-//! submission are separate operations; reads never construct a signer or load
-//! keys. Signing backends, secrets and approval policy are caller-owned.
-//! Preparation/handoff contracts and concrete wallet backends are not implemented
-//! yet; backends remain modular extensions.
+//! Preparations retain family-specific network, intent and unsigned payload
+//! types. A handoff binds a caller-generated ID to that exact snapshot. A returned
+//! signed payload remains unverified until a trusted caller-supplied verifier
+//! confirms actual signed-content binding. Echoed metadata is not verification.
+//!
+//! Custom preparation and signed types must represent immutable snapshots.
+//! The library cannot police interior mutability, incomplete equality or a
+//! dishonest verifier implementation. Signing, approval, replay tracking and
+//! custody are caller-owned; these operations never sign or submit transactions.
+
+mod handoff;
+mod preparation;
+#[cfg(feature = "xrpl")]
+mod xrpl;
+
+pub use handoff::{
+    HandoffId, HandoffRequest, HandoffResponse, SignedPayloadVerifier, VerificationDecision,
+    VerifiedSignedPayload, verify_handoff,
+};
+pub use preparation::{Preparation, PreparedRequest, Review};
+#[cfg(feature = "xrpl")]
+pub use xrpl::XrplPaymentPreparation;

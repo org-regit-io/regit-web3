@@ -45,18 +45,42 @@
 //! `defillama-http` supplies independently configured TVL/analytics, yield and
 //! stablecoin sources. Peg-denominated circulation, USD valuations and percent
 //! APYs remain distinct; large datasets fail at explicit limits without truncation.
-//! Solana, Bitcoin, XRPL and these market-provider backends have representative live
-//! qualification alongside deterministic fixtures. This is point-in-time source
-//! evidence; Cardano's backend has fixture coverage with live proof pending.
+//! `mempool-space-http` supplies genesis-checked mempool summaries, bounded recent
+//! and full-ID lists, exact sat/vB recommendations and compatible canonical
+//! Bitcoin transaction/status retrieval. Moving observations are independent;
+//! complete lists fail at explicit limits without truncation or invented paging.
+//! `THORChain` supplies pure Cosmos/asset identities and exact protocol records;
+//! `thorchain-http` supplies RUNE balances, individual/complete layer-one pool
+//! reads, network values, swap quotes, inbound vaults, chain heights and
+//! transaction progress. Cosmos chain ID and account prefix remain separate.
+//! Quotes preserve requested input identity and quantity; the source can expand
+//! identifiers without reporting its resolved input, which remains explicitly
+//! unreported. Full output fee identity
+//! and expiry are checked. Per-chain heights and source stages do not establish
+//! a common snapshot, independent external inclusion or signed execution.
+//! Solana, Bitcoin, XRPL and these provider backends have representative read-live
+//! qualification; `THORChain` has representative read/quote qualification.
+//! Deterministic fixtures cover each implemented backend. This is point-in-time
+//! source evidence; Cardano's live proof remains pending.
 //! XRPL provides classic/X-address identities, exact drops and issued values,
 //! source-attributed ledger observations, and ordinary unsigned Payment JSON
 //! preparation. Its `xrpl-http` backend supplies ledger-anchored account/trustline
 //! reads, explicit fee estimates, computed-ID opaque transaction retrieval,
 //! separate execution/inclusion status, and bounded explicit-range account
 //! history. Binary history retains omitted ledger hashes without inventing a
-//! common anchor. Signed submission and advanced preparation remain pending.
-//! Wider chain and provider operations, protocol operations, and wallet handoff
-//! contracts remain pending.
+//! common anchor. Explicit signed-payload submission uses one write attempt and
+//! preserves unresolved outcomes after dispatch; this submit-only path has fixture
+//! qualification, without a funded live submission. Payment preparation covers
+//! ordinary sequence-based XRP/issued transfers; concrete signing and additional
+//! transaction families remain separate extensions.
+//! The [`wallets`] module supplies generic typed preparation, read-only review and
+//! external handoff. Caller-generated IDs and exact snapshots are correlated
+//! before a trusted caller-supplied verifier checks actual signed-content binding.
+//! Confirmed output has no unchecked constructor or deserialization path. The
+//! `xrpl` feature supplies an ordinary Payment JSON adapter; concrete cryptographic
+//! verification, signing, custody and connectors remain separate extensions.
+//! Preparation and handoff do not submit. Wider chain and provider operations and
+//! protocol operations remain pending.
 //!
 //! Read a native balance through an established EVM client:
 //!
@@ -87,7 +111,7 @@ pub mod domain;
 pub mod error;
 pub mod protocols;
 pub mod providers;
-// Compile the private transport when a concrete consumer or its tests use it.
+// Compile the private transport when a concrete backend or its tests use it.
 // Extend this predicate as additional integrations are implemented.
 #[cfg(all(
     feature = "http",
@@ -99,6 +123,8 @@ pub mod providers;
         feature = "xrpl-http",
         feature = "coingecko-http",
         feature = "defillama-http",
+        feature = "mempool-space-http",
+        feature = "thorchain-http",
         test
     )
 ))]

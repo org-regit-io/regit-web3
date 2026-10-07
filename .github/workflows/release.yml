@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (c) 2026 Regit
 
-# Manual cross-platform library build validation; no publication.
+# Manual cross-platform library/example builds and offline fixtures; no publication.
 name: release-build
 
 on:
@@ -20,5 +20,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: toolchain
         run: rustup show
+      - name: fetch locked dependencies
+        run: cargo fetch --locked
       - name: build library
-        run: cargo build --release --lib --all-features --locked
+        run: cargo build --release --lib --all-features --locked --offline
+      - name: build examples
+        run: cargo build --release --examples --all-features --locked --offline
+      - name: offline fixture tests
+        run: cargo test --lib --tests --all-features --locked --offline

@@ -1,0 +1,14 @@
+[
+  {
+    "chain": "BTC",
+    "last_observed_in": 970269,
+    "last_signed_out": 28135239,
+    "thorchain": 28135243
+  },
+  {
+    "chain": "ETH",
+    "last_observed_in": 26137347,
+    "last_signed_out": 28135239,
+    "thorchain": 28135243
+  }
+]

@@ -28,9 +28,13 @@ pub mod evm;
 mod identity;
 #[cfg(any(feature = "coingecko", feature = "defillama"))]
 pub mod market;
+#[cfg(feature = "mempool-space")]
+pub mod mempool_space;
 mod observation;
 #[cfg(feature = "solana")]
 pub mod solana;
+#[cfg(feature = "thorchain")]
+pub mod thorchain;
 #[cfg(feature = "xrpl")]
 pub mod xrpl;
 

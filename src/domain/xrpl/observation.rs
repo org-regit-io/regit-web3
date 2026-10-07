@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
-    AccountBalance, FeeEstimate, Hash, HistoryPage, Network, Transaction, TransactionStatus,
-    TrustLinePage,
+    AccountBalance, FeeEstimate, Hash, HistoryPage, Network, SubmissionResult, Transaction,
+    TransactionStatus, TrustLinePage,
 };
 
 /// An explicitly source-reported XRP Ledger evaluation identity.
@@ -88,6 +88,8 @@ pub enum Operation {
     TransactionStatus,
     /// One bounded account-history page over an explicit range.
     AccountHistory,
+    /// Preliminary handling of an explicit signed transaction submission.
+    Submission,
 }
 
 /// Explicit XRP Ledger network, evaluation and retrieval attribution.
@@ -265,6 +267,18 @@ impl Observation<HistoryPage> {
         Self::new(value, context, Operation::AccountHistory)
     }
 }
+impl Observation<SubmissionResult> {
+    /// Attributes preliminary submission handling without fabricating inclusion.
+    ///
+    /// # Errors
+    /// Rejects operation mismatch or a fabricated transaction inclusion ledger.
+    pub fn submission(value: SubmissionResult, context: Context) -> Result<Self, Error> {
+        if context.ledger().is_some() {
+            return Err(ValidationError::InvalidXrplRecord.into());
+        }
+        Self::new(value, context, Operation::Submission)
+    }
+}
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Fields<T> {
@@ -294,3 +308,4 @@ observation_deserialize!(FeeEstimate, fee_estimate);
 observation_deserialize!(Transaction, transaction);
 observation_deserialize!(TransactionStatus, transaction_status);
 observation_deserialize!(HistoryPage, account_history);
+observation_deserialize!(SubmissionResult, submission);
