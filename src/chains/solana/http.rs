@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Bounded read-only Solana HTTP implementation over explicit configuration.
+//! Bounded Solana reads and explicitly invoked one-shot submission over HTTP.
+
+mod execution;
 
 use std::{
     fmt,
@@ -25,7 +27,7 @@ use super::wire::{
     BinaryAccount, ParsedAccount, RequestOptions, SlotValue, error_policy, invalid_response,
 };
 
-/// Explicit expected network and bounded HTTP configuration for Solana reads.
+/// Explicit expected network and bounded HTTP configuration for Solana operations.
 #[derive(Clone, Debug)]
 pub struct SolanaHttpConfig {
     network: Network,
@@ -52,12 +54,12 @@ impl SolanaHttpConfig {
     }
 }
 
-/// An optional HTTP reader verifying full Solana genesis identity at every read.
+/// An optional HTTP backend verifying full Solana genesis identity at every operation.
 ///
 /// The caller supplies a Tokio runtime with I/O and time drivers. The library
 /// creates no runtime and loads no endpoints or credentials. Requested
 /// commitment and minimum slot are retained; the minimum is not a historical
-/// anchor. A per-read genesis check does not make separate responses atomic.
+/// anchor. A per-operation genesis check does not make separate responses atomic.
 /// HTTP redirects, proxy discovery, decompression and implicit retries are off.
 pub struct SolanaClient {
     config: SolanaHttpConfig,

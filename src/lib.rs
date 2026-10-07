@@ -52,6 +52,14 @@
 //! signature, raw-field agreement or independently verified inclusion claims.
 //! Solana provides pure identities,
 //! account/balance/observation types, and native/token/account reader contracts.
+//! Maintained legacy/v0/v1 codecs validate canonical structure without verifying
+//! signatures. Ordinary recent-blockhash native/classic SPL preparation retains
+//! last-valid block height in wallet review. Transaction/status, blockhash/height,
+//! message-fee and unsigned-simulation capabilities preserve method-specific
+//! evaluation and inclusion facts. Separate one-shot signed submission sets node
+//! retries to zero and retains unknown post-dispatch outcomes. Seven added methods
+//! have representative mainnet proof: real v1 retrieval and successful unsigned
+//! native simulation; legacy/v0/SPL preparation and submission are fixture-qualified.
 //! Its optional `solana-http` backend verifies the full genesis hash and reads
 //! exact SOL balances, SPL token-account balances, and present/absent accounts.
 //! Read results retain actual slot context. Bitcoin's optional `bitcoin-esplora`
@@ -129,7 +137,8 @@
 //! Confirmed output has no unchecked constructor or deserialization path. The
 //! `evm` feature supplies canonical transaction preparation; the `xrpl` feature
 //! supplies an ordinary Payment JSON adapter; `uniswap` supplies an unsigned
-//! router-field adapter; `ton` supplies an internal-message adapter. Concrete cryptographic
+//! router-field adapter; `solana` supplies a canonical-message adapter; `ton`
+//! supplies an internal-message adapter. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
 //! other protocol operations remain pending.

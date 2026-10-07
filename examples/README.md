@@ -8,7 +8,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`litecoin_live`](../tests/litecoin_live.rs) | `litecoin-http` | Five documented mainnet BlockCypher reads and history continuation; explicit URL/source/genesis/alias/address/txid and history/transaction capacities |
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`bitcoin_cash_live`](../tests/bitcoin_cash_live.rs) | `bitcoin-cash-electrum` | Six Electrum-Cash TLS source reads; explicit host/port/server name/DER trust root/full genesis/fork checkpoint/address/txid/history interval/capacity/fee target |
-| [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL balance, present decoded account and individual SPL token account; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
+| [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL/account/SPL reads plus canonical transaction/status, recent hash/validity/height, exact message fee and unsigned simulation; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
 | [`coingecko_live`](../tests/coingecko_live.rs) | `coingecko-http` | Search, ID/currency prices, one markets page and history; explicit anonymous API base/source/item bound/listing/currency/search/time range |
@@ -331,3 +331,34 @@ history/status do not invent a common block or finality proof. Internal-message
 preparation encodes destination/value/bounce/body; outer-wallet sender/expiry are
 review policy for an external verifier. Submission has one-shot loopback proof
 only, with no funded write or signature-verification claim.
+
+## Solana transaction reads and unsigned simulation
+
+The added qualifier calls seven RPC methods through the public Rust API. Set
+these explicit public inputs, then select only the execution qualifier:
+
+```sh
+export REGIT_WEB3_SOLANA_URL=https://api.mainnet.solana.com
+export REGIT_WEB3_SOLANA_GENESIS_HASH=5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d
+export REGIT_WEB3_SOLANA_NETWORK_ALIAS=mainnet
+export REGIT_WEB3_SOLANA_PROVIDER_ID=solana-mainnet
+export REGIT_WEB3_SOLANA_COMMITMENT=confirmed
+export REGIT_WEB3_SOLANA_TRANSACTION_SIGNATURE=4ofUzrGeDGsRvg7oTzC133nSACkXMP9vagDw3RMyswa2AsAB9Vp9Vyh7EAY2WudZDjf43NJkN1KJLyo2mVYDvg5x
+export REGIT_WEB3_SOLANA_SIMULATION_FEE_PAYER=AXmnRBrNtYYyyo82cLBBhnWJ7o1iqNLZbuEVpDB3V666
+export REGIT_WEB3_SOLANA_SIMULATION_RECIPIENT=AXmnRBrNtYYyyo82cLBBhnWJ7o1iqNLZbuEVpDB3V666
+export REGIT_WEB3_SOLANA_SIMULATION_LAMPORTS=1
+export REGIT_WEB3_SOLANA_SIMULATION_EXPECTED_OUTCOME=success
+cargo test --locked --no-default-features --features solana-http \
+  --test solana_live solana_execution_reads_live -- --ignored --exact --nocapture
+```
+
+On 2026-10-07 this qualified a real 1956-byte v1 transaction, independent
+status, a fresh hash/last-valid block height, exact 5000-lamport message fee and
+a successful unsigned legacy self-transfer simulation consuming 150 compute
+units. Future account state can change the simulation result. The minimum slot
+is a lower bound, last-valid height is separate unencoded review policy, and
+separate responses do not share an atomic snapshot. Maintained legacy/v0 codecs,
+classic SPL TransferChecked preparation and one-shot submission have substantive
+fixture proof. No signed submission, signing or funded transfer was performed.
+[Fixture provenance](../tests/fixtures/solana_execution/README.md) retains the
+source vector and primary contracts.

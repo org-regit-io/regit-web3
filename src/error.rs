@@ -136,6 +136,12 @@ pub enum ValidationError {
     InvalidSolanaHash,
     /// A Solana signature has an invalid base58 encoding or byte length.
     InvalidSolanaSignature,
+    /// A Solana transaction violates its bounded supported encoding contract.
+    InvalidSolanaTransaction,
+    /// A Solana preparation violates its explicit unsigned transfer contract.
+    InvalidSolanaPreparation,
+    /// A Solana execution record violates its method-specific source contract.
+    InvalidSolanaExecution,
     /// A Solana native or token base-unit amount exceeds the unsigned 64-bit range.
     SolanaAmountOverflow,
     /// An observation context declares an operation differing from its value.
@@ -293,6 +299,9 @@ impl fmt::Display for ValidationError {
             Self::InvalidSolanaPubkey => "invalid Solana public key",
             Self::InvalidSolanaHash => "invalid Solana hash",
             Self::InvalidSolanaSignature => "invalid Solana signature",
+            Self::InvalidSolanaTransaction => "invalid Solana transaction",
+            Self::InvalidSolanaPreparation => "invalid Solana transaction preparation",
+            Self::InvalidSolanaExecution => "invalid Solana execution record",
             Self::SolanaAmountOverflow => "Solana amount exceeds 64 bits",
             Self::ObservationOperationMismatch => "observation operation and value differ",
             Self::ContextSlotBelowMinimum => "observation slot is below requested minimum",

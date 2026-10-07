@@ -48,7 +48,12 @@ pub(crate) use budget::OperationBudget;
     )
 ))]
 pub(crate) use http::HttpClient;
-#[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
+#[cfg(any(
+    feature = "xrpl-http",
+    feature = "evm-http",
+    feature = "ton-http",
+    feature = "solana-http"
+))]
 pub(crate) use http::submission_unknown;
-#[cfg(feature = "evm-http")]
+#[cfg(any(feature = "evm-http", feature = "solana-http"))]
 pub(crate) use rpc::{decode_response, encode_request};

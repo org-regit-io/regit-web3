@@ -48,6 +48,28 @@ name = "native_balance"
 required-features = ["evm-http"]
 
 [dependencies]
+solana-message = { version = "=5.1.0", default-features = false, features = [
+  "std",
+  "wincode",
+], optional = true }
+solana-transaction = { version = "=5.1.0", default-features = false, features = [
+  "std",
+  "wincode",
+], optional = true }
+solana-system-interface = { version = "=3.3.0", default-features = false, features = [
+  "std",
+  "wincode",
+], optional = true }
+solana-instruction = { version = "=4.0.0", default-features = false, features = [
+  "std",
+], optional = true }
+solana-transaction-error = { version = "=4.1.0", default-features = false, features = [
+  "serde",
+], optional = true }
+wincode = { version = "=0.6.2", default-features = false, features = [
+  "std",
+], optional = true }
+spl-token-interface = { version = "=3.0.0", optional = true }
 alloy-rlp = { version = "=0.3.16", default-features = false, features = [
   "std",
 ], optional = true }
@@ -136,7 +158,19 @@ default = []
 http = ["dep:reqwest", "dep:serde_json", "dep:tokio", "dep:url"]
 evm = ["dep:alloy-rlp", "dep:sha3"]
 evm-http = ["evm", "http"]
-solana = ["dep:solana-address", "dep:solana-hash", "dep:solana-signature"]
+solana = [
+  "dep:bs58",
+  "dep:solana-address",
+  "dep:solana-hash",
+  "dep:solana-signature",
+  "dep:solana-message",
+  "dep:solana-transaction",
+  "dep:solana-system-interface",
+  "dep:solana-instruction",
+  "dep:solana-transaction-error",
+  "dep:wincode",
+  "dep:spl-token-interface",
+]
 solana-http = ["solana", "http", "dep:base64"]
 cardano = ["dep:pallas-addresses", "dep:pallas-codec", "dep:crc"]
 bitcoin = ["dep:bitcoin"]
