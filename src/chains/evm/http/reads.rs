@@ -332,7 +332,7 @@ impl EvmClient {
             .transpose()?;
         ReceiptLookup::new(self.chain_id, hash, receipt).map_err(|_| invalid_response())
     }
-    fn read_context(
+    pub(super) fn read_context(
         &self,
         operation: ReadOperation,
         state: ReadState,

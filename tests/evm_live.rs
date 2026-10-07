@@ -16,8 +16,9 @@ use std::{
 use regit_web3::{
     chains::evm::EvmClient,
     domain::evm::{
-        Address, Erc20Allowance, Erc20Balance, Erc20Metadata, OperationObservation, OperationValue,
-        ReadState, ReceiptLookup, TransactionId, TransactionLookup, TransactionStatus,
+        AccountNonce, Address, CallResult, Erc20Allowance, Erc20Balance, Erc20Metadata,
+        FeeSuggestions, GasEstimate, OperationObservation, OperationValue, ReadState,
+        ReceiptLookup, TransactionCall, TransactionId, TransactionLookup, TransactionStatus,
     },
     domain::{Balance, BlockSelector, Finality, Observation, Operation},
     error::Error,
@@ -147,6 +148,64 @@ async fn erc20_and_transactions_live() -> Result<(), Error> {
     roundtrip::<TransactionLookup>(&transaction)?;
     roundtrip::<ReceiptLookup>(&receipt)?;
     roundtrip::<TransactionStatus>(&status)?;
+    Ok(())
+}
+
+/// Exercises fee, nonce, call and hash-based estimate reads with explicit call JSON.
+/// No supplied payload is signed or submitted; the call retains complete choices.
+#[tokio::test(flavor = "current_thread")]
+#[ignore = "requires explicit complete EVM call JSON and a read-only hash-estimation provider"]
+async fn fees_nonce_call_and_estimate_live() -> Result<(), Error> {
+    let inputs = inputs::from_env()?;
+    let call: TransactionCall = serde_json::from_str(&required("REGIT_WEB3_EVM_CALL_JSON")?)
+        .map_err(|_| Error::Configuration)?;
+    let before = unix_seconds()?;
+    let client = EvmClient::connect(inputs.config).await?;
+    assert_eq!(call.data().chain_id, client.chain_id());
+    assert_eq!(call.data().from, inputs.address);
+    let fees = client.get_fee_suggestions().await?;
+    let block = fees.value().block_fee.block;
+    let selector = Some(BlockSelector::Hash(*block.hash()));
+    let nonce = client.get_account_nonce(inputs.address, selector).await?;
+    let output = client.call(call.clone(), selector).await?;
+    let estimate = client.estimate_gas(call.clone(), selector).await?;
+    assert_eq!(fees.context().state(), ReadState::Unanchored);
+    assert_eq!(nonce.value().address, inputs.address);
+    assert_eq!(output.value().call, call);
+    assert_eq!(estimate.value().call(), &call);
+    for context in [nonce.context(), output.context(), estimate.context()] {
+        assert_eq!(
+            context.state(),
+            ReadState::CanonicalHash {
+                requested_selector: BlockSelector::Hash(*block.hash()),
+                block,
+            }
+        );
+    }
+    let after = unix_seconds()?;
+    for context in [
+        fees.context(),
+        nonce.context(),
+        output.context(),
+        estimate.context(),
+    ] {
+        assert_eq!(context.network().chain_id(), client.chain_id());
+        assert_eq!(
+            context.source().provider_id(),
+            client.config().provider_id()
+        );
+        assert_eq!(
+            context.source().integration_version(),
+            env!("CARGO_PKG_VERSION")
+        );
+        assert_eq!(context.finality(), Finality::Unknown);
+        assert_eq!(context.confirmations(), None);
+        assert!((before..=after).contains(&context.retrieved_at().unix_seconds()));
+    }
+    roundtrip::<FeeSuggestions>(&fees)?;
+    roundtrip::<AccountNonce>(&nonce)?;
+    roundtrip::<CallResult>(&output)?;
+    roundtrip::<GasEstimate>(&estimate)?;
     Ok(())
 }
 fn required(name: &str) -> Result<String, Error> {

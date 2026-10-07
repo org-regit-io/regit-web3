@@ -2094,6 +2094,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 name = "regit-web3"
 version = "0.1.0"
 dependencies = [
+ "alloy-rlp",
  "base64",
  "bech32",
  "bigdecimal",
@@ -2109,6 +2110,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sha3",
  "solana-address",
  "solana-hash",
  "solana-signature",

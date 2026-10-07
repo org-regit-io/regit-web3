@@ -4,7 +4,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 
 | Live test target | Backend feature | Qualified reads / explicit harness inputs |
 | --- | --- | --- |
-| [`evm_live`](../tests/evm_live.rs) | `evm-http` | Native balance or ERC-20 balance/allowance/optional metadata and transaction/receipt/status; select the exact qualifier and its explicit inputs below |
+| [`evm_live`](../tests/evm_live.rs) | `evm-http` | Native/ERC-20/transaction/receipt/status reads or fee/nonce/call/gas estimation; select the exact qualifier and its explicit inputs below |
 | [`litecoin_live`](../tests/litecoin_live.rs) | `litecoin-http` | Five documented mainnet BlockCypher reads and history continuation; explicit URL/source/genesis/alias/address/txid and history/transaction capacities |
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL balance, present decoded account and individual SPL token account; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
@@ -220,3 +220,29 @@ both supported status selectors. Other family encodings have local fixture proof
 cargo test --locked --no-default-features --features lifi-http \
   --test lifi_live -- --ignored --nocapture
 ```
+
+## EVM execution reads and unsigned preparation
+
+The `fees_nonce_call_and_estimate_live` qualifier uses the native example inputs
+plus `REGIT_WEB3_EVM_CALL_JSON`, a serialized `TransactionCallData` with explicit
+chain, sender, destination, nonce, gas cap, value, calldata and fee terms. The
+harness queries fees separately, then reuses the returned nonce observation's
+captured canonical block hash for call and estimate. It does not use the queried
+nonce as a signing policy or perform a write.
+
+```sh
+cargo test --locked --no-default-features --features evm-http \
+  --test evm_live -- --ignored --exact fees_nonce_call_and_estimate_live --nocapture
+cargo test --locked --no-default-features --features evm --test evm_preparation
+cargo test --locked --no-default-features --features evm-http --test evm_submission
+```
+
+`TransactionRequest` prepares native value transfers or standard ERC-20 transfer
+and approval calldata from explicit nonce/gas/fee choices. `PreparedTransaction`
+implements the generic wallet preparation contract and retains canonical
+legacy/type1/type2 signing bytes and digest. These bytes do not recover or bind
+an expected sender without external signature verification. `SignedSubmission`
+checks canonical supported envelope structure, ranges, chain and computed ID;
+it does not prove signature validity or reviewed intent. `submit_signed` is a
+separate explicit one-shot write. Its loopback tests cover ambiguous outcomes;
+there is no live funded-submission qualifier.

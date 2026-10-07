@@ -10,7 +10,7 @@ All modules below are part of the required library scope. Current implementation
 
 | Chain family | Scope | Current implementation |
 | --- | --- | --- |
-| EVM | Native/ERC-20 balances, transactions/receipts, gas/fees, transfers and approvals | Native/ERC-20 balance and allowance/optional metadata readers, typed transaction/receipt/status reads and optional HTTP backend implemented; fees and preparation/submission pending |
+| EVM | Native/ERC-20 balances, transactions/receipts, gas/fees, transfers and approvals | Native/ERC-20 reads, transaction/receipt/status, independent fees, canonical nonce/call/gas estimates, unsigned native/ERC-20 transfer/approval preparation and explicit one-shot signed submission implemented |
 | Solana | SOL/SPL balances, accounts, transactions and transfers | Pure family contracts and optional HTTP backend for SOL, SPL token-account balances and account reads implemented; transactions and transfers pending |
 | Cardano | Balances, UTxOs, assets, transactions, epoch/staking and preparation | Pure family contracts and optional Blockfrost current ADA/native-asset balances and explicit UTxO pages implemented; transactions, fees, epoch/staking and preparation pending |
 | Bitcoin | Validation, balance/history, fees and transactions/status | Pure family contracts and optional Esplora balances, bounded history, exact fee estimates, status and canonical full transaction retrieval implemented |
@@ -37,7 +37,7 @@ All modules below are part of the required library scope. Current implementation
 | Blockfrost | Indexed Cardano network, asset and supporting account data | Genesis verification, current full-asset address balances and explicit UTxO pages implemented; wider provider operations pending |
 | mempool.space | Bitcoin mempool, fees and transaction data | Backlog summaries, recent arrivals, bounded full transaction-ID lists, exact recommended fees, canonical transaction retrieval and inclusion status implemented |
 
-Generic typed wallet preparation, review and external signing-handoff contracts are implemented, with an XRPL Payment JSON adapter. Returned signed content requires a caller-supplied verifier against the original preparation; matching echoed metadata alone does not verify it. Concrete cryptographic verification, signing, custody and connectors remain separate extensions. Callers own approval and replay policy; preparation and handoff do not submit.
+Generic typed wallet preparation, review and external signing-handoff contracts are implemented, with EVM canonical transaction and XRPL Payment JSON adapters. Returned signed content requires a caller-supplied verifier against the original preparation; matching echoed metadata alone does not verify it. Concrete cryptographic verification, signing, custody and connectors remain separate extensions. Callers own approval and replay policy; preparation and handoff do not submit.
 
 ## Implemented contracts
 
@@ -57,6 +57,8 @@ Generic typed wallet preparation, review and external signing-handoff contracts 
 | Market data | Provider listing IDs and explicit currencies/units; exact nullable prices, TVL/volume/fee/revenue values, signed APY percentages and supplied series timestamps; source and retrieval facts without invented ledger anchors |
 | Bitcoin mempool data | Exact satoshi totals and sat/vB suggestions; individual histogram bins, at most ten recent arrivals and explicitly bounded full ID lists. Fractional weight/4 sizes retain quarter-byte increments; separate reads do not establish an atomic snapshot |
 | EVM HTTP state reads | Verify `eth_chainId` at establishment and before each read; resolve once; use EIP-1898 `blockHash` with `requireCanonical: true`; retries retain exact address/calldata/hash. ERC-20 name/symbol/decimals remain individually optional, without an assumed precision |
+| EVM execution and preparation | Explicit sender/nonce/gas/value/fees/access lists; canonical nonce/call reads and Geth-compatible hash gas-estimation extension with no height fallback. Fees are separately sourced. Canonical legacy/type1/type2 unsigned signing bytes and digest preserve exact intent; no signer or inferred defaults |
+| EVM signed submission | Canonical replay-protected legacy/type1/type2 envelope and computed hash; structural checks do not verify signatures, recovered sender or intent. One explicit write after chain preflight, no retry; matching node hash is acknowledgment only, unresolved post-dispatch outcomes remain potentially submitted |
 | EVM HTTP transaction reads | Typed legacy/type1–4 source fields and bounded receipts/logs; explicit absence, pending/included state and failed/succeeded/unknown execution stay distinct. Sequential status reads validate matching facts without claiming an atomic snapshot |
 | Litecoin/Dogecoin HTTP reads | Explicit documented mainnet BlockCypher bases; verify full genesis/chain name at establishment and before every operation. Complete bounded indexed transaction arrays, source-height history cursors and fee preferences per 1000 serialized bytes; no computed raw identity, consensus/signature proof or vbyte guarantee |
 | Solana HTTP reads | Verify the full genesis hash at establishment and before each read; return exact SOL lamports, decoded present/absent accounts, or SPL raw units with mint/program/owner/state and reported decimals. Preserve requested commitment/minimum slot separately from the actual slot; ignore scaled UI amounts |
@@ -72,7 +74,7 @@ Generic typed wallet preparation, review and external signing-handoff contracts 
 
 EVM HTTP native reads retain configured precision, finality `unknown` and confirmations `null`; requested tags do not establish either. Bitcoin and Cardano indexed reads do not promise a hash-selected snapshot or lasting finality. Each family retains its own ledger and source semantics. Pure observation construction validates supplied records and does not independently verify a remote source.
 
-EVM ERC-20 balance/allowance/metadata and transaction/receipt/status reads, Litecoin/Dogecoin five reads with history continuation, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and the XRPL JSON adapter have deterministic fixture qualification. XRPL's submit-only path has deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Blockfrost live qualification remains pending. These operation-specific observations do not complete the full catalogue or qualify every network, provider plan or query variant.
+EVM ERC-20 balance/allowance/metadata, transaction/receipt/status, fee/nonce/call/estimate reads, Litecoin/Dogecoin five reads with history continuation, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and EVM/XRPL preparation adapters have deterministic fixture qualification. EVM and XRPL explicit submission paths have deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Blockfrost live qualification remains pending. These operation-specific observations do not complete the full catalogue or qualify every network, provider plan or query variant.
 
 ## Features
 
@@ -81,7 +83,7 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | Feature | API / composition |
 | --- | --- |
 | No features | Shared exact values, typed errors and generic wallet preparation/review/handoff; no networking dependencies |
-| `evm` | Pure `NativeBalanceReader`, `Erc20Reader` and `TransactionReader` capabilities with exact typed records |
+| `evm` | Pure native/ERC-20/transaction, `FeeReader`, `ExecutionReader` and separate `EvmSubmitter` capabilities; exact preparation and bounded signed-envelope types |
 | `litecoin`, `dogecoin` | Distinct family address/genesis/unit contracts and five-method reader capabilities |
 | `solana` | Pure family types and native/token/account reader capabilities |
 | `bitcoin` | Pure family types/canonical transactions; `BitcoinReader` balance/history/fees/status and separate `TransactionReader` capabilities |
@@ -94,7 +96,7 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | `thorchain` | Pure Cosmos/asset identities, exact source records, quote input-resolution metadata and the eight-method `ThorchainReader` capability |
 | `lifi` | Pure cross-family quote/route/preparation/status contracts and `LifiReader` with independently supplied step handles |
 | `http` | Shared `HttpConfig`, `RpcEndpoint` and `RpcLimits` configuration |
-| `evm-http` | Bounded `EvmClient` implementing native/ERC-20/transaction/receipt/status readers; Reqwest/rustls and caller-owned Tokio runtime |
+| `evm-http` | Bounded `EvmClient` implementing read/simulation capabilities and separate explicit signed submission; Reqwest/rustls and caller-owned Tokio runtime |
 | `litecoin-http`, `dogecoin-http` | Family-specific `BlockCypherClient` and explicit `BlockCypherConfig`; documented mainnet sources only |
 | `solana-http` | Bounded `SolanaClient` implementing native/token/account readers with explicit `SolanaHttpConfig`; Reqwest/rustls and caller-owned Tokio runtime |
 | `bitcoin-esplora` | Bounded `EsploraClient` implementing Bitcoin read and transaction capabilities with explicit `EsploraConfig` |

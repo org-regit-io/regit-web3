@@ -10,7 +10,7 @@ use serde::{
 
 use crate::error::{Error, ProviderError};
 
-pub(super) fn encode_request<P>(request_id: u64, method: &str, params: &P) -> Result<Vec<u8>, Error>
+pub(crate) fn encode_request<P>(request_id: u64, method: &str, params: &P) -> Result<Vec<u8>, Error>
 where
     P: Serialize + ?Sized,
 {
@@ -75,7 +75,7 @@ struct Failure {
     _data: Option<IgnoredAny>,
 }
 
-pub(super) fn decode_response<T: DeserializeOwned>(
+pub(crate) fn decode_response<T: DeserializeOwned>(
     bytes: &[u8],
     expected_id: u64,
     error_policy: fn(i64) -> Error,

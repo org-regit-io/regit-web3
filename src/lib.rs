@@ -25,12 +25,18 @@
 //!
 //! EVM native/ERC-20 balance, allowance, optional metadata and transaction/receipt
 //! status reads use pure capabilities and the optional `evm-http` backend.
-//! State reads verify chain identity,
-//! resolves a block, and reads with EIP-1898 `blockHash` and
+//! State reads verify chain identity, resolve one block, and read with EIP-1898 `blockHash` and
 //! `requireCanonical: true`. Retries retain the captured hash and address without
 //! re-resolving a head or falling back to height. ERC-20 precision is never assumed.
 //! Typed transaction/receipt records retain actual inclusion and distinct execution
 //! outcomes; source JSON identities/signatures are not independently verified.
+//! Nonce and local calls retain canonical state; gas estimates require the
+//! Geth-compatible hash-selector extension without height fallback. Fee facts are
+//! independently sourced. Exact native/ERC-20 preparation retains caller choices
+//! and canonical legacy/type1/type2 signing bytes. Explicit one-shot submission
+//! structurally checks supported signed envelopes and matches the computed hash;
+//! it does not verify signatures/sender/intent or prove acceptance/execution.
+//! Unresolved post-dispatch failures retain possible submission outcome.
 //! Litecoin/Dogecoin provide family-qualified addresses, genesis identities and
 //! exact litoshi/koinu balances with separate signed mempool deltas. Optional
 //! `BlockCypher` mainnet backends read balances, height-cursor history, fee
@@ -94,7 +100,8 @@
 //! external handoff. Caller-generated IDs and exact snapshots are correlated
 //! before a trusted caller-supplied verifier checks actual signed-content binding.
 //! Confirmed output has no unchecked constructor or deserialization path. The
-//! `xrpl` feature supplies an ordinary Payment JSON adapter; concrete cryptographic
+//! `evm` feature supplies canonical transaction preparation; the `xrpl` feature
+//! supplies an ordinary Payment JSON adapter. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
 //! other protocol operations remain pending.

@@ -5,7 +5,7 @@ use super::{BlockContext, BlockSelector, Finality, Inclusion, NetworkId, Source,
 use crate::error::{Error, ValidationError};
 use serde::{Deserialize, Deserializer, Serialize};
 
-/// The typed EVM operation described by a wider read observation.
+/// The typed EVM operation described by an attributed observation.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReadOperation {
@@ -21,9 +21,19 @@ pub enum ReadOperation {
     Receipt,
     /// Joint transaction/receipt status with matched observed identities.
     TransactionStatus,
+    /// Exact account nonce at a captured canonical hash; pending nonces are excluded.
+    AccountNonce,
+    /// Source-returned local call bytes at a captured canonical hash.
+    Call,
+    /// Source gas estimate using an explicitly supported canonical-hash extension.
+    GasEstimate,
+    /// Separately sourced node fee preferences and a resolved block header.
+    FeeSuggestions,
+    /// A matching signed transaction ID acknowledged after one explicit dispatch.
+    SignedSubmission,
 }
 
-/// Actual state attribution for a read, without invented block timestamps.
+/// Actual state attribution for an operation, without invented block timestamps.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum ReadState {
@@ -64,7 +74,7 @@ impl ReadState {
     }
 }
 
-/// Provenance for wider EVM reads, independent of the original native API.
+/// Provenance for wider EVM operations, independent of the original native API.
 ///
 /// Finality is unknown and confirmations absent. Tags, successful execution
 /// and returned inclusion never independently prove either fact.
@@ -183,7 +193,7 @@ pub trait OperationValue {
     fn validate_context(&self, context: &OperationContext) -> Result<(), Error>;
 }
 
-/// A validated typed wider EVM read result with explicit provenance.
+/// A validated typed wider EVM operation result with explicit provenance.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
 pub struct OperationObservation<T: OperationValue> {
     value: T,

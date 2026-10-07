@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Bounded, read-only EVM operations with explicit chain and block context.
+//! Bounded EVM operations with explicit chain and block context.
 //!
 //! Establishment and each balance operation check the provider's `eth_chainId`.
 //! Balance reads use EIP-1898 with a captured hash and `requireCanonical: true`.
@@ -10,6 +10,8 @@
 //! The caller owns a Tokio runtime with I/O and time drivers enabled. HTTPS
 //! uses verified standard platform trust. Proxy discovery, redirects,
 //! automatic transport retries, cookies, and decompression are disabled.
+//! Signed submission is a separate explicit one-shot operation; preparation and
+//! simulation never invoke it and unresolved outcomes after dispatch remain unknown.
 
 use std::{
     fmt,
@@ -30,14 +32,17 @@ use super::wire::{
     CanonicalBlock, RpcBlock, chain_error, invalid_response, parse_quantity, state_error,
 };
 
+mod execution;
 mod reads;
+mod submission;
 
-/// A read-only EVM client with explicit configuration and verified chain identity.
+/// An EVM client with explicit configuration and verified chain identity.
 ///
 /// Construct with [`Self::connect`] inside an existing Tokio runtime with its
 /// I/O and time drivers enabled. The library creates no runtime, loads no RPC
 /// configuration or credentials, and discovers no proxy configuration.
 /// Native balances are read only at a captured canonical block hash.
+/// Signed submission is separate, explicit and never retried.
 pub struct EvmClient {
     config: EvmConfig,
     chain_id: ChainId,

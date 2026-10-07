@@ -126,6 +126,10 @@ pub enum ValidationError {
     InvalidEvmRecord,
     /// EVM token metadata violates its typed availability or value contract.
     InvalidEvmMetadata,
+    /// An unsigned EVM preparation violates its explicit transaction intent.
+    InvalidEvmPreparation,
+    /// A signed EVM transaction violates its supported envelope contract.
+    InvalidEvmSignedTransaction,
     /// A Solana public key has an invalid base58 encoding or byte length.
     InvalidSolanaPubkey,
     /// A Solana hash has an invalid base58 encoding or byte length.
@@ -258,6 +262,8 @@ impl fmt::Display for ValidationError {
             Self::InvalidEvmBytes => "invalid EVM byte encoding",
             Self::InvalidEvmRecord => "invalid EVM record",
             Self::InvalidEvmMetadata => "invalid EVM token metadata",
+            Self::InvalidEvmPreparation => "invalid EVM transaction preparation",
+            Self::InvalidEvmSignedTransaction => "invalid EVM signed transaction envelope",
             Self::InvalidSolanaPubkey => "invalid Solana public key",
             Self::InvalidSolanaHash => "invalid Solana hash",
             Self::InvalidSolanaSignature => "invalid Solana signature",

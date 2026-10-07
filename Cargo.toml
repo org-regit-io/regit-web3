@@ -48,6 +48,9 @@ name = "native_balance"
 required-features = ["evm-http"]
 
 [dependencies]
+alloy-rlp = { version = "=0.3.16", default-features = false, features = [
+  "std",
+], optional = true }
 bech32 = { version = "=0.11.1", default-features = false, features = [
   "std",
 ], optional = true }
@@ -82,6 +85,7 @@ serde_json = { version = "=1.0.151", features = [
 sha2 = { version = "=0.10.9", default-features = false, features = [
   "std",
 ], optional = true }
+sha3 = { version = "=0.12.0", default-features = false, optional = true }
 solana-address = { version = "=2.9.0", default-features = false, features = [
   "std",
   "copy",
@@ -116,7 +120,7 @@ tokio = { version = "=1.53.2", default-features = false, features = [
 default = []
 
 http = ["dep:reqwest", "dep:serde_json", "dep:tokio", "dep:url"]
-evm = []
+evm = ["dep:alloy-rlp", "dep:sha3"]
 evm-http = ["evm", "http"]
 solana = ["dep:solana-address", "dep:solana-hash", "dep:solana-signature"]
 solana-http = ["solana", "http", "dep:base64"]

@@ -33,8 +33,9 @@ use crate::{
 };
 
 use crate::domain::evm::{
-    Erc20Allowance, Erc20Balance, Erc20Metadata, OperationObservation, ReceiptLookup,
-    TransactionId, TransactionLookup, TransactionStatus,
+    AccountNonce, CallResult, Erc20Allowance, Erc20Balance, Erc20Metadata, FeeSuggestions,
+    GasEstimate, OperationObservation, ReceiptLookup, SignedSubmission, SubmissionAcknowledgment,
+    TransactionCall, TransactionId, TransactionLookup, TransactionStatus,
 };
 
 #[cfg(feature = "evm-http")]
@@ -138,4 +139,65 @@ pub trait TransactionReader {
         &self,
         hash: TransactionId,
     ) -> impl Future<Output = Result<OperationObservation<TransactionStatus>, Error>> + Send;
+}
+
+/// Independent pure capability for separately attributed node fee suggestions.
+/// Implementations must not claim atomic or canonical-state fee-oracle behavior.
+pub trait FeeReader {
+    /// Queries exact source prices and a matching block base-fee fact.
+    /// # Errors
+    /// Reports malformed, unavailable or mismatched source facts and backend failures.
+    fn get_fee_suggestions(
+        &self,
+    ) -> impl Future<Output = Result<OperationObservation<FeeSuggestions>, Error>> + Send;
+}
+
+/// Independent pure capability for canonical-state nonce, call and gas-estimate reads.
+/// Callers provide complete simulation parameters; implementations never sign or
+/// submit them. Hash-based gas estimation can require a backend-specific extension.
+pub trait ExecutionReader {
+    /// Reads the source account nonce at the selected canonical state.
+    /// # Errors
+    /// Reports malformed/unavailable state, identity and backend failures.
+    fn get_account_nonce(
+        &self,
+        address: Address,
+        selector: Option<BlockSelector>,
+    ) -> impl Future<Output = Result<OperationObservation<AccountNonce>, Error>> + Send;
+    /// Executes the exact local call at one captured canonical state.
+    /// # Errors
+    /// Reports source revert, unavailable state, identity and backend failures.
+    fn call(
+        &self,
+        call: TransactionCall,
+        selector: Option<BlockSelector>,
+    ) -> impl Future<Output = Result<OperationObservation<CallResult>, Error>> + Send;
+    /// Estimates gas with an explicit cap at one captured canonical state.
+    /// # Errors
+    /// Reports source revert, unsupported selector, unavailable state and backend failures.
+    fn estimate_gas(
+        &self,
+        call: TransactionCall,
+        selector: Option<BlockSelector>,
+    ) -> impl Future<Output = Result<OperationObservation<GasEstimate>, Error>> + Send;
+}
+
+/// Explicit capability for one-shot submission of caller-supplied signed bytes.
+///
+/// Local envelope structure and computed identity do not verify signatures,
+/// recovered sender or reviewed intent. Callers own signing/approval and semantic
+/// verification. This capability is separate from preparation and read operations.
+pub trait EvmSubmitter {
+    /// Submits an exact bounded envelope once, without retrying a possible write.
+    ///
+    /// A matching source hash acknowledges the request without proving mempool
+    /// acceptance, inclusion, execution or finality. Unresolved post-dispatch
+    /// failures retain `Error::SubmissionOutcomeUnknown`. Cancellation after
+    /// polling the future cannot establish that the source received no request.
+    /// # Errors
+    /// Returns preflight errors before dispatch or possible-outcome failures afterward.
+    fn submit_signed(
+        &self,
+        submission: SignedSubmission,
+    ) -> impl Future<Output = Result<OperationObservation<SubmissionAcknowledgment>, Error>> + Send;
 }
