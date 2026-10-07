@@ -6,13 +6,15 @@
 //! Capabilities use the caller's backend and executor. Indexed address state
 //! and history are not hash-pinned snapshots; source and retrieval facts remain
 //! explicit. No transaction signing or submission capability is provided.
+//! Canonical full-transaction retrieval is a separate capability, retaining
+//! indexed fee/previous-output/inclusion data without treating them as proofs.
 
 use std::future::Future;
 
 use crate::{
     domain::bitcoin::{
         Address, AddressBalance, FeeEstimates, HistoryCursor, HistoryPage, Observation,
-        TransactionStatus, Txid,
+        Transaction, TransactionStatus, Txid,
     },
     error::Error,
 };
@@ -52,4 +54,19 @@ pub trait BitcoinReader {
         &self,
         txid: Txid,
     ) -> impl Future<Output = Result<Observation<TransactionStatus>, Error>> + Send;
+}
+
+/// A separate full-transaction capability without expanding existing reader implementors.
+///
+/// Canonical decoding and computed byte identity are distinct from script/signature
+/// validation. Source previous outputs, fee and inclusion remain indexed facts.
+pub trait TransactionReader {
+    /// Reads canonical transaction data and retains separately attributed index facts.
+    ///
+    /// # Errors
+    /// Returns fixed source failures, unavailable resources or inconsistent transaction data.
+    fn get_transaction(
+        &self,
+        txid: Txid,
+    ) -> impl Future<Output = Result<Observation<Transaction>, Error>> + Send;
 }

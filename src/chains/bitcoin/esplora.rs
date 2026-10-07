@@ -16,7 +16,8 @@ use crate::{
         Source, Timestamp,
         bitcoin::{
             Address, AddressBalance, BlockHash, Context, FeeEstimates, HistoryCursor, HistoryPage,
-            NetworkId, Observation, Operation, TransactionStatus, Txid,
+            NetworkId, Observation, Operation, Transaction, TransactionBody, TransactionStatus,
+            Txid,
         },
     },
     error::{Error, ProviderError, ValidationError},
@@ -231,6 +232,60 @@ impl EsploraClient {
             .await
     }
 
+    /// Reads canonical full transaction bytes and separately attributed index facts.
+    ///
+    /// One deadline covers genesis verification, `/tx/:txid/hex`, `/tx/:txid`,
+    /// retries, bounded response consumption and decoding. Computed txid and
+    /// immutable fields must agree across both resources; previous outputs,
+    /// nullable fee and status remain source-reported facts. Canonical decoding
+    /// does not execute scripts, verify signatures or prove inclusion.
+    ///
+    /// # Errors
+    /// HTTP 404 for either resource is unavailable data. Malformed/noncanonical
+    /// bytes, immutable mismatches and invalid index facts return a fixed provider
+    /// error. Missing previous output/fee data remain explicit nullable values.
+    ///
+    /// # Panics
+    /// Tokio may panic if the caller's runtime lacks I/O or time drivers.
+    pub async fn get_transaction(&self, txid: Txid) -> Result<Observation<Transaction>, Error> {
+        let budget = OperationBudget::new(self.config.http_config().limits())?;
+        budget
+            .run(async {
+                self.verify_genesis(&budget).await?;
+                let encoded = txid.to_string();
+                let hex = self
+                    .read_transaction_resource(&["tx", &encoded, "hex"], &budget)
+                    .await?;
+                let hex = std::str::from_utf8(&hex).map_err(|_| invalid_response())?;
+                let body = TransactionBody::from_hex(hex).map_err(|_| invalid_response())?;
+                if body.txid() != txid {
+                    return Err(invalid_response());
+                }
+                let bytes = self
+                    .read_transaction_resource(&["tx", &encoded], &budget)
+                    .await?;
+                let indexed: wire::IndexedTransaction = decode_json(&bytes)?;
+                let value = indexed.into_transaction(body, self.config.network().network())?;
+                Observation::transaction(
+                    value,
+                    self.context(Operation::Transaction { txid }, "tx-with-hex")?,
+                )
+            })
+            .await
+    }
+
+    async fn read_transaction_resource(
+        &self,
+        path: &[&str],
+        budget: &OperationBudget,
+    ) -> Result<Vec<u8>, Error> {
+        let response = self.http.read(path, &[], None, budget).await?;
+        if response.status == reqwest::StatusCode::NOT_FOUND {
+            return Err(Error::UnavailableData);
+        }
+        response.into_success()
+    }
+
     fn check_address(&self, address: &Address) -> Result<(), Error> {
         if address.network() != self.config.network().network() {
             return Err(ValidationError::NetworkMismatch.into());
@@ -313,6 +368,12 @@ impl super::BitcoinReader for EsploraClient {
         txid: Txid,
     ) -> Result<Observation<TransactionStatus>, Error> {
         self.get_transaction_status(txid).await
+    }
+}
+
+impl super::TransactionReader for EsploraClient {
+    async fn get_transaction(&self, txid: Txid) -> Result<Observation<Transaction>, Error> {
+        self.get_transaction(txid).await
     }
 }
 

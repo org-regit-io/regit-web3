@@ -108,6 +108,10 @@ pub enum ValidationError {
     InvalidBitcoinStatus,
     /// A fee estimate has an invalid horizon or negative exact rate.
     InvalidBitcoinFeeEstimate,
+    /// A Bitcoin transaction has invalid or inconsistent indexed facts.
+    InvalidBitcoinTransaction,
+    /// Bitcoin bytes violate bounded canonical hexadecimal or script encoding.
+    InvalidBitcoinBytes,
     /// A Bitcoin observation uses an unsupported schema version.
     UnsupportedBitcoinSchema,
     /// A Cardano address has invalid encoding or checksum.
@@ -142,6 +146,22 @@ pub enum ValidationError {
     UnsupportedSchemaVersion,
     /// A serialized formatted amount does not match its exact raw value.
     InvalidFormattedAmount,
+    /// An XRPL address has invalid encoding, length or checksum.
+    InvalidXrplAddress,
+    /// An XRPL hash has invalid hexadecimal encoding or width.
+    InvalidXrplHash,
+    /// An XRPL currency identifier violates its family contract.
+    InvalidXrplCurrency,
+    /// An XRPL native or issued amount violates its exact numeric contract.
+    InvalidXrplAmount,
+    /// An XRPL record violates its structural contract.
+    InvalidXrplRecord,
+    /// An XRPL network identity violates its explicit network contract.
+    InvalidXrplNetwork,
+    /// A market identifier or label violates its lexical or length contract.
+    InvalidMarketIdentity,
+    /// A market request or record violates its structural contract.
+    InvalidMarketRecord,
 }
 
 impl fmt::Display for ValidationError {
@@ -169,6 +189,8 @@ impl fmt::Display for ValidationError {
             Self::InvalidBitcoinHistory => "invalid Bitcoin history page",
             Self::InvalidBitcoinStatus => "inconsistent Bitcoin transaction status",
             Self::InvalidBitcoinFeeEstimate => "invalid Bitcoin fee estimate",
+            Self::InvalidBitcoinTransaction => "invalid Bitcoin transaction",
+            Self::InvalidBitcoinBytes => "invalid Bitcoin byte encoding",
             Self::UnsupportedBitcoinSchema => "unsupported Bitcoin observation schema",
             Self::InvalidCardanoAddress => "invalid Cardano address",
             Self::InvalidCardanoNetwork => "invalid Cardano network identity",
@@ -186,6 +208,14 @@ impl fmt::Display for ValidationError {
             Self::NetworkMismatch => "balance and observation chains differ",
             Self::UnsupportedSchemaVersion => "unsupported observation schema version",
             Self::InvalidFormattedAmount => "formatted amount differs from exact value",
+            Self::InvalidXrplAddress => "invalid XRPL address",
+            Self::InvalidXrplHash => "invalid XRPL hash",
+            Self::InvalidXrplCurrency => "invalid XRPL currency",
+            Self::InvalidXrplAmount => "invalid XRPL amount",
+            Self::InvalidXrplRecord => "invalid XRPL record",
+            Self::InvalidXrplNetwork => "invalid XRPL network identity",
+            Self::InvalidMarketIdentity => "invalid market identity or label",
+            Self::InvalidMarketRecord => "invalid market request or record",
         })
     }
 }

@@ -3,6 +3,9 @@
 
 //! Typed market, analytics and indexed-data provider integrations.
 
+#[cfg(any(feature = "coingecko-http", feature = "defillama-http"))]
+mod market_wire;
+
 #[cfg(feature = "coingecko")]
 pub mod coingecko;
 

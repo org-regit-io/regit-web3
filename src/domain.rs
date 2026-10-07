@@ -19,12 +19,20 @@ mod amount;
 pub mod bitcoin;
 #[cfg(feature = "cardano")]
 pub mod cardano;
+#[cfg(feature = "coingecko")]
+pub mod coingecko;
 mod decimal;
+#[cfg(feature = "defillama")]
+pub mod defillama;
 pub mod evm;
 mod identity;
+#[cfg(any(feature = "coingecko", feature = "defillama"))]
+pub mod market;
 mod observation;
 #[cfg(feature = "solana")]
 pub mod solana;
+#[cfg(feature = "xrpl")]
+pub mod xrpl;
 
 pub use amount::Amount;
 pub use decimal::ExactDecimal;

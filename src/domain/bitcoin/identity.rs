@@ -133,6 +133,12 @@ pub struct Address {
 }
 
 impl Address {
+    pub(super) fn from_script(script: &bitcoin::Script, network: Network) -> Option<Self> {
+        bitcoin::Address::from_script(script, network.primitive())
+            .ok()
+            .map(|address| Self { network, address })
+    }
+
     /// Parses and checks address encoding, checksum and network compatibility.
     ///
     /// # Errors
@@ -228,3 +234,21 @@ hash_type!(
     InvalidBitcoinTxid,
     "A complete Bitcoin transaction identifier with canonical lowercase hexadecimal serialization."
 );
+hash_type!(
+    Wtxid,
+    bitcoin::Wtxid,
+    InvalidBitcoinTxid,
+    "A complete witness transaction identifier computed including witness data."
+);
+
+impl Txid {
+    pub(super) const fn from_native(value: bitcoin::Txid) -> Self {
+        Self(value)
+    }
+}
+
+impl Wtxid {
+    pub(super) const fn from_native(value: bitcoin::Wtxid) -> Self {
+        Self(value)
+    }
+}

@@ -57,6 +57,10 @@ bigdecimal = { version = "=0.4.11", default-features = false, features = [
 bitcoin = { version = "=0.32.102", default-features = false, features = [
   "std",
 ], optional = true }
+bs58 = { version = "=0.5.1", default-features = false, features = [
+  "std",
+  "check",
+], optional = true }
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
 ] }
@@ -72,6 +76,9 @@ serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.151", features = [
   "arbitrary_precision",
   "raw_value",
+], optional = true }
+sha2 = { version = "=0.10.9", default-features = false, features = [
+  "std",
 ], optional = true }
 solana-address = { version = "=2.9.0", default-features = false, features = [
   "std",
@@ -117,7 +124,8 @@ bitcoin-esplora = ["bitcoin", "http"]
 litecoin = []
 dogecoin = []
 bitcoin-cash = []
-xrpl = []
+xrpl = ["dep:bs58", "dep:sha2"]
+xrpl-http = ["xrpl", "http"]
 ton = []
 thorchain = []
 
@@ -128,7 +136,9 @@ lifi = []
 rubic = []
 
 coingecko = []
+coingecko-http = ["coingecko", "http"]
 defillama = []
+defillama-http = ["defillama", "http"]
 helius = ["solana"]
 blockfrost = ["cardano"]
 blockfrost-http = ["blockfrost", "http"]
@@ -146,6 +156,7 @@ all = [
   "dogecoin",
   "bitcoin-cash",
   "xrpl",
+  "xrpl-http",
   "ton",
   "thorchain",
   "jupiter",
@@ -154,7 +165,9 @@ all = [
   "lifi",
   "rubic",
   "coingecko",
+  "coingecko-http",
   "defillama",
+  "defillama-http",
   "helius",
   "blockfrost",
   "blockfrost-http",

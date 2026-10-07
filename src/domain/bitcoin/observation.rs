@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::{
-    Address, AddressBalance, FeeEstimates, HistoryCursor, HistoryPage, NetworkId,
+    Address, AddressBalance, FeeEstimates, HistoryCursor, HistoryPage, NetworkId, Transaction,
     TransactionStatus, Txid,
 };
 use crate::{
@@ -32,6 +32,11 @@ pub enum Operation {
     FeeEstimates,
     /// A transaction-status lookup.
     TransactionStatus {
+        /// The exact requested transaction identifier.
+        txid: Txid,
+    },
+    /// Canonical full transaction bytes plus separately reported index facts.
+    Transaction {
         /// The exact requested transaction identifier.
         txid: Txid,
     },
@@ -200,3 +205,26 @@ observation_type!(
     |_value, operation| matches!(operation, Operation::TransactionStatus { .. }),
     "Records transaction status while retaining its exact requested identifier."
 );
+
+impl Observation<Transaction> {
+    /// Records a full transaction with matching network and computed query identity.
+    ///
+    /// # Errors
+    /// Rejects mismatched operation, computed transaction ID or qualified network.
+    pub fn transaction(value: Transaction, context: Context) -> Result<Self, Error> {
+        if value.network() != context.network.network() {
+            return Err(ValidationError::NetworkMismatch.into());
+        }
+        if !matches!(context.operation, Operation::Transaction { txid } if txid == value.body().txid())
+        {
+            return Err(ValidationError::ObservationOperationMismatch.into());
+        }
+        Ok(Self { context, value })
+    }
+}
+impl<'de> Deserialize<'de> for Observation<Transaction> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let fields = ObservationFields::<Transaction>::deserialize(deserializer)?;
+        Self::transaction(fields.value, fields.context).map_err(serde::de::Error::custom)
+    }
+}

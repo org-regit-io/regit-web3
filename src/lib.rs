@@ -33,13 +33,30 @@
 //! exact SOL balances, SPL token-account balances, and present/absent accounts.
 //! Read results retain actual slot context. Bitcoin's optional `bitcoin-esplora`
 //! backend verifies the full genesis hash and reads address balances, bounded
-//! history, exact fee estimates, and transaction status. Cardano provides pure
+//! history, exact fee estimates, transaction status, and canonical raw/indexed
+//! transaction retrieval. Cardano provides pure
 //! balance/UTxO reader contracts; the optional `blockfrost-http` backend verifies
 //! network magic and reads current indexed ADA/native-asset balances and explicit
 //! `UTxO` pages. Indexed reads do not establish a hash-selected snapshot or lasting
-//! finality. These new backends have deterministic fixture coverage; live
-//! qualification remains pending. Wider chain and provider operations, protocol
-//! operations, and wallet preparation/handoff contracts remain pending.
+//! finality. `CoinGecko` provides pure search, ID/currency price, markets-page and
+//! historical-chart contracts; `coingecko-http` supplies explicit anonymous or
+//! Demo/Pro-header reads with exact prices and independently timed series.
+//! `DefiLlama` provides pure TVL, yield, stablecoin and USD analytics contracts;
+//! `defillama-http` supplies independently configured TVL/analytics, yield and
+//! stablecoin sources. Peg-denominated circulation, USD valuations and percent
+//! APYs remain distinct; large datasets fail at explicit limits without truncation.
+//! Solana, Bitcoin, XRPL and these market-provider backends have representative live
+//! qualification alongside deterministic fixtures. This is point-in-time source
+//! evidence; Cardano's backend has fixture coverage with live proof pending.
+//! XRPL provides classic/X-address identities, exact drops and issued values,
+//! source-attributed ledger observations, and ordinary unsigned Payment JSON
+//! preparation. Its `xrpl-http` backend supplies ledger-anchored account/trustline
+//! reads, explicit fee estimates, computed-ID opaque transaction retrieval,
+//! separate execution/inclusion status, and bounded explicit-range account
+//! history. Binary history retains omitted ledger hashes without inventing a
+//! common anchor. Signed submission and advanced preparation remain pending.
+//! Wider chain and provider operations, protocol operations, and wallet handoff
+//! contracts remain pending.
 //!
 //! Read a native balance through an established EVM client:
 //!
@@ -79,6 +96,9 @@ pub mod providers;
         feature = "solana-http",
         feature = "bitcoin-esplora",
         feature = "blockfrost-http",
+        feature = "xrpl-http",
+        feature = "coingecko-http",
+        feature = "defillama-http",
         test
     )
 ))]
