@@ -6,8 +6,9 @@
 //! The catalogue comprises ten chain families: EVM, Solana, Cardano, Bitcoin,
 //! Litecoin, Dogecoin, Bitcoin Cash, XRPL, TON, and `THORChain`; five protocols:
 //! Jupiter, Uniswap, 1inch, LI.FI, and Rubic; and five providers: `CoinGecko`,
-//! `DefiLlama`, Helius, Blockfrost, and mempool.space. Implementation is partial;
-//! the catalogue remains the full required library scope.
+//! `DefiLlama`, Helius, Blockfrost, and mempool.space. All twenty modules provide
+//! functional operations within their documented supported profiles. Authenticated
+//! live data and final platform qualification remain separate pending checks.
 //!
 //! The [`domain`] module provides exact integer amounts and signed decimals,
 //! validated family identities, account values, and attributable observations.
@@ -150,6 +151,16 @@
 //! unsigned transaction fields and typed wallet handoff without signing or
 //! submission. V3 quote/comparison have representative live proof; deployment
 //! declarations are caller-verified and no global route discovery is implied.
+//! 1inch supplies Classic Swap v6.1 exact-input EVM quotes, bounded liquidity
+//! catalogues, source spender reads and independent fresh unsigned preparation.
+//! Pure `oneinch` contracts keep exact assets/units, actual graph/filter facts and
+//! immutable original review; `oneinch-http` takes explicit caller-held Bearer
+//! authorization and a replaceable API prefix. Separate spender/fresh reads do
+//! not share a snapshot. Strict ordinary transaction fields retain source gas
+//! suggestions; opaque calldata and estimation overrides do not prove reviewed
+//! intent or execution. Expiry, block and genesis proof are unreported. The four
+//! methods and local handoff have 31 deterministic/loopback tests; authenticated
+//! live qualification remains pending.
 //! Rubic supplies the direct API-v2 chain catalogue, all/best quotes, fresh unsigned
 //! preparation and extended source status. Pure contracts retain caller-qualified
 //! families, exact amounts/fees and bounded JSON source metadata; `rubic-http`
@@ -167,10 +178,12 @@
 //! supplies an ordinary Payment JSON adapter; `uniswap` supplies an unsigned
 //! router-field adapter; `solana` supplies a canonical-message adapter; `ton`
 //! supplies an internal-message adapter; `rubic` composes direct EVM/Solana
-//! preparation with generic review/handoff. Concrete cryptographic
+//! preparation with generic review/handoff; `oneinch` retains an unsigned source
+//! envelope and explicit original swap review. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
-//! Preparation and handoff do not submit. Wider chain and provider operations and
-//! other protocol operations remain pending.
+//! Preparation and handoff do not submit. Authenticated Helius, Blockfrost and
+//! 1inch data and final platform qualification remain pending. Representative
+//! proofs apply to their recorded operations, networks and query variants.
 //!
 //! Read a native balance through an established EVM client:
 //!
@@ -223,6 +236,7 @@ pub mod providers;
             feature = "ton-http",
             feature = "helius-http",
             feature = "rubic-http",
+            feature = "oneinch-http",
             test
         )
     )

@@ -45,6 +45,8 @@ pub mod market;
 #[cfg(feature = "mempool-space")]
 pub mod mempool_space;
 mod observation;
+#[cfg(feature = "oneinch")]
+pub mod oneinch;
 #[cfg(feature = "rubic")]
 pub mod rubic;
 #[cfg(feature = "solana")]

@@ -21,6 +21,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`jupiter_live`](../tests/jupiter_live.rs) | `jupiter-http` | V2 quote-only selection, fresh Metis build, local canonical V0 preparation/handoff and exact-message Solana fee/simulation; explicit API/RPC/config/request/settings inputs |
 | [`uniswap_live`](../tests/uniswap_live.rs) | `uniswap-http` | V3 exact-input quotes, supplied-path comparison and local unsigned Universal Router 2.1.2 preparation; explicit EVM/deployment/path/input/call/recipient/slippage/deadline/handoff inputs |
 | [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
+| [`oneinch_live`](../tests/oneinch_live.rs) | `oneinch-http` | Awaiting authenticated live qualification: Classic Swap v6.1 quote, catalogue, spender and fresh unsigned review; explicit caller-held Bearer token/API base/EVM chain/assets/actors/router/spender/value/floor/slippage inputs |
 | [`rubic_live`](../tests/rubic_live.rs) | `rubic-http` | API-v2 chain catalogue, direct all/best quotes, fresh unsigned EVM preparation/handoff and extended status; complete explicit public input file with no credentials |
 
 After setting the linked test's required inputs, select its feature and target:
@@ -506,3 +507,57 @@ All collections fail whole on excess: at most 512 chains and 128 routes,
 legs per route, tokens per leg and warnings per route, with caller-selected lower
 capacities. The [fixture reference](../tests/fixtures/rubic/README.md) records primary
 contracts, source captures and exact metadata/encoding limits.
+
+## 1inch Classic Swap v6.1 quotes and unsigned review
+
+`oneinch` supplies the pure `ClassicSwapReader` capability, exact EVM asset/unit
+and graph records, and immutable source preparation for generic review/handoff.
+`oneinch-http` adds a replaceable outgoing backend with explicit caller-held
+Bearer API key or existing OAuth access token. It neither acquires nor refreshes
+credentials. The caller supplies the swap API prefix, EVM network and bounds;
+the backend appends literal `v6.1/{chainId}`. URL query parameters are rejected
+so additional source parameters cannot bypass typed review choices.
+
+| Method | Operation |
+| --- | --- |
+| `quote_exact_input` | Exact-input quote with actual v6.1 token/hop/liquidity-share graph |
+| `get_liquidity_sources` | Complete bounded liquidity catalogue; duplicate IDs/excess fail whole |
+| `get_spender` | Source-reported spender identity, without an approval operation |
+| `prepare_swap` | Separate spender read and fresh unsigned swap result for a new immutable review |
+
+Every reported liquidity-share ID must match the exact caller allowlist when
+nonempty and must not match exclusions. Empty source graphs remain absent route
+evidence, without inferred completeness, topology or execution. Native identity
+stays separate from the provider sentinel; exact raw amounts and decimal route
+shares never pass through binary floating point.
+
+Preparation retains the selected quote, fresh graph/output/source attribution
+and all caller settings, including sender, origin, recipient, output floor,
+return policy, router, spender, native value, estimation and routing choices. Source sender/router/native value,
+reported spender and output floor are checked. These separate reads do not share
+an atomic snapshot. The strict ordinary envelope rejects unsupported unknown
+fields and nonempty access lists. Supported gas/price/optional gas-used values
+remain source suggestions. Opaque calldata does not establish recipient, origin,
+allowance or return semantics. Override presence stays explicit and is not used
+for simulation; expiry, nonce, block/genesis and finality are not invented.
+
+The current native Mac proof is 12 pure and 19 actual-loopback tests, including
+constructor/serde parity, exact values, protocol filters, strict envelope fields,
+limits, frozen retries, shared deadlines and wallet handoff. Authenticated Rust
+live qualification remains pending. After supplying the caller-owned inputs in
+the [explicit harness recipe](../tests/fixtures/oneinch/README.md), select the
+ignored [live test](../tests/oneinch_live.rs):
+
+```sh
+cargo test --locked --no-default-features --features oneinch-http \
+  --test oneinch_live -- --ignored --exact \
+  classic_swap_four_methods_live_without_execution --nocapture
+```
+
+The harness supplies a 2 MiB response ceiling, five-second connect and twenty-second
+total deadlines with two safe-read retries. Graphs retain at most 64 groups,
+256 hops/group, 256 shares/hop and 4096 total records; the complete liquidity
+catalogue retains at most 512 entries, with caller-selected lower capacities.
+Calldata is bounded to 65536 bytes. One operation deadline covers all source
+reads, retries, body transfer and decoding. Preparation only generates unsigned
+review data; no approval, signing, relay, submission or funded write is performed.

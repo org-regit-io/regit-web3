@@ -194,15 +194,15 @@ validation_errors! {
     InvalidTonRecord => "invalid TON record",
     /// A TON transfer violates its explicit unsigned intent contract.
     InvalidTonTransfer => "invalid TON transfer preparation",
-    /// A Jupiter request violates its bounded typed contract.
+    /// A Jupiter request violates its explicit typed query contract.
     InvalidJupiterRequest => "invalid Jupiter request",
-    /// A Jupiter quote violates its bounded typed contract.
+    /// A Jupiter quote violates its exact source/request contract.
     InvalidJupiterQuote => "invalid Jupiter quote",
-    /// A Jupiter build violates its bounded typed contract.
+    /// A Jupiter build response violates its bounded source contract.
     InvalidJupiterBuild => "invalid Jupiter build",
-    /// A Jupiter preparation violates its bounded typed contract.
+    /// A Jupiter preparation violates its explicitly reviewed unsigned contract.
     InvalidJupiterPreparation => "invalid Jupiter swap preparation",
-    /// A Jupiter estimate violates its bounded typed contract.
+    /// A Jupiter estimate violates its independently sourced operation contract.
     InvalidJupiterEstimate => "invalid Jupiter estimate",
     /// A Uniswap deployment violates its explicit supported-version contract.
     InvalidUniswapDeployment => "invalid Uniswap deployment",
@@ -312,6 +312,12 @@ validation_errors! {
     InvalidHeliusAsset => "invalid Helius asset",
     /// A Helius transaction violates its bounded typed contract.
     InvalidHeliusTransaction => "invalid Helius transaction",
+    /// A 1inch request violates its bounded typed contract.
+    InvalidOneinchRequest => "invalid 1inch request",
+    /// A 1inch source record violates its exact correlated contract.
+    InvalidOneinchRecord => "invalid 1inch record",
+    /// A 1inch payload violates its explicit unsigned preparation contract.
+    InvalidOneinchPayload => "invalid 1inch unsigned payload",
     /// A Rubic identity violates its bounded typed contract.
     InvalidRubicIdentity => "invalid Rubic identity",
     /// A Rubic request violates its bounded typed contract.
@@ -322,11 +328,11 @@ validation_errors! {
     InvalidRubicPreparation => "invalid Rubic preparation",
     /// A Rubic status violates its bounded typed contract.
     InvalidRubicStatus => "invalid Rubic status",
-    /// A LI.FI identity violates its qualified encoding contract.
+    /// A LI.FI chain, asset, address or route identifier violates its typed contract.
     InvalidLifiIdentity => "invalid LI.FI identity",
-    /// A LI.FI request or source record violates its typed contract.
+    /// A LI.FI quote, route, continuation or status record violates its structural contract.
     InvalidLifiRecord => "invalid LI.FI record",
-    /// A LI.FI prepared payload violates its bounded encoding contract.
+    /// A LI.FI prepared payload violates its bounded family encoding contract.
     InvalidLifiPayload => "invalid LI.FI prepared payload",
 }
 

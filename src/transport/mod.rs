@@ -22,6 +22,7 @@ mod budget;
         feature = "ton-http",
         feature = "helius-http",
         feature = "rubic-http",
+        feature = "oneinch-http",
         test
     )
 ))]
@@ -48,6 +49,7 @@ pub(crate) use budget::OperationBudget;
         feature = "ton-http",
         feature = "helius-http",
         feature = "rubic-http",
+        feature = "oneinch-http",
         test
     )
 ))]

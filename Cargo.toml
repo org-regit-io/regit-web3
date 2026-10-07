@@ -94,8 +94,8 @@ const-hex = { version = "=1.19.3", default-features = false, features = [
 ] }
 crc = { version = "=3.4.0", default-features = false, optional = true }
 ethaddr = { version = "=0.2.4", default-features = false, features = ["sha3"] }
-pallas-crypto = { version = "=1.4.0", default-features = false, optional = true }
 pallas-primitives = { version = "=1.4.0", default-features = false, optional = true }
+pallas-crypto = { version = "=1.4.0", default-features = false, optional = true }
 pallas-addresses = { version = "=1.4.0", default-features = false, optional = true }
 pallas-codec = { version = "=1.4.0", default-features = false, optional = true }
 reqwest = { version = "=0.13.5", default-features = false, features = [
@@ -210,6 +210,7 @@ jupiter-http = ["jupiter", "http", "solana-http"]
 uniswap = ["evm"]
 uniswap-http = ["uniswap", "evm-http"]
 oneinch = ["evm"]
+oneinch-http = ["oneinch", "http"]
 lifi = ["dep:bs58", "dep:base64", "dep:bitcoin"]
 lifi-http = ["lifi", "http"]
 rubic = ["evm", "solana", "dep:base64", "dep:serde_json"]
@@ -251,6 +252,7 @@ all = [
   "uniswap",
   "uniswap-http",
   "oneinch",
+  "oneinch-http",
   "lifi",
   "lifi-http",
   "rubic",
