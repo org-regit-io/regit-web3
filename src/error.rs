@@ -158,6 +158,18 @@ pub enum ValidationError {
     InvalidBitcoinCashRecord,
     /// Bitcoin Cash bytes violate their bounded encoding contract.
     InvalidBitcoinCashBytes,
+    /// A TON address violates its encoding, flags or checksum contract.
+    InvalidTonAddress,
+    /// A TON network identity violates its zero-state or alias contract.
+    InvalidTonNetwork,
+    /// A TON hash violates its exact-width encoding contract.
+    InvalidTonHash,
+    /// A TON bag of cells violates its bounded container contract.
+    InvalidTonBoc,
+    /// A TON source record violates its typed structural contract.
+    InvalidTonRecord,
+    /// A TON transfer violates its explicit unsigned intent contract.
+    InvalidTonTransfer,
     /// A Uniswap deployment violates its explicit supported-version contract.
     InvalidUniswapDeployment,
     /// A Uniswap V3 path violates its bounded token/fee contract.
@@ -292,6 +304,12 @@ impl fmt::Display for ValidationError {
             Self::InvalidBitcoinCashAddress => "invalid Bitcoin Cash address",
             Self::InvalidBitcoinCashRecord => "invalid Bitcoin Cash record",
             Self::InvalidBitcoinCashBytes => "invalid Bitcoin Cash byte encoding",
+            Self::InvalidTonAddress => "invalid TON address",
+            Self::InvalidTonNetwork => "invalid TON network",
+            Self::InvalidTonHash => "invalid TON hash",
+            Self::InvalidTonBoc => "invalid TON bag of cells",
+            Self::InvalidTonRecord => "invalid TON record",
+            Self::InvalidTonTransfer => "invalid TON transfer preparation",
             Self::InvalidUniswapDeployment => "invalid Uniswap deployment",
             Self::InvalidUniswapPath => "invalid Uniswap V3 path",
             Self::InvalidUniswapQuote => "invalid Uniswap V3 quote",

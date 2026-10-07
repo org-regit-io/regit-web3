@@ -38,7 +38,7 @@ impl OperationBudget {
         Ok(value)
     }
 
-    #[cfg(any(feature = "xrpl-http", feature = "evm-http"))]
+    #[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
     pub(crate) fn check_remaining(&self) -> Result<(), Error> {
         if Instant::now() >= self.deadline {
             return Err(Error::Timeout);

@@ -72,6 +72,18 @@
 //! and full-ID lists, exact sat/vB recommendations and compatible canonical
 //! Bitcoin transaction/status retrieval. Moving observations are independent;
 //! complete lists fail at explicit limits without truncation or invented paging.
+//! TON supplies CRC-checked standard addresses, full zero-state identity, exact
+//! nanotons and bounded maintained BOC/transaction/message representation hashes.
+//! `ton-http` supplies network/account/history/transaction/status/message-scan
+//! reads and explicit wallet-body fee estimates. Account retries freeze the
+//! selected masterchain sequence and check full returned block identity; history
+//! linkage does not prove inclusion. Decoded fees and reported aggregate/outgoing
+//! components remain separate. Optional caller-configured request spacing and
+//! every retry share one deadline. Internal-message preparation supports wallet
+//! review; outer sender/expiry remain unencoded wallet policy. Separate one-shot
+//! submission retains acknowledgment or ambiguous post-dispatch outcome without
+//! retry. Seven reads/estimates and an outgoing-fee transaction have live proof;
+//! submission is fixture-qualified without funded writes or signature verification.
 //! `THORChain` supplies pure Cosmos/asset identities and exact protocol records;
 //! `thorchain-http` supplies RUNE balances, individual/complete layer-one pool
 //! reads, network values, swap quotes, inbound vaults, chain heights and
@@ -117,7 +129,7 @@
 //! Confirmed output has no unchecked constructor or deserialization path. The
 //! `evm` feature supplies canonical transaction preparation; the `xrpl` feature
 //! supplies an ordinary Payment JSON adapter; `uniswap` supplies an unsigned
-//! router-field adapter. Concrete cryptographic
+//! router-field adapter; `ton` supplies an internal-message adapter. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
 //! other protocol operations remain pending.
@@ -170,6 +182,7 @@ pub mod providers;
             feature = "mempool-space-http",
             feature = "thorchain-http",
             feature = "lifi-http",
+            feature = "ton-http",
             test
         )
     )

@@ -169,8 +169,12 @@ async fn read_request(stream: &mut TcpStream) -> io::Result<Request> {
         .lines()
         .filter_map(|line| line.split_once(':'))
         .find(|(name, _)| name.eq_ignore_ascii_case("content-length"))
-        .and_then(|(_, value)| value.trim().parse::<usize>().ok())
-        .ok_or_else(|| io::Error::other("fixture request length missing"))?;
+        .map_or(Ok(0), |(_, value)| {
+            value
+                .trim()
+                .parse::<usize>()
+                .map_err(|_| io::Error::other("fixture request length invalid"))
+        })?;
     if length > 65_536 {
         return Err(io::Error::other("fixture request body too large"));
     }
@@ -181,8 +185,12 @@ async fn read_request(stream: &mut TcpStream) -> io::Result<Request> {
         }
         bytes.extend_from_slice(&buffer[..read]);
     }
-    let body = serde_json::from_slice(&bytes[header_end..header_end + length])
-        .map_err(|_| io::Error::other("fixture request body is not JSON"))?;
+    let body = if length == 0 {
+        Value::Null
+    } else {
+        serde_json::from_slice(&bytes[header_end..header_end + length])
+            .map_err(|_| io::Error::other("fixture request body is not JSON"))?
+    };
     Ok(Request {
         target,
         headers,

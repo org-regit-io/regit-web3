@@ -19,6 +19,7 @@ mod budget;
         feature = "mempool-space-http",
         feature = "thorchain-http",
         feature = "lifi-http",
+        feature = "ton-http",
         test
     )
 ))]
@@ -42,11 +43,12 @@ pub(crate) use budget::OperationBudget;
         feature = "mempool-space-http",
         feature = "thorchain-http",
         feature = "lifi-http",
+        feature = "ton-http",
         test
     )
 ))]
 pub(crate) use http::HttpClient;
-#[cfg(any(feature = "xrpl-http", feature = "evm-http"))]
+#[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
 pub(crate) use http::submission_unknown;
 #[cfg(feature = "evm-http")]
 pub(crate) use rpc::{decode_response, encode_request};

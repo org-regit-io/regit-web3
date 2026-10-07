@@ -112,6 +112,10 @@ tokio-rustls = { version = "=0.26.6", default-features = false, features = [
   "aws_lc_rs",
   "tls12",
 ], optional = true }
+tycho-types = { version = "=0.3.5", default-features = false, features = [
+  "models",
+  "sync",
+], optional = true }
 url = { version = "=2.5.8", default-features = false, features = [
   "std",
 ], optional = true }
@@ -153,7 +157,8 @@ bitcoin-cash-electrum = [
 ]
 xrpl = ["dep:bs58", "bs58/check", "dep:sha2"]
 xrpl-http = ["xrpl", "http"]
-ton = []
+ton = ["dep:tycho-types", "dep:base64", "dep:crc"]
+ton-http = ["ton", "http"]
 thorchain = ["dep:bech32", "dep:bs58"]
 thorchain-http = ["thorchain", "http"]
 
@@ -192,6 +197,7 @@ all = [
   "xrpl",
   "xrpl-http",
   "ton",
+  "ton-http",
   "thorchain",
   "thorchain-http",
   "jupiter",

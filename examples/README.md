@@ -14,6 +14,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`coingecko_live`](../tests/coingecko_live.rs) | `coingecko-http` | Search, ID/currency prices, one markets page and history; explicit anonymous API base/source/item bound/listing/currency/search/time range |
 | [`defillama_live`](../tests/defillama_live.rs) | `defillama-http` | TVL/history, yields/history, stablecoins/history and all four analytics metrics; three explicit bases/source labels plus item bound/protocol/pool/chain/stablecoin/analytics IDs |
 | [`mempool_space_live`](../tests/mempool_space_live.rs) | `mempool-space-http` | Backlog, recent arrivals, full bounded IDs, recommended fees, canonical transaction and status; explicit API base/source/network/alias/confirmed transaction/full-list capacity |
+| [`ton_live`](../tests/ton_live.rs) | `ton-http` | Seven read/estimate methods, additional outgoing-fee transaction and local unsigned review; explicit URL/source/zero-state/account/cursors/message/fee-body/transfer/pacing inputs |
 | [`thorchain_live`](../tests/thorchain_live.rs) | `thorchain-http` | RUNE balance, individual/complete layer-one pool reads, network values, swap quote, inbound vaults, chain heights and transaction progress; explicit API base/source/Cosmos chain ID/account prefix/alias/account/assets/amount/destination/transaction/item bound |
 | [`uniswap_live`](../tests/uniswap_live.rs) | `uniswap-http` | V3 exact-input quotes, supplied-path comparison and local unsigned Universal Router 2.1.2 preparation; explicit EVM/deployment/path/input/call/recipient/slippage/deadline/handoff inputs |
 | [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
@@ -304,3 +305,29 @@ or submission was invoked. This profile supports V3 pools/QuoterV2 and the
 six-field router 2.1.2 command; supplied deployment declarations require caller
 verification. Preparation checks the deadline against quoted block time only;
 current-time expiry and future liquidity remain caller policy.
+
+## TON reads, fee estimates and unsigned review
+
+[`TON fixture documentation`](../tests/fixtures/ton/README.md) retains the exact
+public inputs for the seven-method qualifier and an additional outgoing-fee
+transaction. It supplies the expected full zero-state, account/cursors, bounded
+history, incoming-message hash, an explicit unsigned no-action Wallet-V4 fee
+body and local internal-message review choices. Caller-selected request spacing
+1100 ms and separate harness operation pacing 2100 ms qualified the anonymous
+endpoint after initial unpaced attempts returned `RateLimited`. Spacing is
+client-local, consumes the total deadline and does not guarantee provider quotas.
+
+```sh
+cargo test --locked --no-default-features --features ton-http \
+  --test ton_live -- --ignored --exact \
+  current_ton_reads_fee_estimate_and_internal_review --nocapture
+```
+
+The Rust API qualified these reads/estimates on 2026-10-07. The fee body uses
+`ignore_chksig=true`; its stored sequence is an explicit input, never refreshed
+implicitly. Decoded transaction fees remain separate from the reported aggregate
+and outgoing fee components. Account evaluation retains a full source block;
+history/status do not invent a common block or finality proof. Internal-message
+preparation encodes destination/value/bounce/body; outer-wallet sender/expiry are
+review policy for an external verifier. Submission has one-shot loopback proof
+only, with no funded write or signature-verification claim.

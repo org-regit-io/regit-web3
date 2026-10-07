@@ -19,7 +19,7 @@ use crate::{
 
 use super::OperationBudget;
 
-#[cfg(any(feature = "xrpl-http", feature = "evm-http"))]
+#[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
 use crate::error::SubmissionFailure;
 
 const RETRY_DELAY: Duration = Duration::from_millis(25);
@@ -93,7 +93,7 @@ impl HttpClient {
     // settings. Building and checking the deadline happen before execute. Once
     // execution is attempted, unresolved failures retain possible dispatch;
     // dropping the future also cannot establish that no submission occurred.
-    #[cfg(any(feature = "xrpl-http", feature = "evm-http"))]
+    #[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
     pub(crate) async fn write_once(
         &self,
         path: &[&str],
@@ -206,7 +206,7 @@ impl HttpClient {
     }
 }
 
-#[cfg(any(feature = "xrpl-http", feature = "evm-http"))]
+#[cfg(any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http"))]
 pub(crate) const fn submission_unknown(error: Error) -> Error {
     let reason = match error {
         Error::SubmissionOutcomeUnknown(reason) => return Error::SubmissionOutcomeUnknown(reason),
@@ -302,6 +302,9 @@ async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>,
 #[path = "tests.rs"]
 mod tests;
 
-#[cfg(all(test, any(feature = "xrpl-http", feature = "evm-http")))]
+#[cfg(all(
+    test,
+    any(feature = "xrpl-http", feature = "evm-http", feature = "ton-http")
+))]
 #[path = "write_tests.rs"]
 mod write_tests;
