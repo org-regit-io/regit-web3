@@ -1,0 +1,33 @@
+{
+  "blockhash": "000000000000000000c41d4e1344c8d34a64717e5e6f2d4a52059811bfa998dd",
+  "blocktime": 1791342457,
+  "confirmations": 1,
+  "hash": "f9540793088014f8f4a7f3ee29233c8e99932ab54e90a93d12811ed1a8445970",
+  "hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff26032cd40e000479b7c56a03de4b2c0c8f01c86ad2d6f489f89b00000a706f6f6c6274632e696fffffffff012d7fa012000000001976a91418d285eb3b4c38516ebd73e08a7201e0a621b8ae88ac00000000",
+  "locktime": 0,
+  "size": 123,
+  "time": 1791342457,
+  "txid": "f9540793088014f8f4a7f3ee29233c8e99932ab54e90a93d12811ed1a8445970",
+  "version": 1,
+  "vin": [
+    {
+      "coinbase": "032cd40e000479b7c56a03de4b2c0c8f01c86ad2d6f489f89b00000a706f6f6c6274632e696f",
+      "sequence": 4294967295
+    }
+  ],
+  "vout": [
+    {
+      "n": 0,
+      "scriptPubKey": {
+        "addresses": [
+          "bitcoincash:qqvd9p0t8dxrs5twh4e7pznjq8s2vgdc4chzqrew27"
+        ],
+        "asm": "OP_DUP OP_HASH160 18d285eb3b4c38516ebd73e08a7201e0a621b8ae OP_EQUALVERIFY OP_CHECKSIG",
+        "hex": "76a91418d285eb3b4c38516ebd73e08a7201e0a621b8ae88ac",
+        "reqSigs": 1,
+        "type": "pubkeyhash"
+      },
+      "value": 3.12508205
+    }
+  ]
+}

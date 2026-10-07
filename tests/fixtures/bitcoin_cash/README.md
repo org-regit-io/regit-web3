@@ -1,0 +1,9 @@
+# Bitcoin Cash read fixtures
+
+- `cashaddr.json`: supported destination vectors from the [CashTokens specification](https://github.com/cashtokens/cashtokens/blob/master/test-vectors/cashaddr.json). Supported P2PKH20/P2SH20/P2SH32 and token-aware destination forms are checked against [BCHN](https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/blob/master/src/cashaddrenc.cpp).
+- `genesis.hex` / `fork.hex`: source header bytes from certificate-verified `cashnode.bch.ninja:50002`, heights 0 and 661648. The latter hash matches the [BCHN mainnet checkpoint](https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/blob/master/src/chainparams.cpp). Header/hash agreement is not consensus or chainwork verification.
+- `coinbase.json` / `coinbase.hex` / `inclusion.json`: actual verbose, raw and source inclusion records for `f9540793088014f8f4a7f3ee29233c8e99932ab54e90a93d12811ed1a8445970`, observed at source height 971820. Raw bytes are independently hashed; verbose fields remain separate source evidence.
+- `history.json` / `unspent.json`: actual point-in-time reads of `bitcoincash:qqvd9p0t8dxrs5twh4e7pznjq8s2vgdc4chzqrew27` on the same source. No historical read pin is claimed.
+- `test-root.der`, `test-leaf.der`, `test-leaf-key.der`: generated local TLS fixture CA, server certificate and **public test-only private key**. These carry no funds or production identity. Tests use explicitly supplied trust roots and retain certificate/hostname validation.
+
+Protocol shapes and units follow [Electrum-Cash 1.6](https://electrum-cash-protocol.readthedocs.io/en/latest/protocol-methods.html). Token-bearing wire cases are deliberate fixtures covering exact fungible quantities, NFT capabilities and commitments; these records do not claim live token authorization or consensus validity. No fixture requires external network access.

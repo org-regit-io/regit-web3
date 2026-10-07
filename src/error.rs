@@ -152,6 +152,12 @@ pub enum ValidationError {
     InvalidLitecoinAddress,
     /// A Dogecoin address violates its family encoding, checksum or network contract.
     InvalidDogecoinAddress,
+    /// A Bitcoin Cash address violates its qualified encoding contract.
+    InvalidBitcoinCashAddress,
+    /// A Bitcoin Cash source record violates its typed contract.
+    InvalidBitcoinCashRecord,
+    /// Bitcoin Cash bytes violate their bounded encoding contract.
+    InvalidBitcoinCashBytes,
     /// An indexed UTxO-family source record violates its structural contract.
     InvalidUtxoRecord,
     /// Indexed UTxO-family bytes violate their bounded encoding contract.
@@ -275,6 +281,9 @@ impl fmt::Display for ValidationError {
             Self::InvalidBitcoinAddress => "invalid Bitcoin address",
             Self::InvalidLitecoinAddress => "invalid Litecoin address",
             Self::InvalidDogecoinAddress => "invalid Dogecoin address",
+            Self::InvalidBitcoinCashAddress => "invalid Bitcoin Cash address",
+            Self::InvalidBitcoinCashRecord => "invalid Bitcoin Cash record",
+            Self::InvalidBitcoinCashBytes => "invalid Bitcoin Cash byte encoding",
             Self::InvalidUtxoRecord => "invalid indexed UTxO record",
             Self::InvalidUtxoBytes => "invalid indexed UTxO byte encoding",
             Self::BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",

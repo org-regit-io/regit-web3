@@ -66,6 +66,7 @@ bitcoin = { version = "=0.32.102", default-features = false, features = [
 bs58 = { version = "=0.5.1", default-features = false, features = [
   "std",
 ], optional = true }
+cashaddr = { version = "=0.2.0", default-features = false, optional = true }
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
 ] }
@@ -75,6 +76,11 @@ pallas-addresses = { version = "=1.4.0", default-features = false, optional = tr
 pallas-codec = { version = "=1.4.0", default-features = false, optional = true }
 reqwest = { version = "=0.13.5", default-features = false, features = [
   "rustls",
+], optional = true }
+rustls = { version = "=0.23.45", default-features = false, features = [
+  "std",
+  "aws_lc_rs",
+  "tls12",
 ], optional = true }
 ruint = { version = "=1.20.1", default-features = false, features = ["std"] }
 serde = { version = "=1.0.229", features = ["derive"] }
@@ -101,6 +107,10 @@ solana-signature = { version = "=3.6.0", default-features = false, features = [
 tokio = { version = "=1.53.2", default-features = false, features = [
   "rt",
   "time",
+], optional = true }
+tokio-rustls = { version = "=0.26.6", default-features = false, features = [
+  "aws_lc_rs",
+  "tls12",
 ], optional = true }
 url = { version = "=2.5.8", default-features = false, features = [
   "std",
@@ -131,7 +141,16 @@ litecoin = ["dep:bech32", "dep:bs58", "bs58/check"]
 litecoin-http = ["litecoin", "http"]
 dogecoin = ["dep:bs58", "bs58/check"]
 dogecoin-http = ["dogecoin", "http"]
-bitcoin-cash = []
+bitcoin-cash = ["dep:cashaddr", "dep:bs58", "bs58/check", "dep:sha2"]
+bitcoin-cash-electrum = [
+  "bitcoin-cash",
+  "dep:rustls",
+  "dep:tokio-rustls",
+  "dep:tokio",
+  "tokio/net",
+  "tokio/io-util",
+  "dep:serde_json",
+]
 xrpl = ["dep:bs58", "bs58/check", "dep:sha2"]
 xrpl-http = ["xrpl", "http"]
 ton = []
@@ -168,6 +187,7 @@ all = [
   "dogecoin",
   "dogecoin-http",
   "bitcoin-cash",
+  "bitcoin-cash-electrum",
   "xrpl",
   "xrpl-http",
   "ton",

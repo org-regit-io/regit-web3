@@ -43,6 +43,13 @@
 //! preferences, complete indexed transactions and status after genesis checks.
 //! Fees are per 1000 serialized bytes; opaque raw bytes and source inclusion do
 //! not establish computed identity, consensus or signature proof.
+//! Bitcoin Cash provides distinct `CashAddr`/legacy and `CashToken` contracts,
+//! full genesis plus explicit fork-checkpoint identity, and six source reads
+//! through optional certificate-verified Electrum-Cash 1.6 TLS. Explicit DER
+//! trust roots, server name and limits select no HTTP dependency. Source history
+//! intervals and zero/null status facts retain actual semantics. Raw bytes have
+//! a computed identity; verbose fields remain separate, without consensus,
+//! signature, raw-field agreement or independently verified inclusion claims.
 //! Solana provides pure identities,
 //! account/balance/observation types, and native/token/account reader contracts.
 //! Its optional `solana-http` backend verifies the full genesis hash and reads
@@ -74,7 +81,7 @@
 //! unreported. Full output fee identity
 //! and expiry are checked. Per-chain heights and source stages do not establish
 //! a common snapshot, independent external inclusion or signed execution.
-//! EVM added reads, Litecoin/Dogecoin, Solana, Bitcoin, XRPL and these provider
+//! EVM added reads, Litecoin/Dogecoin, Bitcoin Cash, Solana, Bitcoin, XRPL and these provider
 //! backends have representative read-live
 //! qualification; `THORChain` has representative read/quote qualification.
 //! Deterministic fixtures cover each implemented backend. This is point-in-time
@@ -129,7 +136,7 @@
 //! ```
 
 pub mod chains;
-#[cfg(feature = "http")]
+#[cfg(any(feature = "http", feature = "bitcoin-cash-electrum"))]
 pub mod config;
 pub mod domain;
 pub mod error;
@@ -137,22 +144,25 @@ pub mod protocols;
 pub mod providers;
 // Compile the private transport when a concrete backend or its tests use it.
 // Extend this predicate as additional integrations are implemented.
-#[cfg(all(
-    feature = "http",
-    any(
-        feature = "evm-http",
-        feature = "solana-http",
-        feature = "bitcoin-esplora",
-        feature = "litecoin-http",
-        feature = "dogecoin-http",
-        feature = "blockfrost-http",
-        feature = "xrpl-http",
-        feature = "coingecko-http",
-        feature = "defillama-http",
-        feature = "mempool-space-http",
-        feature = "thorchain-http",
-        feature = "lifi-http",
-        test
+#[cfg(any(
+    feature = "bitcoin-cash-electrum",
+    all(
+        feature = "http",
+        any(
+            feature = "evm-http",
+            feature = "solana-http",
+            feature = "bitcoin-esplora",
+            feature = "litecoin-http",
+            feature = "dogecoin-http",
+            feature = "blockfrost-http",
+            feature = "xrpl-http",
+            feature = "coingecko-http",
+            feature = "defillama-http",
+            feature = "mempool-space-http",
+            feature = "thorchain-http",
+            feature = "lifi-http",
+            test
+        )
     )
 ))]
 mod transport;

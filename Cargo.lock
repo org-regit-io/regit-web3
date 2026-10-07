@@ -529,6 +529,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc652a48c352aef3ea3aed32080501cf3ef6ed5da78602a020c991775b0aff04"
 
 [[package]]
+name = "cashaddr"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0b4591bc7b7f87bba58b1073c710f7af203e677f17bfb84459d8d25427d9676"
+
+[[package]]
 name = "cc"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2100,6 +2106,7 @@ dependencies = [
  "bigdecimal",
  "bitcoin",
  "bs58",
+ "cashaddr",
  "const-hex",
  "crc",
  "ethaddr",
@@ -2107,6 +2114,7 @@ dependencies = [
  "pallas-codec",
  "reqwest",
  "ruint",
+ "rustls",
  "serde",
  "serde_json",
  "sha2",
@@ -2115,6 +2123,7 @@ dependencies = [
  "solana-hash",
  "solana-signature",
  "tokio",
+ "tokio-rustls",
  "url",
 ]
 

@@ -7,6 +7,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`evm_live`](../tests/evm_live.rs) | `evm-http` | Native/ERC-20/transaction/receipt/status reads or fee/nonce/call/gas estimation; select the exact qualifier and its explicit inputs below |
 | [`litecoin_live`](../tests/litecoin_live.rs) | `litecoin-http` | Five documented mainnet BlockCypher reads and history continuation; explicit URL/source/genesis/alias/address/txid and history/transaction capacities |
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
+| [`bitcoin_cash_live`](../tests/bitcoin_cash_live.rs) | `bitcoin-cash-electrum` | Six Electrum-Cash TLS source reads; explicit host/port/server name/DER trust root/full genesis/fork checkpoint/address/txid/history interval/capacity/fee target |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL balance, present decoded account and individual SPL token account; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
@@ -246,3 +247,30 @@ checks canonical supported envelope structure, ranges, chain and computed ID;
 it does not prove signature validity or reviewed intent. `submit_signed` is a
 separate explicit one-shot write. Its loopback tests cover ambiguous outcomes;
 there is no live funded-submission qualifier.
+
+## Bitcoin Cash TLS reads
+
+The `bitcoin_cash_six_source_reads_live` qualifier uses the explicit harness
+variables `REGIT_WEB3_BITCOIN_CASH_{HOST,PORT,SERVER_NAME,ROOT_DER_PATH,
+NETWORK_ALIAS,GENESIS_HASH,FORK_HEIGHT,FORK_HASH,PROVIDER_ID,ADDRESS,TXID,
+CAPACITY,HISTORY_FROM,HISTORY_TO,FEE_TARGET}`. `ROOT_DER_PATH` is a caller-owned
+certificate trust anchor; certificate and server-name validation stay enabled.
+The harness qualifies a positive public mainnet balance, finite nonempty history,
+exact BCH/1000-byte fee suggestion, confirmed transaction/status and nonempty
+UTXOs. Token-bearing metadata has fixture proof; the recorded public address's
+outputs were token-free. It does not sign or submit.
+
+```sh
+cargo test --locked --no-default-features --features bitcoin-cash-electrum \
+  --test bitcoin_cash_live -- --ignored --exact bitcoin_cash_six_source_reads_live --nocapture
+cargo test --locked --no-default-features --features bitcoin-cash-electrum \
+  --test bitcoin_cash --test bitcoin_cash_electrum
+```
+
+The backend negotiates Electrum-Cash 1.6 and checks token support, full genesis
+and the explicit fork checkpoint at establishment and before every operation.
+A namespace alone cannot distinguish chains sharing genesis or test prefixes.
+History intervals retain their inclusive lower/exclusive upper bounds; an open
+tip includes source mempool entries without establishing a common snapshot.
+Raw transaction bytes retain a computed identity beside source verbose fields,
+without consensus decoding, script/signature validation or inclusion proof.

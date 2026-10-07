@@ -17,6 +17,8 @@
 mod amount;
 #[cfg(feature = "bitcoin")]
 pub mod bitcoin;
+#[cfg(feature = "bitcoin-cash")]
+pub mod bitcoin_cash;
 #[cfg(feature = "cardano")]
 pub mod cardano;
 #[cfg(feature = "coingecko")]
