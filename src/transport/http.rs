@@ -215,7 +215,7 @@ pub(crate) const fn submission_unknown(error: Error) -> Error {
         Error::Provider(ProviderError::RateLimited) => SubmissionFailure::RateLimited,
         Error::Provider(ProviderError::HttpStatus) => SubmissionFailure::HttpStatus,
         Error::Provider(ProviderError::ResponseTooLarge) => SubmissionFailure::ResponseTooLarge,
-        Error::Provider(ProviderError::Rpc) => SubmissionFailure::Rpc,
+        Error::Provider(ProviderError::Rpc) | Error::ExecutionReverted => SubmissionFailure::Rpc,
         Error::Configuration
         | Error::Validation(_)
         | Error::UnsupportedCapability

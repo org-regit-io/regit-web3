@@ -339,7 +339,8 @@ async fn malformed_raw_and_body_bounds_use_fixed_secret_safe_errors()
 #[tokio::test]
 async fn one_deadline_covers_genesis_raw_and_indexed_resources()
 -> Result<(), Box<dyn std::error::Error>> {
-    let delay = Duration::from_millis(40);
+    // All three resources fit a fresh budget; only their total exceeds it.
+    let delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![
         genesis(),
         Reply::delayed(Network::Mainnet.genesis_hash().to_string(), delay),
@@ -347,11 +348,15 @@ async fn one_deadline_covers_genesis_raw_and_indexed_resources()
         Reply::delayed(GENESIS_JSON, delay),
     ])
     .await?;
-    let client = client(&fixture, 0, Duration::from_millis(110), 16 * 1024).await?;
+    let client = client(&fixture, 0, Duration::from_secs(3), 16 * 1024).await?;
     assert_eq!(
         client.get_transaction(Txid::parse(GENESIS_TXID)?).await,
         Err(Error::Timeout)
     );
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 4);
+    assert!(requests[2].starts_with(&format!("GET /api/tx/{GENESIS_TXID}/hex ")));
+    assert!(requests[3].starts_with(&format!("GET /api/tx/{GENESIS_TXID} ")));
     Ok(())
 }
 

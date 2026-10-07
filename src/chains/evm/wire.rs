@@ -9,6 +9,9 @@
 
 use serde::{Deserialize, Serialize};
 
+pub(super) mod abi;
+pub(super) mod reads;
+
 use crate::{
     domain::{BlockContext, BlockHash, Timestamp, U256},
     error::{Error, ProviderError},

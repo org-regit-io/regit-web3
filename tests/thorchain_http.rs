@@ -618,7 +618,9 @@ async fn inbound_halts_and_external_heights_reject_incompatible_source_facts()
 #[tokio::test(flavor = "current_thread")]
 async fn network_and_data_delays_share_one_budget_with_bounded_bodies_and_safe_errors()
 -> Result<(), Box<dyn std::error::Error>> {
-    let delay = Duration::from_millis(40);
+    // Each stage fits a fresh budget; their total exceeds the shared deadline.
+    // Keep enough setup margin for slower Linux runners.
+    let delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![
         Reply::json(INFO),
         Reply {
@@ -635,11 +637,13 @@ async fn network_and_data_delays_share_one_budget_with_bounded_bodies_and_safe_e
         &fixture.endpoint,
         1024 * 1024,
         0,
-        Duration::from_millis(65),
+        Duration::from_secs(2),
     )?)
     .await?;
     assert_eq!(c.get_network().await.unwrap_err(), Error::Timeout);
-    assert_eq!(fixture.requests()?.len(), 3);
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert!(requests[2].starts_with("GET /api/v3/thorchain/network "));
     let huge = "x".repeat(2000);
     let fixture = Fixture::start(vec![
         Reply::json(INFO),

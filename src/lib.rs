@@ -23,11 +23,21 @@
 //! runtime and transport dependencies. The `http` feature exposes explicit,
 //! redacted HTTP(S) configuration. Concrete backends use private bounded transport.
 //!
-//! Currently, EVM native-balance reads are implemented through the `evm`
-//! capability and `evm-http` backend. The backend verifies chain identity,
+//! EVM native/ERC-20 balance, allowance, optional metadata and transaction/receipt
+//! status reads use pure capabilities and the optional `evm-http` backend.
+//! State reads verify chain identity,
 //! resolves a block, and reads with EIP-1898 `blockHash` and
 //! `requireCanonical: true`. Retries retain the captured hash and address without
-//! re-resolving a head or falling back to height. Solana provides pure identities,
+//! re-resolving a head or falling back to height. ERC-20 precision is never assumed.
+//! Typed transaction/receipt records retain actual inclusion and distinct execution
+//! outcomes; source JSON identities/signatures are not independently verified.
+//! Litecoin/Dogecoin provide family-qualified addresses, genesis identities and
+//! exact litoshi/koinu balances with separate signed mempool deltas. Optional
+//! `BlockCypher` mainnet backends read balances, height-cursor history, fee
+//! preferences, complete indexed transactions and status after genesis checks.
+//! Fees are per 1000 serialized bytes; opaque raw bytes and source inclusion do
+//! not establish computed identity, consensus or signature proof.
+//! Solana provides pure identities,
 //! account/balance/observation types, and native/token/account reader contracts.
 //! Its optional `solana-http` backend verifies the full genesis hash and reads
 //! exact SOL balances, SPL token-account balances, and present/absent accounts.
@@ -58,7 +68,8 @@
 //! unreported. Full output fee identity
 //! and expiry are checked. Per-chain heights and source stages do not establish
 //! a common snapshot, independent external inclusion or signed execution.
-//! Solana, Bitcoin, XRPL and these provider backends have representative read-live
+//! EVM added reads, Litecoin/Dogecoin, Solana, Bitcoin, XRPL and these provider
+//! backends have representative read-live
 //! qualification; `THORChain` has representative read/quote qualification.
 //! Deterministic fixtures cover each implemented backend. This is point-in-time
 //! source evidence; Cardano's live proof remains pending.
@@ -73,6 +84,12 @@
 //! qualification, without a funded live submission. Payment preparation covers
 //! ordinary sequence-based XRP/issued transfers; concrete signing and additional
 //! transaction families remain separate extensions.
+//! LI.FI supplies exact-input quotes, bounded route alternatives, selected-step
+//! source preparation and transaction/provider-transfer status. An explicit chain
+//! catalogue prevents family inference from numbers. Immutable selections and
+//! private authority-bound continuations stay separate from fresh estimates and
+//! payloads; encoding does not establish verified signed intent. The four methods
+//! have representative EVM live proof; other family encodings have fixture proof.
 //! The [`wallets`] module supplies generic typed preparation, read-only review and
 //! external handoff. Caller-generated IDs and exact snapshots are correlated
 //! before a trusted caller-supplied verifier checks actual signed-content binding.
@@ -80,7 +97,7 @@
 //! `xrpl` feature supplies an ordinary Payment JSON adapter; concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
-//! protocol operations remain pending.
+//! other protocol operations remain pending.
 //!
 //! Read a native balance through an established EVM client:
 //!
@@ -119,12 +136,15 @@ pub mod providers;
         feature = "evm-http",
         feature = "solana-http",
         feature = "bitcoin-esplora",
+        feature = "litecoin-http",
+        feature = "dogecoin-http",
         feature = "blockfrost-http",
         feature = "xrpl-http",
         feature = "coingecko-http",
         feature = "defillama-http",
         feature = "mempool-space-http",
         feature = "thorchain-http",
+        feature = "lifi-http",
         test
     )
 ))]

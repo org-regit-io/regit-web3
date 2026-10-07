@@ -716,14 +716,15 @@ async fn safe_read_retries_reuse_identical_hash_account_and_body()
 async fn total_deadline_covers_network_ledger_and_read_not_each_request()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut verify = network()?;
-    verify.delay = Duration::from_millis(50);
+    // Both delayed stages fit individually, but consume one shared deadline.
+    verify.delay = Duration::from_millis(1200);
     let mut selected = ledger()?;
-    selected.delay = Duration::from_millis(50);
+    selected.delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![network()?, verify, selected, result(account())?]).await?;
     let client = XrplClient::connect(config(
         &fixture.endpoint,
         0,
-        Duration::from_millis(90),
+        Duration::from_secs(2),
         1_048_576,
     )?)
     .await?;
@@ -733,7 +734,9 @@ async fn total_deadline_covers_network_ledger_and_read_not_each_request()
             .await,
         Err(Error::Timeout)
     );
-    assert_eq!(fixture.requests()?.len(), 3);
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert_eq!(requests[2].body["method"], "ledger");
     Ok(())
 }
 

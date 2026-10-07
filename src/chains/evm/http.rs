@@ -30,6 +30,8 @@ use super::wire::{
     CanonicalBlock, RpcBlock, chain_error, invalid_response, parse_quantity, state_error,
 };
 
+mod reads;
+
 /// A read-only EVM client with explicit configuration and verified chain identity.
 ///
 /// Construct with [`Self::connect`] inside an existing Tokio runtime with its

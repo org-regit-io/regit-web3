@@ -3,6 +3,9 @@
 
 //! Family-specific chain capabilities and replaceable implementations.
 
+#[cfg(any(feature = "litecoin-http", feature = "dogecoin-http"))]
+mod blockcypher;
+
 #[cfg(feature = "evm")]
 pub mod evm;
 

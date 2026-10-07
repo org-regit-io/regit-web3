@@ -324,7 +324,7 @@ async fn frozen_read_retries_keep_auth_and_limits_and_fixed_diagnostics()
         Error::Provider(ProviderError::ResponseTooLarge)
     );
     let mut delayed = Reply::json(r#"{"coins":[]}"#);
-    delayed.delay = Duration::from_millis(150);
+    delayed.delay = Duration::from_secs(3);
     let fixture = Fixture::start(vec![delayed]).await?;
     assert_eq!(
         client(
@@ -332,7 +332,7 @@ async fn frozen_read_retries_keep_auth_and_limits_and_fixed_diagnostics()
             100,
             0,
             1024,
-            Duration::from_millis(70),
+            Duration::from_secs(2),
             ApiTier::Demo
         )?
         .search(SearchQuery::new("btc")?)
@@ -340,6 +340,9 @@ async fn frozen_read_retries_keep_auth_and_limits_and_fixed_diagnostics()
         .unwrap_err(),
         Error::Timeout
     );
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 1);
+    assert!(requests[0].starts_with("GET /api/v3/search?query=btc "));
     for (status, error) in [
         (404, Error::UnavailableData),
         (401, Error::Provider(ProviderError::HttpStatus)),

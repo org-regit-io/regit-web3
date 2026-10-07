@@ -177,21 +177,17 @@ async fn get_consumption_respects_deadline_and_discards_remote_error_bodies()
     let (endpoint, captured) = fixture(
         "HTTP/1.1 200 OK\r\nContent-Length: 1\r\nConnection: close\r\n\r\n",
         b"0".to_vec(),
-        Duration::from_millis(100),
+        Duration::from_secs(3),
     )
     .await?;
-    let config = http_config(
-        RpcEndpoint::new(&endpoint)?,
-        1024,
-        Duration::from_millis(30),
-    )?;
+    let config = http_config(RpcEndpoint::new(&endpoint)?, 1024, Duration::from_secs(2))?;
     let client = HttpClient::new(&config)?;
     let budget = OperationBudget::new(config.limits())?;
     assert!(matches!(
         client.read(&[], &[], None, &budget).await,
         Err(Error::Timeout)
     ));
-    captured.await??;
+    assert!(captured.await??.starts_with("GET /api/v1/ "));
 
     let (endpoint, captured) = fixture(
         "HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n",
@@ -251,19 +247,15 @@ async fn get_retries_retain_url_headers_and_bound_attempts_and_total_deadline()
         assert!(requests[0].contains("x-api-key: fixture-header-secret\r\n"));
     }
 
+    // Each attempt fits a fresh budget; together they exceed the original one.
     let (endpoint, captured) = retry_fixture(vec![
-        (429, Duration::from_millis(40)),
-        (200, Duration::from_millis(70)),
+        (429, Duration::from_millis(1200)),
+        (200, Duration::from_millis(1200)),
     ])
     .await?;
     let config = HttpConfig::new(
         RpcEndpoint::new(&endpoint)?,
-        RpcLimits::new(
-            Duration::from_millis(100),
-            Duration::from_millis(100),
-            1024,
-            1,
-        )?,
+        RpcLimits::new(Duration::from_secs(2), Duration::from_secs(2), 1024, 1)?,
         "fixture",
     )?;
     let client = HttpClient::new(&config)?;
@@ -272,6 +264,9 @@ async fn get_retries_retain_url_headers_and_bound_attempts_and_total_deadline()
         client.read(&[], &[], None, &budget).await,
         Err(Error::Timeout)
     ));
-    assert_eq!(captured.await??.len(), 2);
+    let requests = captured.await??;
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[0], requests[1]);
+    assert!(requests[1].starts_with("GET /api/ "));
     Ok(())
 }

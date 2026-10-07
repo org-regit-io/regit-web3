@@ -24,6 +24,8 @@ pub enum Error {
     UnsupportedCapability,
     /// The operation exceeded its time limit.
     Timeout,
+    /// The provider reports that a contract call reverted during execution.
+    ExecutionReverted,
     /// A provider operation failed.
     Provider(ProviderError),
     /// An outgoing submission was attempted, but its outcome could not be established.
@@ -42,6 +44,7 @@ impl Error {
             Self::Validation(_) => "validation",
             Self::UnsupportedCapability => "unsupported_capability",
             Self::Timeout => "timeout",
+            Self::ExecutionReverted => "execution_reverted",
             Self::Provider(_) => "provider",
             Self::SubmissionOutcomeUnknown(_) => "submission_outcome_unknown",
             Self::UnavailableData => "unavailable_data",
@@ -56,6 +59,7 @@ impl fmt::Display for Error {
             Self::Validation(reason) => reason.fmt(formatter),
             Self::UnsupportedCapability => formatter.write_str("unsupported capability"),
             Self::Timeout => formatter.write_str("operation timed out"),
+            Self::ExecutionReverted => formatter.write_str("contract execution reverted"),
             Self::Provider(reason) => reason.fmt(formatter),
             Self::SubmissionOutcomeUnknown(reason) => {
                 write!(formatter, "submission outcome unknown: {reason}")
@@ -114,6 +118,14 @@ pub enum ValidationError {
     DecimalOutOfBounds,
     /// An EVM address has an invalid length, encoding, or mixed-case checksum.
     InvalidAddress,
+    /// An EVM transaction identifier has invalid hexadecimal encoding or width.
+    InvalidEvmTransactionId,
+    /// EVM bytes violate their bounded hexadecimal or binary encoding contract.
+    InvalidEvmBytes,
+    /// An EVM transaction, receipt or operation record violates its structural contract.
+    InvalidEvmRecord,
+    /// EVM token metadata violates its typed availability or value contract.
+    InvalidEvmMetadata,
     /// A Solana public key has an invalid base58 encoding or byte length.
     InvalidSolanaPubkey,
     /// A Solana hash has an invalid base58 encoding or byte length.
@@ -132,6 +144,14 @@ pub enum ValidationError {
     SolanaAccountDataTooLarge,
     /// A Bitcoin address has invalid encoding or checksum.
     InvalidBitcoinAddress,
+    /// A Litecoin address violates its family encoding, checksum or network contract.
+    InvalidLitecoinAddress,
+    /// A Dogecoin address violates its family encoding, checksum or network contract.
+    InvalidDogecoinAddress,
+    /// An indexed UTxO-family source record violates its structural contract.
+    InvalidUtxoRecord,
+    /// Indexed UTxO-family bytes violate their bounded encoding contract.
+    InvalidUtxoBytes,
     /// A Bitcoin address is incompatible with the explicitly declared network.
     BitcoinAddressNetworkMismatch,
     /// A Bitcoin block hash has an invalid hexadecimal encoding or length.
@@ -218,6 +238,12 @@ pub enum ValidationError {
     InvalidMarketIdentity,
     /// A market request or record violates its structural contract.
     InvalidMarketRecord,
+    /// A LI.FI identity violates its qualified encoding contract.
+    InvalidLifiIdentity,
+    /// A LI.FI request or source record violates its typed contract.
+    InvalidLifiRecord,
+    /// A LI.FI prepared payload violates its bounded encoding contract.
+    InvalidLifiPayload,
 }
 
 impl fmt::Display for ValidationError {
@@ -228,6 +254,10 @@ impl fmt::Display for ValidationError {
             Self::InvalidDecimal => "invalid finite decimal value",
             Self::DecimalOutOfBounds => "decimal value exceeds resource bounds",
             Self::InvalidAddress => "invalid EVM address",
+            Self::InvalidEvmTransactionId => "invalid EVM transaction identifier",
+            Self::InvalidEvmBytes => "invalid EVM byte encoding",
+            Self::InvalidEvmRecord => "invalid EVM record",
+            Self::InvalidEvmMetadata => "invalid EVM token metadata",
             Self::InvalidSolanaPubkey => "invalid Solana public key",
             Self::InvalidSolanaHash => "invalid Solana hash",
             Self::InvalidSolanaSignature => "invalid Solana signature",
@@ -237,6 +267,10 @@ impl fmt::Display for ValidationError {
             Self::InvalidSolanaAccount => "Solana account and requested identity differ",
             Self::SolanaAccountDataTooLarge => "Solana account data exceeds byte limit",
             Self::InvalidBitcoinAddress => "invalid Bitcoin address",
+            Self::InvalidLitecoinAddress => "invalid Litecoin address",
+            Self::InvalidDogecoinAddress => "invalid Dogecoin address",
+            Self::InvalidUtxoRecord => "invalid indexed UTxO record",
+            Self::InvalidUtxoBytes => "invalid indexed UTxO byte encoding",
             Self::BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",
             Self::InvalidBitcoinHash => "invalid Bitcoin block hash",
             Self::InvalidBitcoinTxid => "invalid Bitcoin transaction identifier",
@@ -280,6 +314,9 @@ impl fmt::Display for ValidationError {
             Self::InvalidXrplNetwork => "invalid XRPL network identity",
             Self::InvalidMarketIdentity => "invalid market identity or label",
             Self::InvalidMarketRecord => "invalid market request or record",
+            Self::InvalidLifiIdentity => "invalid LI.FI identity",
+            Self::InvalidLifiRecord => "invalid LI.FI record",
+            Self::InvalidLifiPayload => "invalid LI.FI prepared payload",
         })
     }
 }

@@ -123,8 +123,10 @@ solana-http = ["solana", "http", "dep:base64"]
 cardano = ["dep:pallas-addresses", "dep:pallas-codec", "dep:crc"]
 bitcoin = ["dep:bitcoin"]
 bitcoin-esplora = ["bitcoin", "http"]
-litecoin = []
-dogecoin = []
+litecoin = ["dep:bech32", "dep:bs58", "bs58/check"]
+litecoin-http = ["litecoin", "http"]
+dogecoin = ["dep:bs58", "bs58/check"]
+dogecoin-http = ["dogecoin", "http"]
 bitcoin-cash = []
 xrpl = ["dep:bs58", "bs58/check", "dep:sha2"]
 xrpl-http = ["xrpl", "http"]
@@ -135,7 +137,8 @@ thorchain-http = ["thorchain", "http"]
 jupiter = ["solana"]
 uniswap = ["evm"]
 oneinch = ["evm"]
-lifi = []
+lifi = ["dep:bs58", "dep:base64", "dep:bitcoin"]
+lifi-http = ["lifi", "http"]
 rubic = []
 
 coingecko = []
@@ -157,7 +160,9 @@ all = [
   "bitcoin",
   "bitcoin-esplora",
   "litecoin",
+  "litecoin-http",
   "dogecoin",
+  "dogecoin-http",
   "bitcoin-cash",
   "xrpl",
   "xrpl-http",
@@ -168,6 +173,7 @@ all = [
   "uniswap",
   "oneinch",
   "lifi",
+  "lifi-http",
   "rubic",
   "coingecko",
   "coingecko-http",

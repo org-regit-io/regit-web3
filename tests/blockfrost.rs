@@ -458,14 +458,15 @@ async fn transient_retries_retain_the_same_explicit_page_and_credentials()
 async fn one_deadline_covers_network_verification_and_body_reads()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut delayed_genesis = genesis();
-    delayed_genesis.body_delay = Duration::from_millis(80);
+    // Each body fits a fresh budget; their accumulated delays must time out.
+    delayed_genesis.body_delay = Duration::from_millis(1200);
     let mut delayed_balance = Reply::json(&balance());
-    delayed_balance.body_delay = Duration::from_millis(80);
+    delayed_balance.body_delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![genesis(), delayed_genesis, delayed_balance]).await?;
     let client = BlockfrostClient::connect(config(
         &fixture.endpoint,
         0,
-        Duration::from_millis(130),
+        Duration::from_secs(2),
         1024 * 1024,
     )?)
     .await?;
@@ -476,7 +477,9 @@ async fn one_deadline_covers_network_verification_and_body_reads()
             .unwrap_err(),
         Error::Timeout
     );
-    assert_eq!(fixture.requests()?.len(), 3);
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert!(requests[2].starts_with(&format!("GET /api/v0/addresses/{ADDRESS} ")));
     Ok(())
 }
 

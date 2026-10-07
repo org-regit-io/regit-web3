@@ -529,15 +529,16 @@ async fn retry_attempts_keep_identical_read_options_and_do_not_repeat_genesis_st
 async fn one_deadline_covers_genesis_and_slow_chunked_read_body()
 -> Result<(), Box<dyn std::error::Error>> {
     let mut delayed_genesis = genesis()?;
-    delayed_genesis.delay = Duration::from_millis(90);
+    // Verification and the chunked body fit individually, but not together.
+    delayed_genesis.delay = Duration::from_millis(1200);
     let mut slow = response(&json!(42), 120)?;
     slow.framing = Framing::Chunked;
-    slow.body_delay = Duration::from_millis(140);
+    slow.body_delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![genesis()?, delayed_genesis, slow]).await?;
     let client = SolanaClient::connect(config(
         &fixture.endpoint,
         0,
-        Duration::from_millis(200),
+        Duration::from_secs(2),
         1024 * 1024,
     )?)
     .await?;
@@ -548,7 +549,9 @@ async fn one_deadline_covers_genesis_and_slow_chunked_read_body()
             .unwrap_err(),
         Error::Timeout
     );
-    assert_eq!(fixture.requests()?.len(), 3);
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert_eq!(requests[2].body["method"], "getBalance");
     Ok(())
 }
 

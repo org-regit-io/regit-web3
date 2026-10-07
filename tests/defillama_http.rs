@@ -384,9 +384,9 @@ async fn selected_host_retry_budget_and_http_status_policy_do_not_fallback()
         Error::Provider(ProviderError::ResponseTooLarge)
     );
     let mut reply = Reply::json("1");
-    reply.delay = Duration::from_millis(150);
+    reply.delay = Duration::from_secs(3);
     let f = Fixture::start(vec![reply]).await?;
-    let http = config(&f.endpoint, "fixed", 1024, 0, Duration::from_millis(70))?;
+    let http = config(&f.endpoint, "fixed", 1024, 0, Duration::from_secs(2))?;
     let c = DefiLlamaClient::new(DefiLlamaHttpConfig::new(
         http.clone(),
         http.clone(),
@@ -394,6 +394,9 @@ async fn selected_host_retry_budget_and_http_status_policy_do_not_fallback()
         ItemLimit::new(1)?,
     ))?;
     assert_eq!(c.protocol_tvl(id()?).await.unwrap_err(), Error::Timeout);
+    let requests = f.requests()?;
+    assert_eq!(requests.len(), 1);
+    assert!(requests[0].starts_with("GET /api/v3/tvl/aave "));
     for (status, expected) in [
         (404, Error::UnavailableData),
         (401, Error::Provider(ProviderError::HttpStatus)),

@@ -1,0 +1,43 @@
+{
+  "block_hash": "80ca095ed10b02e53d769eb6eaf92cd04e9e0759e5be4a8477b42911ba49c78f",
+  "block_height": 1,
+  "block_index": 0,
+  "hash": "fa3906a4219078364372d0e2715f93e822edd0b47ce146c71ba7ba57179b50f6",
+  "hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff07045dec8f4e0102ffffffff0100f2052a01000000434104284464458f95a72e610ecd7a561e8c2bdb46c491b347e4a375aa8f2e3b3ed56e99552e789265b6e52a2fc9a00edcdd6c032979dd81a7f1201b62427076768a7aac00000000",
+  "addresses": [
+    "LSdTvMHRm8sScqwCi6x9wzYQae8JeZhx6y"
+  ],
+  "total": 5000000000,
+  "fees": 0,
+  "size": 134,
+  "vsize": 134,
+  "preference": "low",
+  "confirmed": "2011-10-08T06:29:19Z",
+  "received": "2011-10-08T06:29:19Z",
+  "ver": 1,
+  "double_spend": false,
+  "vin_sz": 1,
+  "vout_sz": 1,
+  "confirmations": 3190864,
+  "confidence": 1,
+  "inputs": [
+    {
+      "output_index": -1,
+      "script": "045dec8f4e0102",
+      "sequence": 4294967295,
+      "script_type": "empty",
+      "age": 1
+    }
+  ],
+  "outputs": [
+    {
+      "value": 5000000000,
+      "script": "4104284464458f95a72e610ecd7a561e8c2bdb46c491b347e4a375aa8f2e3b3ed56e99552e789265b6e52a2fc9a00edcdd6c032979dd81a7f1201b62427076768a7aac",
+      "spent_by": "5374cd84b5db1b32d4b4536cc961b6e055bc64a2c48b0a8d152c0dd427f3fbc3",
+      "addresses": [
+        "LSdTvMHRm8sScqwCi6x9wzYQae8JeZhx6y"
+      ],
+      "script_type": "pay-to-pubkey"
+    }
+  ]
+}

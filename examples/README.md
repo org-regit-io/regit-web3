@@ -4,7 +4,9 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 
 | Live test target | Backend feature | Qualified reads / explicit harness inputs |
 | --- | --- | --- |
-| [`evm_live`](../tests/evm_live.rs) | `evm-http` | Native balance; required endpoint/network/address/precision/source/selector inputs below |
+| [`evm_live`](../tests/evm_live.rs) | `evm-http` | Native balance or ERC-20 balance/allowance/optional metadata and transaction/receipt/status; select the exact qualifier and its explicit inputs below |
+| [`litecoin_live`](../tests/litecoin_live.rs) | `litecoin-http` | Five documented mainnet BlockCypher reads and history continuation; explicit URL/source/genesis/alias/address/txid and history/transaction capacities |
+| [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL balance, present decoded account and individual SPL token account; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
@@ -12,6 +14,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`defillama_live`](../tests/defillama_live.rs) | `defillama-http` | TVL/history, yields/history, stablecoins/history and all four analytics metrics; three explicit bases/source labels plus item bound/protocol/pool/chain/stablecoin/analytics IDs |
 | [`mempool_space_live`](../tests/mempool_space_live.rs) | `mempool-space-http` | Backlog, recent arrivals, full bounded IDs, recommended fees, canonical transaction and status; explicit API base/source/network/alias/confirmed transaction/full-list capacity |
 | [`thorchain_live`](../tests/thorchain_live.rs) | `thorchain-http` | RUNE balance, individual/complete layer-one pool reads, network values, swap quote, inbound vaults, chain heights and transaction progress; explicit API base/source/Cosmos chain ID/account prefix/alias/account/assets/amount/destination/transaction/item bound |
+| [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
 
 After setting the linked test's required inputs, select its feature and target:
 
@@ -157,7 +160,63 @@ Success writes one observation JSON line to stdout. Failure writes a fixed typed
 Ordinary tests use deterministic fixtures. With the explicit inputs above, run the ignored public API test separately:
 
 ```sh
-cargo test --locked --test evm_live --features evm-http -- --ignored --nocapture
+cargo test --locked --test evm_live --features evm-http -- --ignored --exact native_balance_live --nocapture
 ```
 
 Missing inputs fail when this test is explicitly selected. The recorded reads are historical, EVM-specific point-in-time evidence; they do not qualify other integrations or establish lasting finality.
+
+## EVM ERC-20 and transaction reads
+
+The second EVM qualifier uses the native example inputs plus
+`REGIT_WEB3_ERC20_CONTRACT`, `REGIT_WEB3_ERC20_SPENDER` and
+`REGIT_WEB3_TRANSACTION_ID`. It reads raw token units without assuming precision,
+records each optional metadata field, and separately checks transaction, receipt
+and status. Source inclusion and failed execution remain distinct.
+
+```sh
+cargo test --locked --no-default-features --features evm-http \
+  --test evm_live -- --ignored --exact erc20_and_transactions_live --nocapture
+```
+
+A representative Ethereum-mainnet USDC read qualified on 2026-10-07 through
+PublicNode: decimals 6, name USD Coin and symbol USDC. The selected included
+legacy transaction had receipt status 0 (failed); inclusion did not become a
+success or finality claim. Typed forms 1–4 have fixture coverage; this live
+transaction does not qualify every transaction form or query.
+
+## Litecoin and Dogecoin indexed reads
+
+Each harness requires its family prefix (`REGIT_WEB3_LITECOIN_` or
+`REGIT_WEB3_DOGECOIN_`) followed by `URL`, `PROVIDER_ID`, `NETWORK_ALIAS`,
+`GENESIS_HASH`, `ADDRESS`, `TXID`, `HISTORY_MINIMUM`, `HISTORY_CAPACITY` and
+`TRANSACTION_CAPACITY`. The backend supports the documented mainnet endpoints;
+pure address/network validation also covers the supported test/regression forms.
+The harness paces requests for the anonymous provider tier.
+
+```sh
+cargo test --locked --no-default-features --features litecoin-http \
+  --test litecoin_live -- --ignored --nocapture
+cargo test --locked --no-default-features --features dogecoin-http \
+  --test dogecoin_live -- --ignored --nocapture
+```
+
+Both five-method qualifiers and separate history continuations passed through
+the Rust API on 2026-10-07. Fees retain native atomic units per 1000 serialized
+bytes. Indexed raw transaction bytes remain opaque; source IDs, inclusion and
+coinbase classification do not establish computed identity or consensus/signature
+verification. A missing continuation flag is uncertainty, not proof of exhaustion.
+
+## LI.FI quotes, routes and preparation
+
+The [fixture notes](../tests/fixtures/lifi/README.md) contain the explicit public
+replay inputs and source compatibility observations. Preparation sends the exact
+selected private step to its configured authority and returns fresh source
+estimates/payload for review. It submits nothing. Chain hashes and provider
+transfer IDs are distinct status inputs; quote/route selection UUIDs are not
+accepted status hashes. The representative EVM proof covers four methods and
+both supported status selectors. Other family encodings have local fixture proof.
+
+```sh
+cargo test --locked --no-default-features --features lifi-http \
+  --test lifi_live -- --ignored --nocapture
+```

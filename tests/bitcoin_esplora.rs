@@ -38,7 +38,7 @@ fn config(
     timeout: Duration,
     bytes: usize,
 ) -> Result<EsploraConfig, Error> {
-    let limits = RpcLimits::new(Duration::from_millis(20), timeout, bytes, retries)?;
+    let limits = RpcLimits::new(timeout, timeout, bytes, retries)?;
     Ok(EsploraConfig::new(
         NetworkId::new(Network::Mainnet, "bitcoin-main")?,
         HttpConfig::new(RpcEndpoint::new(endpoint)?, limits, "esplora-fixture")?,
@@ -378,8 +378,7 @@ async fn safe_retries_reuse_exact_query_credentials_and_errors_are_redacted() {
     .await
     .unwrap();
     let endpoint = format!("{}?key=FAKE_QUERY_SECRET", fixture.endpoint());
-    let limits =
-        RpcLimits::new(Duration::from_millis(20), Duration::from_secs(2), 1024, 2).unwrap();
+    let limits = RpcLimits::new(Duration::from_secs(2), Duration::from_secs(2), 1024, 2).unwrap();
     let http = HttpConfig::new(
         RpcEndpoint::new(&endpoint)
             .unwrap()
@@ -445,18 +444,19 @@ async fn safe_retries_reuse_exact_query_credentials_and_errors_are_redacted() {
 
 #[tokio::test]
 async fn one_deadline_covers_genesis_and_response_body_consumption() {
+    // Each response fits a fresh deadline; their combined delay must not.
     let fixture = Fixture::start(vec![
         genesis(),
         Reply::delayed(
             Network::Mainnet.genesis_hash().to_string(),
-            Duration::from_millis(70),
+            Duration::from_millis(1200),
         ),
-        Reply::delayed(stats(0, 0, 0, 0), Duration::from_millis(70)),
+        Reply::delayed(stats(0, 0, 0, 0), Duration::from_millis(1200)),
     ])
     .await
     .unwrap();
     let client = EsploraClient::connect(
-        config(fixture.endpoint(), 0, Duration::from_millis(110), 1024).unwrap(),
+        config(fixture.endpoint(), 0, Duration::from_secs(2), 1024).unwrap(),
     )
     .await
     .unwrap();
@@ -467,7 +467,9 @@ async fn one_deadline_covers_genesis_and_response_body_consumption() {
             .unwrap_err(),
         Error::Timeout
     );
-    assert_eq!(fixture.requests().unwrap().len(), 3);
+    let requests = fixture.requests().unwrap();
+    assert_eq!(requests.len(), 3);
+    assert!(requests[2].starts_with(&format!("GET /api/address/{ADDRESS} ")));
 }
 
 #[tokio::test]

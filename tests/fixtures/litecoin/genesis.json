@@ -1,0 +1,24 @@
+{
+  "hash": "12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2",
+  "height": 0,
+  "chain": "LTC.main",
+  "total": 0,
+  "fees": 0,
+  "size": 280,
+  "vsize": 280,
+  "ver": 1,
+  "time": "2011-10-07T07:31:05Z",
+  "received_time": "2011-10-07T07:31:05Z",
+  "relayed_by": "",
+  "bits": 504365040,
+  "nonce": 2084524493,
+  "n_tx": 1,
+  "prev_block": "0000000000000000000000000000000000000000000000000000000000000000",
+  "mrkl_root": "97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9",
+  "txids": [
+    "97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9"
+  ],
+  "depth": 3190864,
+  "prev_block_url": "https://api.blockcypher.com/v1/ltc/main/blocks/0000000000000000000000000000000000000000000000000000000000000000",
+  "tx_url": "https://api.blockcypher.com/v1/ltc/main/txs/"
+}

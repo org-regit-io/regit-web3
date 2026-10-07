@@ -24,8 +24,16 @@ pub mod coingecko;
 mod decimal;
 #[cfg(feature = "defillama")]
 pub mod defillama;
+#[cfg(feature = "dogecoin")]
+pub mod dogecoin;
 pub mod evm;
 mod identity;
+#[cfg(any(feature = "litecoin", feature = "dogecoin"))]
+pub(crate) mod indexed_utxo;
+#[cfg(feature = "lifi")]
+pub mod lifi;
+#[cfg(feature = "litecoin")]
+pub mod litecoin;
 #[cfg(any(feature = "coingecko", feature = "defillama"))]
 pub mod market;
 #[cfg(feature = "mempool-space")]
