@@ -22,28 +22,13 @@ Preparation and handoff do not sign or submit. Supported submission operations a
 
 ## Install
 
-Rust 1.98 or newer is required. Before the first crates.io publication, use the Git repository:
+Rust 1.98 or newer is required. Install [regit-web3 1.0.1 from crates.io](https://crates.io/crates/regit-web3/1.0.1):
 
 ```toml
 [dependencies.regit-web3]
-git = "https://github.com/org-regit-io/regit-web3"
-branch = "main"
+version = "1.0.1"
 default-features = false
 ```
-
-Cargo records the resolved Git revision in `Cargo.lock`.
-
-<details>
-<summary>Dependency form after the first 1.0 publication</summary>
-
-```toml
-[dependencies]
-regit-web3 = { version = "1", default-features = false }
-```
-
-This registry form becomes available after publication.
-
-</details>
 
 ## Core primitives
 
