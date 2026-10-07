@@ -1,50 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 Regit
 
-//! Shared bounded HTTP transport. Protocol decoding stays in each integration.
+//! Bounded HTTP sending, URL policy, response limits, and safe-read retries.
 
-use std::{future::Future, time::Duration};
+use std::time::Duration;
 
 use reqwest::{Client, Response, StatusCode, header::CONTENT_TYPE};
-use tokio::time::{Instant, sleep, timeout_at};
+use tokio::time::sleep;
 use url::Url;
 
+#[cfg(any(feature = "evm-http", feature = "solana-http"))]
+use serde::{Serialize, de::DeserializeOwned};
+
 use crate::{
-    config::{HttpConfig, RpcLimits},
+    config::HttpConfig,
     error::{Error, ProviderError},
 };
 
+use super::OperationBudget;
+
 const RETRY_DELAY: Duration = Duration::from_millis(25);
-
-pub(crate) struct OperationBudget {
-    deadline: Instant,
-}
-
-impl OperationBudget {
-    pub(crate) fn new(limits: RpcLimits) -> Result<Self, Error> {
-        if tokio::runtime::Handle::try_current().is_err() {
-            return Err(Error::Configuration);
-        }
-        Ok(Self {
-            deadline: Instant::now() + limits.request_timeout(),
-        })
-    }
-
-    // The deadline covers all stages, retries and response reads. A second
-    // check rejects success after synchronous decoding or construction ran late.
-    pub(crate) async fn run<T, F>(&self, operation: F) -> Result<T, Error>
-    where
-        F: Future<Output = Result<T, Error>>,
-    {
-        let value = timeout_at(self.deadline, operation)
-            .await
-            .map_err(|_| Error::Timeout)??;
-        if Instant::now() >= self.deadline {
-            return Err(Error::Timeout);
-        }
-        Ok(value)
-    }
-}
 
 pub(crate) struct HttpClient {
     config: HttpConfig,
@@ -52,6 +27,29 @@ pub(crate) struct HttpClient {
 }
 
 impl HttpClient {
+    // HTTP responses are associated with the request by their owning exchange.
+    // Fixed ID 1 is local to that exchange; no global dispatcher is involved.
+    #[cfg(any(feature = "evm-http", feature = "solana-http"))]
+    pub(crate) async fn read_rpc<T, P>(
+        &self,
+        budget: &OperationBudget,
+        method: &'static str,
+        params: &P,
+        error_policy: fn(i64) -> Error,
+    ) -> Result<Option<T>, Error>
+    where
+        T: DeserializeOwned,
+        P: Serialize + ?Sized,
+    {
+        const REQUEST_ID: u64 = 1;
+        let body = super::rpc::encode_request(REQUEST_ID, method, params)?;
+        let response = self
+            .read(&[], &[], Some(&body), budget)
+            .await?
+            .into_success()?;
+        super::rpc::decode_response(&response, REQUEST_ID, error_policy)
+    }
+
     pub(crate) fn new(config: &HttpConfig) -> Result<Self, Error> {
         let client = Client::builder()
             .tls_backend_rustls()
@@ -235,4 +233,5 @@ async fn bounded_body(mut response: Response, maximum: usize) -> Result<Vec<u8>,
 }
 
 #[cfg(test)]
+#[path = "tests.rs"]
 mod tests;

@@ -7,7 +7,9 @@
 //! network is caller-supplied expected identity; exposing it does not establish
 //! that a remote source has been checked. Readers must honor the requested
 //! commitment and minimum context slot without treating the minimum as an
-//! exact historical anchor. No HTTP client or asynchronous runtime is selected.
+//! exact historical anchor. The pure `solana` feature selects no HTTP client
+//! or runtime. The optional `solana-http` feature supplies a bounded concrete
+//! implementation that verifies the source's full genesis hash.
 
 use std::future::Future;
 
@@ -17,6 +19,13 @@ use crate::{
     },
     error::Error,
 };
+
+#[cfg(feature = "solana-http")]
+mod http;
+#[cfg(feature = "solana-http")]
+mod wire;
+#[cfg(feature = "solana-http")]
+pub use http::{SolanaClient, SolanaHttpConfig};
 
 /// An externally implemented reader of exact SOL balances and reported slots.
 pub trait NativeBalanceReader {

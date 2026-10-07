@@ -35,7 +35,7 @@ use crate::{
 #[cfg(feature = "evm-http")]
 mod http;
 #[cfg(feature = "evm-http")]
-mod rpc;
+mod wire;
 
 #[cfg(feature = "evm-http")]
 pub use http::EvmClient;

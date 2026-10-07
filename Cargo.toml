@@ -48,20 +48,30 @@ name = "native_balance"
 required-features = ["evm-http"]
 
 [dependencies]
+base64 = { version = "=0.23.1", default-features = false, features = [
+  "std",
+], optional = true }
 bigdecimal = { version = "=0.4.11", default-features = false, features = [
   "std",
 ] }
+bitcoin = { version = "=0.32.102", default-features = false, features = [
+  "std",
+], optional = true }
 const-hex = { version = "=1.19.3", default-features = false, features = [
   "std",
 ] }
+crc = { version = "=3.4.0", default-features = false, optional = true }
 ethaddr = { version = "=0.2.4", default-features = false, features = ["sha3"] }
-ruint = { version = "=1.20.1", default-features = false, features = ["std"] }
+pallas-addresses = { version = "=1.4.0", default-features = false, optional = true }
+pallas-codec = { version = "=1.4.0", default-features = false, optional = true }
 reqwest = { version = "=0.13.5", default-features = false, features = [
   "rustls",
 ], optional = true }
+ruint = { version = "=1.20.1", default-features = false, features = ["std"] }
 serde = { version = "=1.0.229", features = ["derive"] }
 serde_json = { version = "=1.0.151", features = [
   "arbitrary_precision",
+  "raw_value",
 ], optional = true }
 solana-address = { version = "=2.9.0", default-features = false, features = [
   "std",
@@ -100,8 +110,10 @@ http = ["dep:reqwest", "dep:serde_json", "dep:tokio", "dep:url"]
 evm = []
 evm-http = ["evm", "http"]
 solana = ["dep:solana-address", "dep:solana-hash", "dep:solana-signature"]
-cardano = []
-bitcoin = []
+solana-http = ["solana", "http", "dep:base64"]
+cardano = ["dep:pallas-addresses", "dep:pallas-codec", "dep:crc"]
+bitcoin = ["dep:bitcoin"]
+bitcoin-esplora = ["bitcoin", "http"]
 litecoin = []
 dogecoin = []
 bitcoin-cash = []
@@ -119,14 +131,17 @@ coingecko = []
 defillama = []
 helius = ["solana"]
 blockfrost = ["cardano"]
+blockfrost-http = ["blockfrost", "http"]
 mempool-space = ["bitcoin"]
 
 all = [
   "evm",
   "evm-http",
   "solana",
+  "solana-http",
   "cardano",
   "bitcoin",
+  "bitcoin-esplora",
   "litecoin",
   "dogecoin",
   "bitcoin-cash",
@@ -142,5 +157,6 @@ all = [
   "defillama",
   "helius",
   "blockfrost",
+  "blockfrost-http",
   "mempool-space",
 ]

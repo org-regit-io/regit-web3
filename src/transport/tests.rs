@@ -11,7 +11,7 @@ use tokio::{
     task::JoinHandle,
 };
 
-use super::{HttpClient, OperationBudget};
+use super::super::{HttpClient, OperationBudget};
 use crate::{
     config::{HttpConfig, RpcEndpoint, RpcLimits},
     error::{Error, ProviderError},

@@ -16,19 +16,19 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde::{Deserialize, Serialize};
-
 use crate::{
     config::EvmConfig,
     domain::{
-        Address, Amount, Balance, BlockContext, BlockHash, BlockSelector, ChainId, Observation,
+        Address, Amount, Balance, BlockContext, BlockSelector, ChainId, Observation,
         ObservationContext, Source, Timestamp,
     },
     error::{Error, ProviderError},
     transport::{HttpClient, OperationBudget},
 };
 
-use super::rpc::{ErrorPolicy, parse_quantity, read};
+use super::wire::{
+    CanonicalBlock, RpcBlock, chain_error, invalid_response, parse_quantity, state_error,
+};
 
 /// A read-only EVM client with explicit configuration and verified chain identity.
 ///
@@ -139,15 +139,11 @@ impl EvmClient {
     }
 
     async fn verify_chain(&self, budget: &OperationBudget) -> Result<ChainId, Error> {
-        let quantity: String = read(
-            &self.http,
-            budget,
-            "eth_chainId",
-            &[] as &[(); 0],
-            ErrorPolicy::ChainIdentity,
-        )
-        .await?
-        .ok_or_else(invalid_response)?;
+        let quantity: String = self
+            .http
+            .read_rpc(budget, "eth_chainId", &[] as &[(); 0], chain_error)
+            .await?
+            .ok_or_else(invalid_response)?;
         let chain_id = ChainId::new(parse_quantity(&quantity)?);
         if chain_id != self.config.network().chain_id() {
             return Err(Error::Provider(ProviderError::ChainMismatch));
@@ -167,15 +163,11 @@ impl EvmClient {
             BlockSelector::Number(number) => ("eth_getBlockByNumber", format!("0x{number:x}")),
             BlockSelector::Hash(hash) => ("eth_getBlockByHash", hash.to_string()),
         };
-        let block: RpcBlock = read(
-            &self.http,
-            budget,
-            method,
-            &(identifier, false),
-            ErrorPolicy::StateRead,
-        )
-        .await?
-        .ok_or(Error::UnavailableData)?;
+        let block: RpcBlock = self
+            .http
+            .read_rpc(budget, method, &(identifier, false), state_error)
+            .await?
+            .ok_or(Error::UnavailableData)?;
         let block = block.context()?;
         let mismatch = match selector {
             BlockSelector::Number(number) => number != block.number(),
@@ -196,21 +188,16 @@ impl EvmClient {
     ) -> Result<Observation<Balance>, Error> {
         self.verify_chain(budget).await?;
         let block = self.resolve_block(selector, budget).await?;
-        let quantity: String = read(
-            &self.http,
-            budget,
-            "eth_getBalance",
-            &(
-                address,
-                CanonicalBlock {
-                    block_hash: *block.hash(),
-                    require_canonical: true,
-                },
-            ),
-            ErrorPolicy::StateRead,
-        )
-        .await?
-        .ok_or(Error::UnavailableData)?;
+        let quantity: String = self
+            .http
+            .read_rpc(
+                budget,
+                "eth_getBalance",
+                &(address, CanonicalBlock::new(*block.hash())),
+                state_error,
+            )
+            .await?
+            .ok_or(Error::UnavailableData)?;
         let amount = Amount::new(
             parse_quantity(&quantity)?,
             Some(self.config.native_asset().decimals()),
@@ -254,40 +241,4 @@ impl super::NativeBalanceReader for EvmClient {
     ) -> impl std::future::Future<Output = Result<Observation<Balance>, Error>> + Send {
         Self::get_native_balance(self, address, selector)
     }
-}
-
-const fn invalid_response() -> Error {
-    Error::Provider(ProviderError::InvalidResponse)
-}
-
-// Block responses include many protocol fields, including future extensions.
-// Deserialize the required anchor directly so duplicate critical fields cannot
-// be silently overwritten in an intermediate generic JSON object.
-#[derive(Deserialize)]
-struct RpcBlock {
-    hash: String,
-    number: String,
-    timestamp: String,
-}
-
-impl RpcBlock {
-    fn context(self) -> Result<BlockContext, Error> {
-        let hash = BlockHash::parse(&self.hash).map_err(|_| invalid_response())?;
-        let number =
-            u64::try_from(parse_quantity(&self.number)?).map_err(|_| invalid_response())?;
-        let timestamp =
-            u64::try_from(parse_quantity(&self.timestamp)?).map_err(|_| invalid_response())?;
-        Ok(BlockContext::new(
-            number,
-            hash,
-            Timestamp::from_unix_seconds(timestamp),
-        ))
-    }
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct CanonicalBlock {
-    block_hash: BlockHash,
-    require_canonical: bool,
 }

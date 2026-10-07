@@ -21,6 +21,27 @@ name = "webpki-root-certs"
 version = "=1.0.9"
 allow = ["CDLA-Permissive-2.0"]
 
+# bitcoin 0.32.102 uses hex_lit for compile-time hexadecimal literals.
+# Reviewed license: https://spdx.org/licenses/MITNFA.html
+# Canonical text and released author attribution are retained in LICENSES/ and NOTICE.
+[[licenses.exceptions]]
+name = "hex_lit"
+version = "=0.1.1"
+allow = ["MITNFA"]
+
+# pallas-codec 1.4.0 uses minicbor and its derive macros for Cardano CBOR decoding.
+# Reviewed license: https://blueoakcouncil.org/license/1.0.0
+# The identical released texts are retained in LICENSES/BlueOak-1.0.0.md.
+[[licenses.exceptions]]
+name = "minicbor"
+version = "=0.26.5"
+allow = ["BlueOak-1.0.0"]
+
+[[licenses.exceptions]]
+name = "minicbor-derive"
+version = "=0.16.2"
+allow = ["BlueOak-1.0.0"]
+
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"

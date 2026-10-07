@@ -90,6 +90,40 @@ pub enum ValidationError {
     InvalidSolanaAccount,
     /// Solana account data exceeds the protocol's maximum byte length.
     SolanaAccountDataTooLarge,
+    /// A Bitcoin address has invalid encoding or checksum.
+    InvalidBitcoinAddress,
+    /// A Bitcoin address is incompatible with the explicitly declared network.
+    BitcoinAddressNetworkMismatch,
+    /// A Bitcoin block hash has an invalid hexadecimal encoding or length.
+    InvalidBitcoinHash,
+    /// A Bitcoin transaction identifier has invalid hexadecimal encoding or length.
+    InvalidBitcoinTxid,
+    /// A Bitcoin satoshi value exceeds the supported exact unsigned 64-bit range.
+    BitcoinAmountOverflow,
+    /// Bitcoin balance statistics imply a negative confirmed balance.
+    BitcoinBalanceInconsistent,
+    /// Bitcoin history entries violate pagination limits or identity uniqueness.
+    InvalidBitcoinHistory,
+    /// Bitcoin transaction confirmation and inclusion fields are inconsistent.
+    InvalidBitcoinStatus,
+    /// A fee estimate has an invalid horizon or negative exact rate.
+    InvalidBitcoinFeeEstimate,
+    /// A Bitcoin observation uses an unsupported schema version.
+    UnsupportedBitcoinSchema,
+    /// A Cardano address has invalid encoding or checksum.
+    InvalidCardanoAddress,
+    /// A Cardano network identity is invalid.
+    InvalidCardanoNetwork,
+    /// A Cardano hash has invalid encoding or length.
+    InvalidCardanoHash,
+    /// A Cardano native asset identity is invalid.
+    InvalidCardanoAsset,
+    /// A Cardano record violates its structural contract.
+    InvalidCardanoRecord,
+    /// A bounded page request is invalid.
+    InvalidPageRequest,
+    /// A Cardano output amount exceeds its supported width.
+    CardanoAmountOverflow,
     /// A block hash is not a 32-byte hexadecimal value.
     InvalidBlockHash,
     /// A network alias is not a bounded label.
@@ -126,6 +160,23 @@ impl fmt::Display for ValidationError {
             Self::ContextSlotBelowMinimum => "observation slot is below requested minimum",
             Self::InvalidSolanaAccount => "Solana account and requested identity differ",
             Self::SolanaAccountDataTooLarge => "Solana account data exceeds byte limit",
+            Self::InvalidBitcoinAddress => "invalid Bitcoin address",
+            Self::BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",
+            Self::InvalidBitcoinHash => "invalid Bitcoin block hash",
+            Self::InvalidBitcoinTxid => "invalid Bitcoin transaction identifier",
+            Self::BitcoinAmountOverflow => "Bitcoin amount exceeds 64 bits",
+            Self::BitcoinBalanceInconsistent => "inconsistent Bitcoin balance statistics",
+            Self::InvalidBitcoinHistory => "invalid Bitcoin history page",
+            Self::InvalidBitcoinStatus => "inconsistent Bitcoin transaction status",
+            Self::InvalidBitcoinFeeEstimate => "invalid Bitcoin fee estimate",
+            Self::UnsupportedBitcoinSchema => "unsupported Bitcoin observation schema",
+            Self::InvalidCardanoAddress => "invalid Cardano address",
+            Self::InvalidCardanoNetwork => "invalid Cardano network identity",
+            Self::InvalidCardanoHash => "invalid Cardano hash",
+            Self::InvalidCardanoAsset => "invalid Cardano asset identity",
+            Self::InvalidCardanoRecord => "invalid Cardano record",
+            Self::InvalidPageRequest => "invalid page request",
+            Self::CardanoAmountOverflow => "amount exceeds Cardano output width",
             Self::InvalidBlockHash => "invalid block hash",
             Self::InvalidNetworkAlias => "invalid network alias",
             Self::InvalidAssetSymbol => "invalid asset symbol",

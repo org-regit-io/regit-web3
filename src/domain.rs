@@ -15,6 +15,10 @@
 //! strings.
 
 mod amount;
+#[cfg(feature = "bitcoin")]
+pub mod bitcoin;
+#[cfg(feature = "cardano")]
+pub mod cardano;
 mod decimal;
 pub mod evm;
 mod identity;

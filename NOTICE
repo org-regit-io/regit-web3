@@ -2,6 +2,18 @@ Regit Web3
 Copyright (c) 2026 Regit
 An open-source project from Regit: https://www.regit.io
 
-The optional EVM transport depends on webpki-root-certs 1.0.9, which distributes
+The shared optional HTTP backends depend on webpki-root-certs 1.0.9, which distributes
 Mozilla root certificate data under CDLA-Permissive-2.0. Its license text is
 included at LICENSES/CDLA-Permissive-2.0.txt.
+
+The optional Bitcoin primitives depend on hex_lit 0.1.1 by Martin Habovstiak,
+as attributed in its released package metadata. The package declares MITNFA:
+https://spdx.org/licenses/MITNFA.html. LICENSES/MITNFA.txt retains the canonical
+SPDX license text; the released hex_lit archive has no standalone license file.
+No upstream source modifications are vendored here. Substantial modifications
+described by MITNFA must retain responsibility for their own bug-reporting contacts.
+
+The optional Cardano primitives use minicbor 0.26.5 and minicbor-derive 0.16.2
+through pallas-codec 1.4.0. Both packages declare BlueOak-1.0.0:
+https://blueoakcouncil.org/license/1.0.0. Their identical released license text
+is retained at LICENSES/BlueOak-1.0.0.md.
