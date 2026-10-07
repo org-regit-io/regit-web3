@@ -20,11 +20,12 @@ mod budget;
         feature = "thorchain-http",
         feature = "lifi-http",
         feature = "ton-http",
+        feature = "helius-http",
         test
     )
 ))]
 mod http;
-#[cfg(any(feature = "evm-http", feature = "solana-http"))]
+#[cfg(any(feature = "evm-http", feature = "solana-http", feature = "helius-http"))]
 mod rpc;
 
 pub(crate) use budget::OperationBudget;
@@ -44,6 +45,7 @@ pub(crate) use budget::OperationBudget;
         feature = "thorchain-http",
         feature = "lifi-http",
         feature = "ton-http",
+        feature = "helius-http",
         test
     )
 ))]
@@ -56,5 +58,5 @@ pub(crate) use http::HttpClient;
     feature = "solana-http"
 ))]
 pub(crate) use http::submission_unknown;
-#[cfg(any(feature = "evm-http", feature = "solana-http"))]
+#[cfg(any(feature = "evm-http", feature = "solana-http", feature = "helius-http"))]
 pub(crate) use rpc::{decode_response, encode_request};

@@ -306,6 +306,12 @@ validation_errors! {
     InvalidMarketIdentity => "invalid market identity or label",
     /// A market request or record violates its structural contract.
     InvalidMarketRecord => "invalid market request or record",
+    /// A Helius request violates its bounded typed contract.
+    InvalidHeliusRequest => "invalid Helius request",
+    /// A Helius asset violates its bounded typed contract.
+    InvalidHeliusAsset => "invalid Helius asset",
+    /// A Helius transaction violates its bounded typed contract.
+    InvalidHeliusTransaction => "invalid Helius transaction",
     /// A LI.FI identity violates its qualified encoding contract.
     InvalidLifiIdentity => "invalid LI.FI identity",
     /// A LI.FI request or source record violates its typed contract.

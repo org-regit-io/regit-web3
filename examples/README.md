@@ -9,6 +9,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`bitcoin_cash_live`](../tests/bitcoin_cash_live.rs) | `bitcoin-cash-electrum` | Six Electrum-Cash TLS source reads; explicit host/port/server name/DER trust root/full genesis/fork checkpoint/address/txid/history interval/capacity/fee target |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL/account/SPL reads plus canonical transaction/status, recent hash/validity/height, exact message fee and unsigned simulation; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
+| [`helius_live`](../tests/helius_live.rs) | `helius-http` | Awaiting authenticated live qualification: DAS asset/owner pages and current Parsed Events transaction/history reads; explicit authenticated URL/source/full genesis/alias/asset/owner/signature/commitment |
 | [`blockfrost_live`](../tests/blockfrost_live.rs) | `blockfrost-http` | Awaiting authenticated live qualification: seventeen indexed read/estimate methods and local unsigned review; explicit project credential/network/address/stake/asset/transaction/epoch/payment inputs in the fixture recipe |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
@@ -416,4 +417,28 @@ harness calls every read/estimate and local review, and never submits:
 ```sh
 cargo test --locked --no-default-features --features blockfrost-http \
   --test blockfrost_live -- --ignored --nocapture
+```
+
+## Helius assets and parsed transaction history
+
+`helius` supplies four replaceable reader operations and typed DAS/Parsed Events
+records. `helius-http` composes one explicitly configured RPC/REST base and
+verifies the full expected Solana genesis before each read. The library never
+loads credentials, crawls pages or fetches display URLs.
+
+DAS uses explicit page, cursor or binary-ID range controls. Source index progress
+is separate from an evaluation slot. Current Parsed Events batches retain input
+order, duplicates and per-item parser failures; successful parsing can still
+describe failed execution. History token continuation preserves signature, slot,
+time, ordering, commitment and capacity controls. Concrete continuation handles
+are bound to their creating client; source cursors can be persisted explicitly.
+
+The [fixtures](../tests/fixtures/helius/README.md) distinguish current official
+parser example data from synthetic asset/negative cases. Pure/loopback tests
+pass; actual authenticated data qualification remains pending. After supplying
+the linked harness’s explicit inputs, run the four read-only methods with:
+
+```sh
+cargo test --locked --no-default-features --features helius-http \
+  --test helius_live -- --ignored --nocapture
 ```

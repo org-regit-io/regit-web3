@@ -80,6 +80,14 @@
 //! `defillama-http` supplies independently configured TVL/analytics, yield and
 //! stablecoin sources. Peg-denominated circulation, USD valuations and percent
 //! APYs remain distinct; large datasets fail at explicit limits without truncation.
+//! Helius provides pure DAS asset and current Parsed Events transaction/history
+//! records with exact raw token units and bounded structured metadata. The
+//! `helius-http` backend verifies full Solana genesis before every read using one
+//! explicit RPC/REST base. Parser outcomes, execution, inclusion slots and DAS
+//! index progress stay distinct; cached prices remain source valuations. Owner
+//! and history continuations retain every original query control, and concrete
+//! handles reject a different client before dispatch. Authenticated live data
+//! qualification remains pending; no signing or submission is provided.
 //! `mempool-space-http` supplies genesis-checked mempool summaries, bounded recent
 //! and full-ID lists, exact sat/vB recommendations and compatible canonical
 //! Bitcoin transaction/status retrieval. Moving observations are independent;
@@ -203,6 +211,7 @@ pub mod providers;
             feature = "thorchain-http",
             feature = "lifi-http",
             feature = "ton-http",
+            feature = "helius-http",
             test
         )
     )

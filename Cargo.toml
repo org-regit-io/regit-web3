@@ -219,6 +219,7 @@ coingecko-http = ["coingecko", "http"]
 defillama = []
 defillama-http = ["defillama", "http"]
 helius = ["solana"]
+helius-http = ["helius", "http"]
 blockfrost = ["cardano"]
 blockfrost-http = ["blockfrost", "http"]
 mempool-space = ["bitcoin"]
@@ -257,6 +258,7 @@ all = [
   "defillama",
   "defillama-http",
   "helius",
+  "helius-http",
   "blockfrost",
   "blockfrost-http",
   "mempool-space",

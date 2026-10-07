@@ -29,6 +29,8 @@ pub mod defillama;
 #[cfg(feature = "dogecoin")]
 pub mod dogecoin;
 pub mod evm;
+#[cfg(feature = "helius")]
+pub mod helius;
 mod identity;
 #[cfg(any(feature = "litecoin", feature = "dogecoin"))]
 pub(crate) mod indexed_utxo;

@@ -1,0 +1,74 @@
+{
+  "last_indexed_slot": 365750752,
+  "interface": "ProgrammableNFT",
+  "id": "F9Lw3ki3hJ7PF9HQXsBzoY8GyE6sPoEZZdXJBsTTD2rk",
+  "content": {
+    "$schema": "https://schema.metaplex.com/nft1.0.json",
+    "json_uri": "https://example.invalid/source.json",
+    "files": [],
+    "metadata": {
+      "name": "source NFT",
+      "symbol": "NFT",
+      "attributes": [
+        {
+          "trait_type": "edition",
+          "value": "7"
+        }
+      ]
+    },
+    "links": {}
+  },
+  "authorities": [
+    {
+      "address": "2iVwwSHr7hGR6wxNuQM8ArQYnX6Mzy2yeFnhBGgQetRw",
+      "scopes": [
+        "full"
+      ]
+    }
+  ],
+  "compression": {
+    "eligible": false,
+    "compressed": false,
+    "data_hash": "",
+    "creator_hash": "",
+    "asset_hash": "",
+    "tree": "",
+    "seq": 0,
+    "leaf_id": 0
+  },
+  "grouping": [
+    {
+      "group_key": "collection",
+      "group_value": "723Vxwr6aYZHNqc8dVQVwchDHUR3cEwZA8zkejdYWKaS"
+    }
+  ],
+  "royalty": {
+    "royalty_model": "creators",
+    "target": null,
+    "percent": 0.042,
+    "basis_points": 420,
+    "primary_sale_happened": false,
+    "locked": false
+  },
+  "creators": [
+    {
+      "address": "GVKwqsEC5YQZX4hG7Fdy6m7cJUi4DA3ezYx1CC9wkj34",
+      "share": 100,
+      "verified": true
+    }
+  ],
+  "ownership": {
+    "frozen": false,
+    "delegated": false,
+    "delegate": null,
+    "ownership_model": "single",
+    "owner": "86xCnPeV69n6t3DnyGvkKobf9FdN2H9oiVDdaMpo2MMY"
+  },
+  "supply": {
+    "print_max_supply": 0,
+    "print_current_supply": 0,
+    "edition_nonce": 0
+  },
+  "mutable": true,
+  "burnt": false
+}
