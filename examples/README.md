@@ -1,6 +1,6 @@
 # Rust examples and live read qualification
 
-Ordinary tests use deterministic fixtures and require no external provider access. Live tests are ignored by default; explicitly selecting one requires its caller-owned inputs and makes real read-only requests. The library accepts typed configuration and never loads these environment variables.
+Ordinary tests use deterministic fixtures and require no external provider access. Live tests are ignored by default; explicitly selecting one requires its caller-owned inputs and makes real read-only requests. The library accepts typed configuration and never loads these environment variables. See the [catalogue](../guides/catalogue.md), [contracts](../guides/contracts.md) and [qualification summary](../guides/qualification.md) for supported profiles and actual proof.
 
 | Live test target | Backend feature | Qualified reads / explicit harness inputs |
 | --- | --- | --- |
@@ -9,8 +9,8 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`dogecoin_live`](../tests/dogecoin_live.rs) | `dogecoin-http` | Five documented mainnet BlockCypher reads and history continuation; same family-qualified inputs |
 | [`bitcoin_cash_live`](../tests/bitcoin_cash_live.rs) | `bitcoin-cash-electrum` | Six Electrum-Cash TLS source reads; explicit host/port/server name/DER trust root/full genesis/fork checkpoint/address/txid/history interval/capacity/fee target |
 | [`solana_live`](../tests/solana_live.rs) | `solana-http` | SOL/account/SPL reads plus canonical transaction/status, recent hash/validity/height, exact message fee and unsigned simulation; explicit URL/source/full genesis/network alias/commitment/account and token identity inputs |
-| [`helius_live`](../tests/helius_live.rs) | `helius-http` | Awaiting authenticated live qualification: DAS asset/owner pages and current Parsed Events transaction/history reads; explicit authenticated URL/source/full genesis/alias/asset/owner/signature/commitment |
-| [`blockfrost_live`](../tests/blockfrost_live.rs) | `blockfrost-http` | Awaiting authenticated live qualification: seventeen indexed read/estimate methods and local unsigned review; explicit project credential/network/address/stake/asset/transaction/epoch/payment inputs in the fixture recipe |
+| [`helius_live`](../tests/helius_live.rs) | `helius-http` | Four representative authenticated mainnet DAS/Parsed Events reads qualified, including duplicate batches and successful history; DAS asset/owner pages and current Parsed Events transaction/history inputs: explicit authenticated URL/source/full genesis/alias/asset/owner/signature/commitment |
+| [`blockfrost_live`](../tests/blockfrost_live.rs) | `blockfrost-http` | All seventeen indexed read/estimate methods plus local unsigned review authenticated on mainnet at epoch 660/protocol 11; explicit project credential/network/address/stake/asset/transaction/epoch/payment inputs in the fixture recipe |
 | [`bitcoin_live`](../tests/bitcoin_live.rs) | `bitcoin-esplora` | Balance, recent history, fees, status and full transaction; explicit URL/source/network/network alias/address/transaction ID |
 | [`xrpl_live`](../tests/xrpl_live.rs) | `xrpl-http` | XRP balance, trustline page, fees, bounded history, binary transaction and execution status; explicit endpoint/network/account/source/minimum-ledger inputs |
 | [`coingecko_live`](../tests/coingecko_live.rs) | `coingecko-http` | Search, ID/currency prices, one markets page and history; explicit anonymous API base/source/item bound/listing/currency/search/time range |
@@ -413,7 +413,8 @@ provider acknowledgment does not establish execution or finality.
 
 The [fixture and input recipe](../tests/fixtures/blockfrost/README.md) documents
 the supported payment profile and every live input. Ordinary pure/loopback tests
-pass; authenticated indexed-data qualification remains pending. The ignored
+pass. All seventeen indexed reads/estimate and explicit unsigned review have
+representative authenticated mainnet proof at epoch 660/protocol 11. The ignored
 harness calls every read/estimate and local review, and never submits:
 
 ```sh
@@ -437,8 +438,10 @@ are bound to their creating client; source cursors can be persisted explicitly.
 
 The [fixtures](../tests/fixtures/helius/README.md) distinguish current official
 parser example data from synthetic asset/negative cases. Pure/loopback tests
-pass; actual authenticated data qualification remains pending. After supplying
-the linked harness’s explicit inputs, run the four read-only methods with:
+pass. All four methods have representative authenticated mainnet proof,
+including duplicate parsed batches and successful history records. Continuation
+variants retain fixture proof. After supplying the linked harness’s explicit
+inputs, run the four read-only methods with:
 
 ```sh
 cargo test --locked --no-default-features --features helius-http \

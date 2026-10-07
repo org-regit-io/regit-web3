@@ -1,18 +1,38 @@
 name: Bug report
-description: Report a reproducible defect
+description: Report a reproducible library defect
 title: "bug: "
-labels: ["bug"]
 body:
-  - type: textarea
-    id: description
+  - type: markdown
     attributes:
-      label: What happened?
-      description: Include a minimal Rust API reproducer, enabled Cargo features, expected result, and actual result. Redact keys and private transaction data.
+      value: |
+        Thanks for reporting a defect. Include public, reproducible inputs only.
+        Remove secrets, private keys, provider credentials and sensitive transaction data from code, URLs and logs.
+  - type: input
+    id: revision
+    attributes:
+      label: Crate version or Git revision
+      placeholder: "1.0.0 or an exact Git revision"
     validations:
       required: true
-  - type: input
-    id: version
+  - type: textarea
+    id: environment
     attributes:
-      label: Version and platform
+      label: Environment and enabled features
+      description: Include Rust version, target, Cargo features and the affected chain, protocol or provider profile.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducer
+    attributes:
+      label: Minimal reproducer
+      description: Share the smallest Rust example or fixture that reproduces the issue without credentials.
+      render: rust
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Include relevant fixed errors or redacted output and the command used.
     validations:
       required: true

@@ -6,7 +6,7 @@ resolver = "3"
 members = ["."]
 
 [workspace.package]
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 rust-version = "1.98"
 license = "Apache-2.0"
@@ -30,10 +30,25 @@ unreachable_pub = "deny"
 
 [package]
 name = "regit-web3"
-description = "Reusable Rust primitives for typed Web3 operations and observations"
+description = "Modular Web3 primitives for exact values, chain and provider reads, swap quotes, and transaction preparation"
+documentation = "https://docs.rs/regit-web3"
 repository = "https://github.com/org-regit-io/regit-web3"
+keywords = ["web3", "blockchain", "cryptocurrency", "rpc", "defi"]
+categories = [
+  "cryptography::cryptocurrencies",
+  "api-bindings",
+  "data-structures",
+]
 readme = "README.md"
-exclude = ["/doc/", "/sbom/", "/target/", "/key.txt", "/key-*.txt"]
+exclude = [
+  "/AGENTS.md",
+  "/doc/",
+  "/sbom/",
+  "/target/",
+  "/key.txt",
+  "/key-*.txt",
+]
+publish = ["crates-io"]
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -188,6 +203,14 @@ wasm-bindgen-test = "=0.3.79"
 # TON's maintained cell codec uses ahash's OS entropy through getrandom.
 # Select real Web Crypto entropy for that transitive dependency on JS hosts.
 ignored = ["getrandom"]
+
+[package.metadata.docs.rs]
+# Render native APIs on docs.rs's standard Linux host; runtime qualification
+# is recorded separately. JavaScript WASM rendering excludes the native-only
+# Electrum backend.
+all-features = true
+default-target = "x86_64-unknown-linux-gnu"
+targets = ["wasm32-unknown-unknown"]
 
 [features]
 default = []

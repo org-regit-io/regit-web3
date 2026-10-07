@@ -1,12 +1,28 @@
 name: Feature request
-description: Propose a chain, protocol, provider, or library capability
+description: Propose a reusable chain, protocol, provider or library capability
 title: "feat: "
-labels: ["enhancement"]
 body:
-  - type: textarea
-    id: use_case
+  - type: markdown
     attributes:
-      label: Use case
-      description: Describe the library operation and the structured result you need.
+      value: |
+        Thanks for proposing a library improvement. Describe the primitive and its supported profile.
+        Do not include secrets, private keys, provider credentials or sensitive transaction data.
+  - type: textarea
+    id: capability
+    attributes:
+      label: Missing capability
+      description: Describe the typed operation or value that is missing and the current limitation.
     validations:
       required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Proposed API and feature boundary
+      description: Describe inputs, structured results, supported networks/API profiles and whether a pure capability or optional backend is needed.
+    validations:
+      required: true
+  - type: textarea
+    id: qualification
+    attributes:
+      label: Documentation and qualification plan
+      description: Link primary documentation when available and suggest fixtures or read-only qualification that could verify the behavior.
