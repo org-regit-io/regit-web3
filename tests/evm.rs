@@ -593,13 +593,15 @@ async fn retries_reuse_the_original_hash_and_do_not_resolve_a_new_head() -> Test
 
 #[tokio::test]
 async fn one_balance_deadline_covers_chain_resolution_and_body_consumption() -> TestResult {
+    // Every delayed stage fits a fresh budget. Their combined delay exceeds
+    // the total while leaving enough margin to reach the final body transfer.
     let mut chain = Reply::result(&json!("0x1"))?;
-    chain.delay = Duration::from_millis(50);
+    chain.delay = Duration::from_millis(400);
     let mut resolved = Reply::result(&block())?;
-    resolved.delay = Duration::from_millis(50);
+    resolved.delay = Duration::from_millis(400);
     let mut balance = Reply::result(&json!("0x1"))?;
     balance.framing = Framing::Chunked;
-    balance.body_delay = Duration::from_millis(130);
+    balance.body_delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![
         Reply::result(&json!("0x1"))?,
         chain,
@@ -613,7 +615,7 @@ async fn one_balance_deadline_covers_chain_resolution_and_body_consumption() -> 
         BlockSelector::Latest,
         2,
         4096,
-        Duration::from_millis(180),
+        Duration::from_millis(1600),
     )?)
     .await?;
     assert_eq!(

@@ -340,10 +340,10 @@ async fn request_deadline_bounds_waiting_for_headers_and_receiving_the_body() ->
     for slow_body in [false, true] {
         let mut reply = Reply::result(&json!("0x1"))?;
         if slow_body {
-            reply.body_delay = Duration::from_millis(300);
+            reply.body_delay = Duration::from_secs(2);
             reply.framing = Framing::Chunked;
         } else {
-            reply.delay = Duration::from_millis(300);
+            reply.delay = Duration::from_secs(2);
         }
         let fixture = Fixture::start(vec![reply]).await?;
         let config = configured(
@@ -351,14 +351,14 @@ async fn request_deadline_bounds_waiting_for_headers_and_receiving_the_body() ->
             ChainId::from(1),
             4096,
             2,
-            Duration::from_millis(80),
+            Duration::from_millis(750),
         )?;
         let started = Instant::now();
         assert_eq!(
             EvmClient::connect(config).await.unwrap_err(),
             Error::Timeout
         );
-        assert!(started.elapsed() < Duration::from_secs(1));
+        assert!(started.elapsed() < Duration::from_secs(3));
         assert_eq!(fixture.requests()?.len(), 1);
     }
     Ok(())
@@ -366,23 +366,28 @@ async fn request_deadline_bounds_waiting_for_headers_and_receiving_the_body() ->
 
 #[tokio::test]
 async fn all_retry_attempts_share_one_total_deadline() -> TestResult {
+    // Each response fits a fresh budget, but their accumulated delays do not.
+    // Leave setup/scheduling margin so the second attempt actually reaches the
+    // fixture even while other binaries compete for the platform runner.
     let mut first = Reply::raw(503, Vec::new());
-    first.delay = Duration::from_millis(40);
+    first.delay = Duration::from_millis(600);
     let mut second = Reply::result(&json!("0x1"))?;
-    second.delay = Duration::from_millis(70);
+    second.delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![first, second]).await?;
     let config = configured(
         RpcEndpoint::new(&fixture.endpoint)?,
         ChainId::from(1),
         4096,
         2,
-        Duration::from_millis(100),
+        Duration::from_millis(1500),
     )?;
     assert_eq!(
         EvmClient::connect(config).await.unwrap_err(),
         Error::Timeout
     );
-    assert_eq!(fixture.requests()?.len(), 2);
+    let requests = fixture.requests()?;
+    assert_eq!(requests.len(), 2);
+    assert_eq!(requests[0].body, requests[1].body);
     Ok(())
 }
 

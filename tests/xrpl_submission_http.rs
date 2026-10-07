@@ -239,10 +239,10 @@ async fn disconnect_after_receiving_payload_is_unknown_and_never_retried() -> Re
 async fn total_deadline_preserves_preflight_and_post_dispatch_failure_phase()
 -> Result<(), TestError> {
     let mut delayed = network()?;
-    delayed.delay = Duration::from_millis(90);
+    delayed.delay = Duration::from_secs(2);
     let fixture = Fixture::start(vec![network()?, delayed]).await?;
     let client =
-        XrplClient::connect(config(&fixture.endpoint, Duration::from_millis(40), 4096)?).await?;
+        XrplClient::connect(config(&fixture.endpoint, Duration::from_millis(750), 4096)?).await?;
     assert_eq!(
         client.submit_signed(submission()?).await,
         Err(Error::Timeout)
@@ -250,12 +250,18 @@ async fn total_deadline_preserves_preflight_and_post_dispatch_failure_phase()
     assert_eq!(writes(&fixture)?, 0);
 
     let mut preflight = network()?;
-    preflight.delay = Duration::from_millis(30);
+    // Each stage fits a fresh budget, while their total does not. Setup and
+    // dispatch have enough margin to preserve the failure phase under load.
+    preflight.delay = Duration::from_millis(500);
     let mut post = reply(response()?)?;
-    post.body_delay = Duration::from_millis(100);
+    post.body_delay = Duration::from_millis(1200);
     let fixture = Fixture::start(vec![network()?, preflight, post]).await?;
-    let client =
-        XrplClient::connect(config(&fixture.endpoint, Duration::from_millis(80), 4096)?).await?;
+    let client = XrplClient::connect(config(
+        &fixture.endpoint,
+        Duration::from_millis(1500),
+        4096,
+    )?)
+    .await?;
     assert_eq!(
         client.submit_signed(submission()?).await,
         Err(Error::SubmissionOutcomeUnknown(SubmissionFailure::Timeout))
@@ -422,7 +428,14 @@ async fn caller_cancellation_after_dispatch_does_not_spawn_a_retry() -> Result<(
             () = reached.notified() => {}
         }
     }
-    tokio::time::sleep(Duration::from_millis(30)).await;
+    // The first dispatch was observed above. Any detached retry would signal
+    // another request; observe the entire original operation budget instead of
+    // assuming a short sleep was enough for a loaded scheduler to run it.
+    assert!(
+        tokio::time::timeout(Duration::from_secs(2), reached.notified())
+            .await
+            .is_err()
+    );
     assert_eq!(writes(&fixture)?, 1);
     Ok(())
 }
