@@ -9,12 +9,13 @@ Qualification applies to the recorded operation, network, provider plan and quer
 | Evidence | Qualified behavior / limits |
 | --- | --- |
 | Native macOS | Strict gate passed: 753 behavior tests across 85 test binaries, 24 opt-in live tests skipped, eight doctests, formatting, Clippy, documentation and dependency policy |
+| Native platform matrix | All-feature release library/example builds and offline library/integration fixtures passed on Ubuntu, macOS and Windows in [manual run 37621428636](https://github.com/org-regit-io/regit-web3/actions/runs/37621428636) at source commit [`da1828f`](https://github.com/org-regit-io/regit-web3/commit/da1828f). These jobs do not run the full strict gate or provider live reads |
 | Core composition | Checked exact arithmetic/rounding, qualified EVM/Solana mapping keys and ordered partial outcomes have deterministic fixture proof. Synthetic identities and observations do not qualify remote assets, listings or prices |
 | JavaScript WASM in Node | 355 assertions across 33 pure integration targets execute exact values/arithmetic, explicit mappings, bounded collections, family identities, encodings, preparation and typed capabilities across the catalogue |
 | Browser HTTP fixtures | Twelve headless Chrome cases execute actual Request/Response, streams, timers and abort signals with deterministic Fetch fixtures. EVM RPC and typed CoinGecko GET cover bounded bodies, explicit headers/query parameters, frozen-hash retries, shared deadlines, cancellation, timer cleanup and one-shot unknown submission outcomes. Fake credentials only; no provider browser live calls |
 | Feature boundaries | All twenty pure catalogue features and nineteen HTTP backends compile for JavaScript WASM. Empty defaults and pure selections exclude HTTP/runtime dependencies. Electrum-Cash TCP/TLS remains native |
 | Wallet contracts | Generic preparation/review/external handoff and EVM/XRPL adapters have deterministic fixture proof. Returned signed content requires trusted caller-supplied verification; metadata correlation does not verify signed content |
-| Remaining checks | Authenticated 1inch live data and current Linux/Windows qualification remain pending. Browser shared-behavior fixtures do not qualify every provider’s browser live access |
+| Remaining checks | Authenticated 1inch live data remains pending. Browser shared-behavior fixtures do not qualify every provider’s browser live access |
 
 ## Representative live reads and preparation
 

@@ -105,7 +105,7 @@ Native HTTP backends use a caller-owned Tokio runtime. JavaScript WASM uses host
 
 ## Verification
 
-Native macOS and actual JavaScript WASM Node/browser fixture checks pass. Representative live reads apply to their recorded networks, providers and query variants. Authenticated 1inch data and current Linux/Windows qualification remain pending; the [qualification guide](https://github.com/org-regit-io/regit-web3/blob/main/guides/qualification.md) distinguishes fixtures, runtime checks and live proof.
+All-feature library/example builds and offline fixtures pass on Linux, macOS and Windows in the [manual platform run](https://github.com/org-regit-io/regit-web3/actions/runs/37621428636) at source commit [`da1828f`](https://github.com/org-regit-io/regit-web3/commit/da1828f). The macOS strict gate and actual JavaScript WASM Node/browser fixture checks also pass. Representative live reads apply to their recorded networks, providers and query variants. Authenticated 1inch data remains pending; the [qualification guide](https://github.com/org-regit-io/regit-web3/blob/main/guides/qualification.md) distinguishes fixtures, runtime checks and live proof.
 
 ```sh
 just gate

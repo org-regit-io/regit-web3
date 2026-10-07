@@ -8,7 +8,7 @@
 //! Jupiter, Uniswap, 1inch, LI.FI, and Rubic; and five providers: `CoinGecko`,
 //! `DefiLlama`, Helius, Blockfrost, and mempool.space. All twenty modules provide
 //! functional operations within their documented supported profiles. Authenticated
-//! 1inch live data and final platform qualification remain separate pending checks.
+//! 1inch live data remains a separate pending check.
 //!
 //! The [`domain`] module provides exact integer amounts and signed decimals,
 //! validated family identities, account values, and attributable observations.
@@ -186,9 +186,11 @@
 //! preparation with generic review/handoff; `oneinch` retains an unsigned source
 //! envelope and explicit original swap review. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
-//! Preparation and handoff do not submit. Authenticated 1inch data and final
-//! platform qualification remain pending. Representative
-//! proofs apply to their recorded operations, networks and query variants.
+//! Preparation and handoff do not submit. Authenticated 1inch data remains pending.
+//! Native all-feature library/example builds and offline fixtures passed on Linux,
+//! macOS and Windows at source commit `da1828f` in the
+//! [manual run](https://github.com/org-regit-io/regit-web3/actions/runs/37621428636).
+//! Representative proofs apply to their recorded operations, networks and query variants.
 //!
 //! Read a native balance through an established EVM client:
 //!

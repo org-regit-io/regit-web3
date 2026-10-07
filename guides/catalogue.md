@@ -2,7 +2,7 @@
 
 [Overview](../README.md) · [Primitives](primitives.md) · [Catalogue](catalogue.md) · [Contracts](contracts.md) · [Features](features.md) · [Qualification](qualification.md) · [Development](development.md)
 
-All twenty modules provide the operations described below. Qualification remains specific to recorded operations and providers; authenticated 1inch live data and current Linux/Windows qualification remain pending.
+All twenty modules provide the operations described below. Qualification remains specific to recorded operations and providers; authenticated 1inch live data remains pending. See [qualification](qualification.md) for recorded platform checks and their source checkpoint.
 
 ## Shared primitives
 
