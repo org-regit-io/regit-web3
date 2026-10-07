@@ -159,7 +159,25 @@ struct OwnershipWire {
     delegated: bool,
     delegate: Option<Pubkey>,
     ownership_model: SourceText,
-    owner: Option<Pubkey>,
+    owner: Option<String>,
+}
+impl OwnershipWire {
+    fn into_ownership(self) -> Result<Ownership, Error> {
+        // Fungible DAS assets can have multiple holders. The source uses
+        // an empty owner sentinel for token ownership, not a public key.
+        let owner = match self.owner.as_deref() {
+            Some("") if self.ownership_model.as_str() == "token" => None,
+            Some(value) => Some(Pubkey::parse(value).map_err(|_| invalid())?),
+            None => None,
+        };
+        Ok(Ownership {
+            frozen: self.frozen,
+            delegated: self.delegated,
+            delegate: self.delegate,
+            model: self.ownership_model,
+            owner,
+        })
+    }
 }
 #[derive(Deserialize)]
 struct SupplyWire {
@@ -271,13 +289,10 @@ impl AssetWire {
                 locked: r.locked,
             }),
             creators: self.creators.map(|v| v.0),
-            ownership: self.ownership.map(|o| Ownership {
-                frozen: o.frozen,
-                delegated: o.delegated,
-                delegate: o.delegate,
-                model: o.ownership_model,
-                owner: o.owner,
-            }),
+            ownership: self
+                .ownership
+                .map(OwnershipWire::into_ownership)
+                .transpose()?,
             print_supply: self.supply.map(|s| PrintSupply {
                 maximum: s.print_max_supply,
                 current: s.print_current_supply,

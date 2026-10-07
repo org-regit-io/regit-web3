@@ -123,6 +123,68 @@ fn preparation_encodes_exact_selected_intent_and_review_without_witnesses() -> R
 }
 
 #[test]
+fn supported_conway_versions_preserve_ordinary_encoding_fee_and_minimum_ada() -> Result<(), Error> {
+    let baseline = support::preparation()?;
+    let baseline_signed = support::signed_bytes(&baseline, 1)?;
+    let baseline_ledger = ledger_encoding(&baseline_signed)?;
+    for version in [9, 10, 11] {
+        let mut parameters = support::parameters()?.data().clone();
+        parameters.protocol_major = version;
+        let preparation = PaymentPreparation::new(
+            baseline.intent().clone(),
+            ProtocolParameters::new(support::network()?, parameters)?,
+        )?;
+        preparation.validate()?;
+        assert_eq!(
+            preparation.estimate().parameters().data().protocol_major,
+            version
+        );
+        assert_eq!(preparation.unsigned_payload(), baseline.unsigned_payload());
+        assert_eq!(preparation.transaction_id(), baseline.transaction_id());
+        let signed = support::signed_bytes(&preparation, 1)?;
+        assert_eq!(signed, baseline_signed);
+        assert_eq!(ledger_encoding(&signed)?, baseline_ledger);
+        assert_eq!(
+            preparation.estimate().minimum_fee(),
+            baseline.estimate().minimum_fee()
+        );
+        assert_eq!(
+            preparation.estimate().ledger_size_bytes(),
+            baseline.estimate().ledger_size_bytes()
+        );
+        assert_eq!(
+            preparation.estimate().signed_size_bytes(),
+            baseline.estimate().signed_size_bytes()
+        );
+        assert_eq!(
+            preparation.estimate().output_minimum_lovelaces(),
+            baseline.estimate().output_minimum_lovelaces()
+        );
+        assert_eq!(
+            serde_json::from_value::<PaymentPreparation>(
+                serde_json::to_value(&preparation).unwrap()
+            )
+            .unwrap(),
+            preparation
+        );
+    }
+    for version in [8, 12, 13, u64::MAX] {
+        let mut parameters = support::parameters()?.data().clone();
+        parameters.protocol_major = version;
+        assert_eq!(
+            PaymentEstimate::new(
+                baseline.intent().clone(),
+                ProtocolParameters::new(support::network()?, parameters)?,
+            )
+            .unwrap_err(),
+            Error::UnsupportedCapability,
+            "unqualified protocol {version}",
+        );
+    }
+    Ok(())
+}
+
+#[test]
 fn ledger_fee_and_maximum_size_use_three_fields_with_exact_boundaries() -> Result<(), Error> {
     let initial = support::preparation()?;
     let transmitted = support::signed_bytes(&initial, 1)?;
@@ -351,7 +413,7 @@ fn parameter_profile_minimum_ada_value_size_transaction_size_and_arithmetic_are_
             "max_value_bytes" => p.max_value_bytes = Some(1),
             "max_transaction_bytes" => p.max_transaction_bytes = 1,
             "coins_per_utxo_size" => p.coins_per_utxo_size = Some(u64::MAX),
-            "protocol_major" => p.protocol_major = 11,
+            "protocol_major" => p.protocol_major = 12,
             _ => p.min_fee_coefficient = u64::MAX,
         }
         assert!(

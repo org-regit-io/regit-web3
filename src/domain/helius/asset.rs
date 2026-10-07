@@ -122,7 +122,8 @@ pub struct Ownership {
     pub delegate: Option<Pubkey>,
     /// Source ownership model, commonly `single` or `token`.
     pub model: SourceText,
-    /// Optional actual reported owner; absence stays unknown.
+    /// Optional actual reported owner; absence stays unknown. The DAS empty
+    /// owner sentinel for `token` ownership is represented as absent.
     pub owner: Option<Pubkey>,
 }
 /// Source NFT print supply; this is distinct from fungible raw token supply.

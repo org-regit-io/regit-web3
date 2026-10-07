@@ -192,6 +192,93 @@ async fn fungible_supply_balance_prices_and_metadata_numbers_are_lexically_exact
     Ok(())
 }
 #[tokio::test]
+async fn actual_fungible_asset_empty_owner_is_absent_and_owner_pages_preserve_it() -> TestResult {
+    let a: Value = serde_json::from_str(include_str!("fixtures/helius/asset_usdc.json"))?;
+    let request = AssetRequest {
+        id: Pubkey::parse(a["id"].as_str().ok_or("fixture id")?)?,
+        options: options(),
+    };
+    let fixture = Fixture::start(vec![
+        genesis()?,
+        genesis()?,
+        Reply::result(&a)?,
+        genesis()?,
+        Reply::result(&owner_response(&json!([a]), None))?,
+    ])
+    .await?;
+    let client = HeliusClient::connect(standard(&fixture.endpoint)?).await?;
+    let observation = client.get_asset(request.clone()).await?;
+    let asset = observation.value();
+    assert_eq!(asset.id(), request.id);
+    assert_eq!(observation.context().last_indexed_slot(), Some(454_185_479));
+    let ownership = asset.data().ownership.as_ref().ok_or("fixture ownership")?;
+    assert_eq!(ownership.model.as_str(), "token");
+    assert_eq!(ownership.owner, None);
+    let token = asset.data().token_info.as_ref().ok_or("fixture token")?;
+    assert_eq!(token.supply, Some(8_233_196_092_040_001));
+    assert_eq!(token.decimals, Some(6));
+    assert_eq!(
+        token
+            .price
+            .as_ref()
+            .and_then(|price| price.price_per_token.as_ref())
+            .ok_or("fixture price")?
+            .canonical(),
+        "0.999825"
+    );
+    assert_eq!(
+        asset
+            .data()
+            .content
+            .as_ref()
+            .and_then(|content| content.json_uri.as_ref())
+            .ok_or("fixture URI")?
+            .as_str(),
+        ""
+    );
+    assert_eq!(
+        serde_json::from_str::<Observation<Asset>>(&serde_json::to_string(&observation)?)?,
+        observation
+    );
+    let page = client.get_assets_by_owner(owner(None)?).await?;
+    assert_eq!(page.value().items(), std::slice::from_ref(asset));
+    assert_eq!(
+        serde_json::from_str::<Observation<OwnerPage>>(&serde_json::to_string(&page)?)?,
+        page
+    );
+    Ok(())
+}
+#[tokio::test]
+async fn only_token_ownership_accepts_the_empty_owner_sentinel() -> TestResult {
+    for (model, reported_owner) in [("single", ""), ("future", ""), ("token", "invalid-owner")] {
+        let mut a = asset()?;
+        a["ownership"]["ownership_model"] = json!(model);
+        a["ownership"]["owner"] = json!(reported_owner);
+        let fixture = Fixture::start(vec![genesis()?, genesis()?, Reply::result(&a)?]).await?;
+        let client = HeliusClient::connect(standard(&fixture.endpoint)?).await?;
+        assert_eq!(
+            client.get_asset(asset_request()?).await.unwrap_err(),
+            invalid()
+        );
+    }
+    let mut a = asset()?;
+    a["ownership"]["ownership_model"] = json!("token");
+    let fixture = Fixture::start(vec![genesis()?, genesis()?, Reply::result(&a)?]).await?;
+    let client = HeliusClient::connect(standard(&fixture.endpoint)?).await?;
+    let observation = client.get_asset(asset_request()?).await?;
+    assert_eq!(
+        observation
+            .value()
+            .data()
+            .ownership
+            .as_ref()
+            .ok_or("ownership")?
+            .owner,
+        Some(Pubkey::parse(OWNER)?)
+    );
+    Ok(())
+}
+#[tokio::test]
 async fn owner_cursor_keeps_original_controls_source_totals_native_values_and_client_binding()
 -> TestResult {
     let fixture = Fixture::start(vec![

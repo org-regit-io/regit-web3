@@ -248,7 +248,7 @@ impl TryFrom<PaymentIntentFields> for PaymentIntent {
     }
 }
 
-/// Exact local ordinary-payment fee/output calculation for explicit indexed parameters.
+/// Exact local Conway protocol 9–11 ordinary-payment checks for indexed parameters.
 /// Dummy witnesses determine serialization size only and are never signing evidence.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "PaymentEstimateFields")]
@@ -265,14 +265,14 @@ impl PaymentEstimate {
     /// It reports the minimum fee without silently changing fee or change outputs.
     ///
     /// # Errors
-    /// Rejects wrong-network/unsupported parameters, size/value/minimum-ADA violations
+    /// Rejects wrong-network/unsupported protocol parameters, size/value/minimum-ADA violations
     /// or checked arithmetic overflow. Caller must build a fresh review after adjustment.
     pub fn new(intent: PaymentIntent, parameters: ProtocolParameters) -> Result<Self, Error> {
         if intent.network.identity() != parameters.network().identity() {
             return Err(ValidationError::NetworkMismatch.into());
         }
         let p = parameters.data();
-        if !matches!(p.protocol_major, 9 | 10) {
+        if !matches!(p.protocol_major, 9..=11) {
             return Err(Error::UnsupportedCapability);
         }
         let cost = p.coins_per_utxo_size.ok_or(Error::UnsupportedCapability)?;

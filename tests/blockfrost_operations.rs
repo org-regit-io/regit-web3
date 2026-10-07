@@ -10,13 +10,14 @@ mod cardano;
 #[path = "support/blockfrost.rs"]
 mod fixture;
 use fixture::{Fixture, Reply, genesis};
+use regit_web3::wallets::Preparation;
 use regit_web3::{
     chains::cardano::{CardanoReader, CardanoSubmitter},
     domain::{
         U256,
         cardano::{
             EpochSelector, Hash, MetadataAvailability, Observation, Operation, Order, PageRequest,
-            PageStatus, StakeAddress, TransactionStatus, asset_fingerprint,
+            PageStatus, PaymentPreparation, StakeAddress, TransactionStatus, asset_fingerprint,
         },
     },
     error::{Error, ProviderError, SubmissionFailure, ValidationError},
@@ -78,6 +79,46 @@ fn observed<T: regit_web3::domain::cardano::ObservationValue>(v: &Observation<T>
 }
 fn invalid() -> Error {
     Error::Provider(ProviderError::InvalidResponse)
+}
+
+#[tokio::test]
+async fn recorded_protocol_eleven_parameters_support_ordinary_fee_and_unsigned_review()
+-> Result<(), Box<dyn std::error::Error>> {
+    let parameters: Value = serde_json::from_str(include_str!(
+        "fixtures/blockfrost/epoch_660_payment_parameters.json"
+    ))?;
+    let server = Fixture::start(vec![genesis(), genesis(), Reply::json(&parameters)]).await?;
+    let client = BlockfrostClient::connect(fixture::standard(&server.endpoint)?).await?;
+    let intent = cardano::intent(500_000)?;
+    let observation = client
+        .estimate_payment_fee(intent.clone(), EpochSelector::Number(660))
+        .await?;
+    observed(&observation, Operation::PaymentEstimate);
+    assert_eq!(observation.value().intent(), &intent);
+    assert_eq!(observation.value().parameters().data().epoch, 660);
+    assert_eq!(observation.value().parameters().data().protocol_major, 11);
+    let preparation = PaymentPreparation::new(intent, observation.value().parameters().clone())?;
+    preparation.validate()?;
+    let baseline = cardano::preparation()?;
+    assert_eq!(preparation.unsigned_payload(), baseline.unsigned_payload());
+    assert_eq!(
+        preparation.estimate().minimum_fee(),
+        baseline.estimate().minimum_fee()
+    );
+    assert_eq!(
+        preparation.estimate().output_minimum_lovelaces(),
+        baseline.estimate().output_minimum_lovelaces()
+    );
+    roundtrip(&observation)?;
+    roundtrip(&preparation)?;
+    let requests = server.requests()?;
+    assert_eq!(requests.len(), 3);
+    assert!(
+        requests[2]
+            .headers
+            .starts_with("GET /api/v0/epochs/660/parameters ")
+    );
+    Ok(())
 }
 
 #[tokio::test]
