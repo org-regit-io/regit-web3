@@ -103,12 +103,21 @@
 //! private authority-bound continuations stay separate from fresh estimates and
 //! payloads; encoding does not establish verified signed intent. The four methods
 //! have representative EVM live proof; other family encodings have fixture proof.
+//! Uniswap supplies V3 `QuoterV2` exact-input quotes and bounded comparison of
+//! caller-supplied paths, with one captured canonical EVM hash and total deadline.
+//! Raw output and per-hop prices/ticks remain exact source facts. Pure Universal
+//! Router 2.1.2 preparation retains literal recipient, explicit deadline, exact
+//! slippage floor and separate ERC-20/Permit2 allowance requirements. It supplies
+//! unsigned transaction fields and typed wallet handoff without signing or
+//! submission. V3 quote/comparison have representative live proof; deployment
+//! declarations are caller-verified and no global route discovery is implied.
 //! The [`wallets`] module supplies generic typed preparation, read-only review and
 //! external handoff. Caller-generated IDs and exact snapshots are correlated
 //! before a trusted caller-supplied verifier checks actual signed-content binding.
 //! Confirmed output has no unchecked constructor or deserialization path. The
 //! `evm` feature supplies canonical transaction preparation; the `xrpl` feature
-//! supplies an ordinary Payment JSON adapter. Concrete cryptographic
+//! supplies an ordinary Payment JSON adapter; `uniswap` supplies an unsigned
+//! router-field adapter. Concrete cryptographic
 //! verification, signing, custody and connectors remain separate extensions.
 //! Preparation and handoff do not submit. Wider chain and provider operations and
 //! other protocol operations remain pending.

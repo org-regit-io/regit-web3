@@ -45,6 +45,8 @@ mod observation;
 pub mod solana;
 #[cfg(feature = "thorchain")]
 pub mod thorchain;
+#[cfg(feature = "uniswap")]
+pub mod uniswap;
 #[cfg(feature = "xrpl")]
 pub mod xrpl;
 

@@ -15,6 +15,7 @@ Ordinary tests use deterministic fixtures and require no external provider acces
 | [`defillama_live`](../tests/defillama_live.rs) | `defillama-http` | TVL/history, yields/history, stablecoins/history and all four analytics metrics; three explicit bases/source labels plus item bound/protocol/pool/chain/stablecoin/analytics IDs |
 | [`mempool_space_live`](../tests/mempool_space_live.rs) | `mempool-space-http` | Backlog, recent arrivals, full bounded IDs, recommended fees, canonical transaction and status; explicit API base/source/network/alias/confirmed transaction/full-list capacity |
 | [`thorchain_live`](../tests/thorchain_live.rs) | `thorchain-http` | RUNE balance, individual/complete layer-one pool reads, network values, swap quote, inbound vaults, chain heights and transaction progress; explicit API base/source/Cosmos chain ID/account prefix/alias/account/assets/amount/destination/transaction/item bound |
+| [`uniswap_live`](../tests/uniswap_live.rs) | `uniswap-http` | V3 exact-input quotes, supplied-path comparison and local unsigned Universal Router 2.1.2 preparation; explicit EVM/deployment/path/input/call/recipient/slippage/deadline/handoff inputs |
 | [`lifi_live`](../tests/lifi_live.rs) | `lifi-http` | Quote, routes, preparation and transaction/provider-transfer status; explicit URL/source/chain-family catalogue/assets/accounts/raw amount/slippage/status inputs |
 
 After setting the linked test's required inputs, select its feature and target:
@@ -274,3 +275,32 @@ History intervals retain their inclusive lower/exclusive upper bounds; an open
 tip includes source mempool entries without establishing a common snapshot.
 Raw transaction bytes retain a computed identity beside source verbose fields,
 without consensus decoding, script/signature validation or inclusion proof.
+
+## Uniswap V3 quotes and unsigned preparation
+
+The qualifier uses the EVM example inputs plus the following caller-owned values.
+[`live_inputs.json`](../tests/fixtures/uniswap/live_inputs.json) retains the public
+qualification inputs and exact supported deployment profile.
+
+| Variable | Value |
+| --- | --- |
+| `REGIT_WEB3_UNISWAP_QUOTE_JSON` | Serialized `V3QuoteRequest`: declared contracts, forward token/fee path, raw input and explicit sender/nonce/gas/fees |
+| `REGIT_WEB3_UNISWAP_ROUTES_JSON` | Serialized `V3RouteRequest` with at most 16 supplied paths and the same input/call settings |
+| `REGIT_WEB3_UNISWAP_RECIPIENT` | Literal output-token recipient |
+| `REGIT_WEB3_UNISWAP_SLIPPAGE_BPS` | Explicit tolerance, 0 through 10000 |
+| `REGIT_WEB3_UNISWAP_DEADLINE` | Explicit Unix-second router deadline |
+| `REGIT_WEB3_UNISWAP_HANDOFF_ID` | Bounded caller-generated handoff identifier |
+
+```sh
+cargo test --locked --no-default-features --features uniswap-http \
+  --test uniswap_live -- --ignored --exact \
+  v3_quotes_supplied_routes_and_router_2_1_2_unsigned_preparation_live --nocapture
+```
+
+Both reads qualified through the Rust API on 2026-10-07. Every compared path
+used the same captured canonical hash; the harness constructed an immutable
+unsigned Universal Router 2.1.2 intent and wallet handoff. No approval, signer
+or submission was invoked. This profile supports V3 pools/QuoterV2 and the
+six-field router 2.1.2 command; supplied deployment declarations require caller
+verification. Preparation checks the deadline against quoted block time only;
+current-time expiry and future liquidity remain caller policy.

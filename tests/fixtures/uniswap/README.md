@@ -1,0 +1,15 @@
+# Uniswap fixtures
+
+- `quote_multihop.json`, `routes.json` and `prepared_intent.json` are typed observations/intents serialized by the actual public Rust live harness on 2026-10-07. They are decoded domain records, not captured raw JSON-RPC envelopes or proof of swap execution. Provider: `https://ethereum-rpc.publicnode.com`, expected chain 1, retrieval Unix seconds 1791345776, captured block 26137947 / `0xbf6f7ce2099cee100322b6a7077cfca05473c5b0f974db7ac87447ceb4129ab0`.
+- `live_inputs.json` retains the explicit public inputs for `tests/uniswap_live.rs`. The call used WETH→USDC→DAI with fee tiers 500/100 and 1,000,000,000,000,000 raw WETH input. The supplied candidates also included direct WETH→DAI fee 3000. No decimals are inferred, no global route search is performed, and no signer, approval transaction or submission is invoked.
+- Ordinary loopback ABI vectors in `tests/uniswap_http.rs` are independently constructed from the four-field `IQuoterV2.quoteExactInput` output schema. Malformed offsets, cardinalities, uint160/uint32 overflow, truncated/trailing bytes and empty data are intentional rejection cases. They are deterministic fixtures, not live data.
+- The pure preparation test checks the six-field Universal Router **2.1.2** V3 exact-input command, aggregate minimum output, literal recipient, deadline, `payerIsUser=true`, empty per-hop price limits and separate ERC-20/Permit2 authorization requirements. It does not assert future execution, valid signatures or reviewed signed-content binding.
+
+Primary ABI/deployment sources checked with Context7 and current upstream documentation:
+
+- [Official contract deployment inventory](https://developers.uniswap.org/deployments.json), generated 2026-09-22, inventory commit `a677c0d4b5fb6e3357cf6d0f0315bcb135a1e1ee`; Ethereum Universal Router 2.1.2 address `0x23617e59a5925b2a4bf75d73ff6711cd0b29de85`, upstream source reference `802fe4c`.
+- [V3 QuoterV2 ABI](https://github.com/Uniswap/v3-periphery/blob/main/contracts/interfaces/IQuoterV2.sol) and [V3 QuoterV2 source](https://github.com/Uniswap/v3-periphery/blob/main/contracts/lens/QuoterV2.sol).
+- [Universal Router 2.1.2 command dispatch](https://github.com/Uniswap/universal-router/blob/802fe4c/contracts/base/Dispatcher.sol), [router deadline semantics](https://github.com/Uniswap/universal-router/blob/802fe4c/contracts/UniversalRouter.sol), [Permit2 payment width](https://github.com/Uniswap/universal-router/blob/802fe4c/contracts/modules/Permit2Payments.sol) and [V3 swapping](https://github.com/Uniswap/universal-router/blob/802fe4c/contracts/modules/uniswap/v3/V3SwapRouter.sol).
+- [Solidity ABI specification](https://docs.soliditylang.org/en/latest/abi-spec.html). Encodings are bounded explicit ABI fields; no upstream implementation source is copied into this crate.
+
+Supported versions are V3 pools/QuoterV2 and Universal Router 2.1.2. These fixtures make no V4 or universal deployment/code-attestation claim. Arbitrary supplied contract declarations remain caller-verified. Canonicality is source-asserted per frozen-hash call, with unknown lasting finality.

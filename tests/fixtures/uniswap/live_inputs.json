@@ -1,0 +1,81 @@
+{
+  "rpc_url": "https://ethereum-rpc.publicnode.com",
+  "network_alias": "ethereum-mainnet",
+  "provider_id": "publicnode-ethereum",
+  "selector": "safe",
+  "quote": {
+    "deployment": {
+      "chain_id": "1",
+      "factory": "0x1f98431c8ad98523631ae4a59f267346ea31f984",
+      "quoter_v2": "0x61ffe014ba17989e743c5f6cb21bf9697530b21e",
+      "universal_router_2_1_2": "0x23617e59a5925b2a4bf75d73ff6711cd0b29de85",
+      "permit2": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+    },
+    "path": {
+      "tokens": [
+        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+        "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+        "0x6b175474e89094c44da98b954eedeac495271d0f"
+      ],
+      "fees": [
+        500,
+        100
+      ]
+    },
+    "amount_in": "1000000000000000",
+    "settings": {
+      "from": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "nonce": 9,
+      "gas_limit": 500000,
+      "fees": {
+        "kind": "legacy",
+        "gas_price": "100000000000"
+      }
+    }
+  },
+  "routes": {
+    "deployment": {
+      "chain_id": "1",
+      "factory": "0x1f98431c8ad98523631ae4a59f267346ea31f984",
+      "quoter_v2": "0x61ffe014ba17989e743c5f6cb21bf9697530b21e",
+      "universal_router_2_1_2": "0x23617e59a5925b2a4bf75d73ff6711cd0b29de85",
+      "permit2": "0x000000000022d473030f116ddee9f6b43ac78ba3"
+    },
+    "paths": [
+      {
+        "tokens": [
+          "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          "0x6b175474e89094c44da98b954eedeac495271d0f"
+        ],
+        "fees": [
+          3000
+        ]
+      },
+      {
+        "tokens": [
+          "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+          "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+          "0x6b175474e89094c44da98b954eedeac495271d0f"
+        ],
+        "fees": [
+          500,
+          100
+        ]
+      }
+    ],
+    "amount_in": "1000000000000000",
+    "settings": {
+      "from": "0x28c6c06298d514db089934071355e5743bf21d60",
+      "nonce": 9,
+      "gas_limit": 500000,
+      "fees": {
+        "kind": "legacy",
+        "gas_price": "100000000000"
+      }
+    }
+  },
+  "recipient": "0x28c6c06298d514db089934071355e5743bf21d60",
+  "slippage_bps": 100,
+  "deadline": 1792000000,
+  "handoff_id": "caller-uniswap-live-1"
+}

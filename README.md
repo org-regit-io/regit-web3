@@ -24,7 +24,7 @@ All modules below are part of the required library scope. Current implementation
 | Protocol | Scope | Current implementation |
 | --- | --- | --- |
 | Jupiter | Solana aggregation quotes/routes and swap preparation | Pending |
-| Uniswap | Direct EVM DEX quotes and swap preparation | Pending |
+| Uniswap | Direct EVM DEX quotes and swap preparation | V3 QuoterV2 exact-input quotes, bounded supplied-path comparison and unsigned Universal Router 2.1.2 swap preparation implemented |
 | 1inch | Aggregated EVM quotes/routes and swap preparation | Pending |
 | LI.FI | Cross-chain quotes/routes, execution preparation and status | Exact-input quotes, bounded route alternatives, immutable selected-step preparation, and transaction/provider-transfer status implemented |
 | Rubic | Cross-chain quotes/routes and supported execution preparation | Pending |
@@ -37,7 +37,7 @@ All modules below are part of the required library scope. Current implementation
 | Blockfrost | Indexed Cardano network, asset and supporting account data | Genesis verification, current full-asset address balances and explicit UTxO pages implemented; wider provider operations pending |
 | mempool.space | Bitcoin mempool, fees and transaction data | Backlog summaries, recent arrivals, bounded full transaction-ID lists, exact recommended fees, canonical transaction retrieval and inclusion status implemented |
 
-Generic typed wallet preparation, review and external signing-handoff contracts are implemented, with EVM canonical transaction and XRPL Payment JSON adapters. Returned signed content requires a caller-supplied verifier against the original preparation; matching echoed metadata alone does not verify it. Concrete cryptographic verification, signing, custody and connectors remain separate extensions. Callers own approval and replay policy; preparation and handoff do not submit.
+Generic typed wallet preparation, review and external signing-handoff contracts are implemented, with EVM canonical transaction, XRPL Payment JSON and Uniswap router-field adapters. Returned signed content requires a caller-supplied verifier against the original preparation; matching echoed metadata alone does not verify it. Concrete cryptographic verification, signing, custody and connectors remain separate extensions. Callers own approval and replay policy; preparation and handoff do not submit.
 
 ## Implemented contracts
 
@@ -72,11 +72,12 @@ Generic typed wallet preparation, review and external signing-handoff contracts 
 | mempool.space HTTP reads | Explicit expected full Bitcoin genesis and API base; one total deadline for setup/reads/retries. Canonical transaction retrieval/status reuse compatible Esplora contracts and retain the supplied provider label |
 | THORChain HTTP reads | Explicit Cosmos network/account-prefix/API configuration; network verification before each operation under one total deadline. Complete bounded collections fail without truncation; quotes expire without implicit refresh and separate reads have no common snapshot claim |
 | LI.FI source contracts | Explicit chain-family catalogue, exact assets/units/slippage/costs and bounded alternatives. Preparation retains the old selection beside fresh source estimates/payload; encoding checks do not prove signed intent. Status distinguishes chain hashes, provider transfer IDs and refunds; quote expiry remains unreported |
+| Uniswap V3 operations | Explicit deployment/path/input/call settings; QuoterV2 quotes and at most 16 supplied paths retain one canonical hash. Exact raw output, per-hop prices/ticks and source gas estimates; reverted candidates remain distinct. Unsigned Universal Router 2.1.2 preparation retains literal recipient, floor-rounded slippage, explicit deadline and separate ERC-20/Permit2 allowance requirements |
 | Optional transport | Explicit configuration, verified TLS, bounded bodies/retries and one total operation deadline; endpoint credentials and raw provider messages excluded from diagnostics |
 
 EVM HTTP native reads retain configured precision, finality `unknown` and confirmations `null`; requested tags do not establish either. Bitcoin and Cardano indexed reads do not promise a hash-selected snapshot or lasting finality. Each family retains its own ledger and source semantics. Pure observation construction validates supplied records and does not independently verify a remote source.
 
-EVM ERC-20 balance/allowance/metadata, transaction/receipt/status, fee/nonce/call/estimate reads, Litecoin/Dogecoin five reads with history continuation, Bitcoin Cash six Electrum-TLS reads, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and EVM/XRPL preparation adapters have deterministic fixture qualification. EVM and XRPL explicit submission paths have deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Blockfrost live qualification remains pending. These operation-specific observations do not complete the full catalogue or qualify every network, provider plan or query variant.
+EVM ERC-20 balance/allowance/metadata, transaction/receipt/status, fee/nonce/call/estimate reads, Litecoin/Dogecoin five reads with history continuation, Bitcoin Cash six Electrum-TLS reads, Solana native/account/SPL reads, Bitcoin indexed and full transaction reads, XRPL's six read methods, CoinGecko's four operations, DefiLlama's eight reader methods, mempool.space's six reads and THORChain's eight read/quote methods have representative opt-in live qualification. Wallet extension contracts and EVM/XRPL preparation adapters have deterministic fixture qualification. EVM and XRPL explicit submission paths have deterministic and loopback fixture qualification; no funded live submission was performed. LI.FI’s four methods and both transaction/provider-transfer status selectors have representative EVM live qualification; other family payload encodings have fixture proof. Uniswap’s quote and supplied-path comparison have representative V3 live qualification; unsigned Universal Router 2.1.2 preparation and wallet handoff have fixture proof. Blockfrost live qualification remains pending. These operation-specific observations do not complete the full catalogue or qualify every network, provider plan or query variant.
 
 ## Features
 
@@ -98,6 +99,7 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | `mempool-space` | Pure Bitcoin mempool/fees/transaction reader capability, exact source records and bounded collections |
 | `thorchain` | Pure Cosmos/asset identities, exact source records, quote input-resolution metadata and the eight-method `ThorchainReader` capability |
 | `lifi` | Pure cross-family quote/route/preparation/status contracts and `LifiReader` with independently supplied step handles |
+| `uniswap` | Pure V3 deployment/path/quote/comparison contracts, `UniswapV3Reader` and unsigned Universal Router 2.1.2 preparation/wallet adapter |
 | `http` | Shared `HttpConfig` and `RpcEndpoint`; `RpcLimits` is also available with `bitcoin-cash-electrum` |
 | `evm-http` | Bounded `EvmClient` implementing read/simulation capabilities and separate explicit signed submission; Reqwest/rustls and caller-owned Tokio runtime |
 | `litecoin-http`, `dogecoin-http` | Family-specific `BlockCypherClient` and explicit `BlockCypherConfig`; documented mainnet sources only |
@@ -111,6 +113,7 @@ Default features are empty. Pure capabilities use standard Rust futures and do n
 | `mempool-space-http` | Bounded `MempoolSpaceClient` with explicit genesis/API configuration; composes the compatible Bitcoin Esplora backend |
 | `thorchain-http` | Bounded `ThorchainClient` with explicit `ThorchainHttpConfig`, expected Cosmos chain ID and separate account prefix |
 | `lifi-http` | Bounded `LifiClient`, explicit chain-family catalogue, optional caller-provided headers and private exact continuation bound to the configured authority |
+| `uniswap-http` | `UniswapV3Client` composes the EVM backend; exact-input quotes and supplied-route comparison use frozen canonical hashes and one total deadline |
 | `all` | All catalogue features and currently implemented backends |
 
 Concrete HTTP backends use Reqwest/rustls and a caller-owned Tokio runtime with I/O/time drivers. The library loads no environment configuration. The [Rust example and live-test guide](examples/README.md) document explicit inputs, backend selection and read-specific qualification.

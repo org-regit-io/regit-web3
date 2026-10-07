@@ -158,6 +158,14 @@ pub enum ValidationError {
     InvalidBitcoinCashRecord,
     /// Bitcoin Cash bytes violate their bounded encoding contract.
     InvalidBitcoinCashBytes,
+    /// A Uniswap deployment violates its explicit supported-version contract.
+    InvalidUniswapDeployment,
+    /// A Uniswap V3 path violates its bounded token/fee contract.
+    InvalidUniswapPath,
+    /// A Uniswap V3 quote violates its exact request/source contract.
+    InvalidUniswapQuote,
+    /// A Uniswap preparation violates its exact reviewed swap intent.
+    InvalidUniswapPreparation,
     /// An indexed UTxO-family source record violates its structural contract.
     InvalidUtxoRecord,
     /// Indexed UTxO-family bytes violate their bounded encoding contract.
@@ -284,6 +292,10 @@ impl fmt::Display for ValidationError {
             Self::InvalidBitcoinCashAddress => "invalid Bitcoin Cash address",
             Self::InvalidBitcoinCashRecord => "invalid Bitcoin Cash record",
             Self::InvalidBitcoinCashBytes => "invalid Bitcoin Cash byte encoding",
+            Self::InvalidUniswapDeployment => "invalid Uniswap deployment",
+            Self::InvalidUniswapPath => "invalid Uniswap V3 path",
+            Self::InvalidUniswapQuote => "invalid Uniswap V3 quote",
+            Self::InvalidUniswapPreparation => "invalid Uniswap swap preparation",
             Self::InvalidUtxoRecord => "invalid indexed UTxO record",
             Self::InvalidUtxoBytes => "invalid indexed UTxO byte encoding",
             Self::BitcoinAddressNetworkMismatch => "Bitcoin address and declared network differ",

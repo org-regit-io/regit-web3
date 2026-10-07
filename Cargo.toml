@@ -159,6 +159,7 @@ thorchain-http = ["thorchain", "http"]
 
 jupiter = ["solana"]
 uniswap = ["evm"]
+uniswap-http = ["uniswap", "evm-http"]
 oneinch = ["evm"]
 lifi = ["dep:bs58", "dep:base64", "dep:bitcoin"]
 lifi-http = ["lifi", "http"]
@@ -195,6 +196,7 @@ all = [
   "thorchain-http",
   "jupiter",
   "uniswap",
+  "uniswap-http",
   "oneinch",
   "lifi",
   "lifi-http",
